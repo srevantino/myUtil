@@ -488,7 +488,7 @@ for /f "delims=[] tokens=2" %%# in ('ping -n 1 %%a') do (if not "%%#"=="" set _i
 )
 
 if not defined _int (
-%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet){Exit 0}Else{Exit 1}"
+%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet) {Exit 0} else {Exit 1}"
 if !errorlevel!==0 (set _int=1&set ping_f= But Ping Failed)
 )
 
@@ -582,7 +582,7 @@ call :dk_inskey "[%key%]"
 
 ::========================================================================================================================================
 
-::  Change Windows region to USA to avoid activation issues as Windows store license is not available in many countries 
+::  Change Windows region to USA to avoid activation issues as Windows store license is not available in many countries
 
 for /f "skip=2 tokens=2*" %%a in ('reg query "HKCU\Control Panel\International\Geo" /v Name %nul6%') do set "name=%%b"
 for /f "skip=2 tokens=2*" %%a in ('reg query "HKCU\Control Panel\International\Geo" /v Nation %nul6%') do set "nation=%%b"
@@ -720,7 +720,7 @@ licensing.mp.microsoft.com/v7.0/licenses/content
 login.live.com/ppsecure/deviceaddcredential.srf
 purchase.mp.microsoft.com/v7.0/users/me/orders
 ) do if not defined resfail (
-%psc% "try { !tls! irm https://%%# -Method POST } catch { if ($_.Exception.Response -eq $null) { Write-Host """"[%%#] $($_.Exception.Message)"""" -ForegroundColor Red -BackgroundColor Black; exit 3 } }"
+%psc% "try { !tls! irm https://%%# -Method POST } catch { if ($_.Exception.Response -eq $null) { Write-Host """"[%%#]$($_.Exception.Message)"""" -ForegroundColor Red -BackgroundColor Black; exit 3 } }"
 if !errorlevel!==3 set resfail=1
 )
 )
@@ -1109,13 +1109,13 @@ function InstallLicenseArr($Str) {
     ForEach ($x in $a) {InstallLicenseFile "$x"}
 }
 function InstallLicenseDir($Loc) {
-	Get-ChildItem $Loc -Recurse -Filter *.xrm-ms | ForEach-Object {InstallLicenseFile $_.FullName}
+    Get-ChildItem $Loc -Recurse -Filter *.xrm-ms | ForEach-Object {InstallLicenseFile $_.FullName}
 }
 function ReinstallLicenses() {
-	$Paths = @("$env:SysPath\oem", "$env:SysPath\licensing", "$env:SysPath\spp\tokens")
-	foreach ($Path in $Paths) {
+    $Paths = @("$env:SysPath\oem", "$env:SysPath\licensing", "$env:SysPath\spp\tokens")
+    foreach ($Path in $Paths) {
     if (Test-Path $Path) { InstallLicenseDir "$Path" }
-	}
+    }
 }
 :xrm:
 
@@ -1201,9 +1201,9 @@ exit /b
 
 set w=
 set results=
-if exist "%ProgramFiles%\KM%w%Spico" set pupfound= KM%w%Spico 
+if exist "%ProgramFiles%\KM%w%Spico" set pupfound= KM%w%Spico
 if not defined pupfound (
-reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\taskcache\tasks" /f Path /s | find /i "AutoPico" %nul% && set pupfound= KM%w%Spico 
+reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\taskcache\tasks" /f Path /s | find /i "AutoPico" %nul% && set pupfound= KM%w%Spico
 )
 
 set hcount=0
@@ -1876,8 +1876,8 @@ if ($osVersion.Build -ge $minBuildNumber) {
     for ($i=1; $i -le $count; $i++) {
         if (-not $subkeyHashTable.ContainsKey("$i")) {
             Write-Output "Total Keys $count. Error Found - $i key does not exist."
-			$wpaKey.Close()
-			exit
+            $wpaKey.Close()
+            exit
         }
     }
 }
@@ -1885,18 +1885,18 @@ $wpaKey.GetSubKeyNames() | ForEach-Object {
     if ($_ -match '8DEC0AF1-0341-4b93-85CD-72606C2DF94C.*') {
         if ($PSVersionTable.PSVersion.Major -lt 3) {
             cmd /c "reg query "HKLM\SYSTEM\WPA\$_" /ve /t REG_BINARY >nul 2>&1"
-			if ($LASTEXITCODE -ne 0) {
+            if ($LASTEXITCODE -ne 0) {
             Write-Host "Total Keys $count. Error Found - Binary Data is corrupt."
-			$wpaKey.Close()
-			exit
-			}
+            $wpaKey.Close()
+            exit
+            }
         } else {
             $subkey = $wpaKey.OpenSubKey($_)
             $p = $subkey.GetValueNames()
             if (($p | Where-Object { $subkey.GetValueKind($_) -eq [Microsoft.Win32.RegistryValueKind]::Binary }).Count -eq 0) {
                 Write-Host "Total Keys $count. Error Found - Binary Data is corrupt."
-				$wpaKey.Close()
-				exit
+                $wpaKey.Close()
+                exit
             }
         }
     }
@@ -2048,7 +2048,7 @@ function SignProperties {
 
 }
 
-[byte[]] $key = 0x07,0x02,0x00,0x00,0x00,0xA4,0x00,0x00,0x52,0x53,0x41,0x32,0x00,0x04,0x00,0x00,
+[byte[]]$key = 0x07,0x02,0x00,0x00,0x00,0xA4,0x00,0x00,0x52,0x53,0x41,0x32,0x00,0x04,0x00,0x00,
                 0x01,0x00,0x01,0x00,0x29,0x87,0xBA,0x3F,0x52,0x90,0x57,0xD8,0x12,0x26,0x6B,0x38,
                 0xB2,0x3B,0xF9,0x67,0x08,0x4F,0xDD,0x8B,0xF5,0xE3,0x11,0xB8,0x61,0x3A,0x33,0x42,
                 0x51,0x65,0x05,0x86,0x1E,0x00,0x41,0xDE,0xC5,0xDD,0x44,0x60,0x56,0x3D,0x14,0x39,

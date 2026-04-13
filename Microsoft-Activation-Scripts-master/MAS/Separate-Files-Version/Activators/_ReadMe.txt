@@ -2,9 +2,9 @@
 Activation Type        Supported Product        Activation Period
 --------------------------------------------------------------------------------------
 
-HWID                -  Windows 10-11          -  Permanent                           
-Ohook               -  Office                 -  Permanent                           
-TSforge             -  Windows / ESU / Office -  Permanent                           
+HWID                -  Windows 10-11          -  Permanent
+Ohook               -  Office                 -  Permanent
+TSforge             -  Windows / ESU / Office -  Permanent
 Online KMS          -  Windows / Office       -  180 Days. Lifetime With Renewal Task
 
 --------------------------------------------------------------------------------------

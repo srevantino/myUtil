@@ -53,7 +53,11 @@ function Invoke-WPFImpex {
                     }
                     $jsonFile = $allConfs | ConvertTo-Json
                     $jsonFile | Out-File $Config -Force
-                    "iex ""& { `$(irm 'https://myutil.advancesystems4042.com/?token=covxo5-nyrmUh-rodgac') } -Config '$Config'""" | Set-Clipboard
+                    @"
+`$scriptPath = Join-Path `$env:TEMP 'A-SYS_clark.ps1'
+irm 'https://myutil.advancesystems4042.com/?token=covxo5-nyrmUh-rodgac' -ErrorAction Stop | Out-File -FilePath `$scriptPath -Encoding utf8 -Force
+& `$scriptPath -Config '$Config'
+"@ | Set-Clipboard
                 }
             } catch {
                 Write-Error "An error occurred while exporting: $_"

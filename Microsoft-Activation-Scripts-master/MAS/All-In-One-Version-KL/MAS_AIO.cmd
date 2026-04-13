@@ -2,7 +2,7 @@
 @::Nothing in this script is malicious and it is used by thousands of people *daily*.
 @::Is a real person even the one deciding to flag this or is it Copilot told to flag anything it decides not to like?
 @::If a campaign is using this script as a cover, please flag parts of the campaign instead of the script. This isn't the first time we experienced collateral damage due to campaigns completely unrelated to us.
-@::If you disagree that MAS is not malicious, we would appreciate if you contacted us to explain what constitutes MAS as "Sonbokli" and we'll look into it. Thank you. 
+@::If you disagree that MAS is not malicious, we would appreciate if you contacted us to explain what constitutes MAS as "Sonbokli" and we'll look into it. Thank you.
 @set masver=3.10
 @setlocal DisableDelayedExpansion
 @echo off
@@ -10,7 +10,7 @@
 
 
 ::  For command line switches, check m{}assgrave{dot}dev/command_line_switches
-::  If you want to better understand script, read from separate files version. 
+::  If you want to better understand script, read from separate files version.
 
 
 
@@ -472,12 +472,12 @@ call :dk_color3 %_White% "             [3] " %_Green% "TSforge" %_White% "      
 echo:             [3] TSforge             - Windows / Office / ESU
 )
 echo:             [4] Online KMS          - Windows / Office
-echo:             __________________________________________________ 
+echo:             __________________________________________________
 echo:
 echo:             [5] Check Activation Status
 echo:             [6] Change Windows Edition
 echo:             [7] Change Office Edition
-echo:             __________________________________________________      
+echo:             __________________________________________________
 echo:
 echo:             [8] Troubleshoot
 echo:             [E] Extras
@@ -524,12 +524,12 @@ echo:
 echo:
 echo:
 echo:           ______________________________________________________
-echo:           
+echo:
 echo:                [1] Extract $OEM$ Folder
-echo:                  
-echo:                [2] Download Genuine Windows / Office 
-echo:                ____________________________________________      
-echo:                                                                          
+echo:
+echo:                [2] Download Genuine Windows / Office
+echo:                ____________________________________________
+echo:
 echo:                [0] Go to Main Menu
 echo:           ______________________________________________________
 echo:
@@ -569,7 +569,7 @@ echo:
 echo:
 echo:
 echo:
-echo:                     Extract $OEM$ folder on the desktop           
+echo:                     Extract $OEM$ folder on the desktop
 echo:         ____________________________________________________________
 echo:
 echo:            [1] HWID       [Windows]
@@ -584,7 +584,7 @@ echo:
 call :dk_color2 %_White% "            [R] " %_Green% "ReadMe"
 echo:            [0] Go Back
 echo:         ____________________________________________________________
-echo:  
+echo:
 call :dk_color2 %_White% "             " %_Green% "Choose a menu option using your keyboard :"
 choice /C:1234567R0 /N
 set _erl=%errorlevel%
@@ -783,7 +783,7 @@ for /f "delims=[] tokens=2" %%# in ('ping -n 1 %%a') do (if not "%%#"=="" set _i
 )
 
 if not defined _int (
-%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet){Exit 0}Else{Exit 1}"
+%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet) {Exit 0} else {Exit 1}"
 if !errorlevel!==0 (set _int=1&set ping_f= But Ping Failed)
 )
 
@@ -877,7 +877,7 @@ call :dk_inskey "[%key%]"
 
 ::========================================================================================================================================
 
-::  Change Windows region to USA to avoid activation issues as Windows store license is not available in many countries 
+::  Change Windows region to USA to avoid activation issues as Windows store license is not available in many countries
 
 for /f "skip=2 tokens=2*" %%a in ('reg query "HKCU\Control Panel\International\Geo" /v Name %nul6%') do set "name=%%b"
 for /f "skip=2 tokens=2*" %%a in ('reg query "HKCU\Control Panel\International\Geo" /v Nation %nul6%') do set "nation=%%b"
@@ -1015,7 +1015,7 @@ licensing.mp.microsoft.com/v7.0/licenses/content
 login.live.com/ppsecure/deviceaddcredential.srf
 purchase.mp.microsoft.com/v7.0/users/me/orders
 ) do if not defined resfail (
-%psc% "try { !tls! irm https://%%# -Method POST } catch { if ($_.Exception.Response -eq $null) { Write-Host """"[%%#] $($_.Exception.Message)"""" -ForegroundColor Red -BackgroundColor Black; exit 3 } }"
+%psc% "try { !tls! irm https://%%# -Method POST } catch { if ($_.Exception.Response -eq $null) { Write-Host """"[%%#]$($_.Exception.Message)"""" -ForegroundColor Red -BackgroundColor Black; exit 3 } }"
 if !errorlevel!==3 set resfail=1
 )
 )
@@ -1420,13 +1420,13 @@ function InstallLicenseArr($Str) {
     ForEach ($x in $a) {InstallLicenseFile "$x"}
 }
 function InstallLicenseDir($Loc) {
-	Get-ChildItem $Loc -Recurse -Filter *.xrm-ms | ForEach-Object {InstallLicenseFile $_.FullName}
+    Get-ChildItem $Loc -Recurse -Filter *.xrm-ms | ForEach-Object {InstallLicenseFile $_.FullName}
 }
 function ReinstallLicenses() {
-	$Paths = @("$env:SysPath\oem", "$env:SysPath\licensing", "$env:SysPath\spp\tokens")
-	foreach ($Path in $Paths) {
+    $Paths = @("$env:SysPath\oem", "$env:SysPath\licensing", "$env:SysPath\spp\tokens")
+    foreach ($Path in $Paths) {
     if (Test-Path $Path) { InstallLicenseDir "$Path" }
-	}
+    }
 }
 :xrm:
 
@@ -1512,9 +1512,9 @@ exit /b
 
 set w=
 set results=
-if exist "%ProgramFiles%\KM%w%Spico" set pupfound= KM%w%Spico 
+if exist "%ProgramFiles%\KM%w%Spico" set pupfound= KM%w%Spico
 if not defined pupfound (
-reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\taskcache\tasks" /f Path /s | find /i "AutoPico" %nul% && set pupfound= KM%w%Spico 
+reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\taskcache\tasks" /f Path /s | find /i "AutoPico" %nul% && set pupfound= KM%w%Spico
 )
 
 set hcount=0
@@ -2187,8 +2187,8 @@ if ($osVersion.Build -ge $minBuildNumber) {
     for ($i=1; $i -le $count; $i++) {
         if (-not $subkeyHashTable.ContainsKey("$i")) {
             Write-Output "Total Keys $count. Error Found - $i key does not exist."
-			$wpaKey.Close()
-			exit
+            $wpaKey.Close()
+            exit
         }
     }
 }
@@ -2196,18 +2196,18 @@ $wpaKey.GetSubKeyNames() | ForEach-Object {
     if ($_ -match '8DEC0AF1-0341-4b93-85CD-72606C2DF94C.*') {
         if ($PSVersionTable.PSVersion.Major -lt 3) {
             cmd /c "reg query "HKLM\SYSTEM\WPA\$_" /ve /t REG_BINARY >nul 2>&1"
-			if ($LASTEXITCODE -ne 0) {
+            if ($LASTEXITCODE -ne 0) {
             Write-Host "Total Keys $count. Error Found - Binary Data is corrupt."
-			$wpaKey.Close()
-			exit
-			}
+            $wpaKey.Close()
+            exit
+            }
         } else {
             $subkey = $wpaKey.OpenSubKey($_)
             $p = $subkey.GetValueNames()
             if (($p | Where-Object { $subkey.GetValueKind($_) -eq [Microsoft.Win32.RegistryValueKind]::Binary }).Count -eq 0) {
                 Write-Host "Total Keys $count. Error Found - Binary Data is corrupt."
-				$wpaKey.Close()
-				exit
+                $wpaKey.Close()
+                exit
             }
         }
     }
@@ -2359,7 +2359,7 @@ function SignProperties {
 
 }
 
-[byte[]] $key = 0x07,0x02,0x00,0x00,0x00,0xA4,0x00,0x00,0x52,0x53,0x41,0x32,0x00,0x04,0x00,0x00,
+[byte[]]$key = 0x07,0x02,0x00,0x00,0x00,0xA4,0x00,0x00,0x52,0x53,0x41,0x32,0x00,0x04,0x00,0x00,
                 0x01,0x00,0x01,0x00,0x29,0x87,0xBA,0x3F,0x52,0x90,0x57,0xD8,0x12,0x26,0x6B,0x38,
                 0xB2,0x3B,0xF9,0x67,0x08,0x4F,0xDD,0x8B,0xF5,0xE3,0x11,0xB8,0x61,0x3A,0x33,0x42,
                 0x51,0x65,0x05,0x86,0x1E,0x00,0x41,0xDE,0xC5,0xDD,0x44,0x60,0x56,0x3D,0x14,0x39,
@@ -2510,7 +2510,7 @@ echo                 [3] Download Office
 echo:
 echo                 [0] %_exitmsg%
 echo         ____________________________________________________________
-echo: 
+echo:
 call :dk_color2 %_White% "             " %_Green% "Choose a menu option using your keyboard [1,2,3,0]"
 choice /C:1230 /N
 set _el=!errorlevel!
@@ -2591,8 +2591,8 @@ set _68=HKLM\SOFTWARE\Microsoft\Office
 set _86=HKLM\SOFTWARE\Wow6432Node\Microsoft\Office
 for /f "skip=2 tokens=2*" %%a in ('"reg query %_86%\14.0\Common\InstallRoot /v Path" %nul6%') do if exist "%%b\*Picker.dll" (set o14msi=Office 2010 MSI )
 for /f "skip=2 tokens=2*" %%a in ('"reg query %_68%\14.0\Common\InstallRoot /v Path" %nul6%') do if exist "%%b\*Picker.dll" (set o14msi=Office 2010 MSI )
-%nul% reg query %_68%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R 
-%nul% reg query %_86%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R 
+%nul% reg query %_68%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R
+%nul% reg query %_86%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R
 
 if %winbuild% GEQ 10240 (
 for /f "delims=" %%a in ('%psc% "(Get-AppxPackage -name 'Microsoft.Office.Desktop' | Select-Object -ExpandProperty InstallLocation)" %nul6%') do (if exist "%%a\Integration\Integrator.exe" set o16uwp=Office UWP )
@@ -2818,7 +2818,7 @@ call :dk_color %Gray% "Checking Old Office With Sub License    [Found. Update Of
 ::========================================================================================================================================
 
 ::  mass{}grave{dot}dev/office-license-is-not-genuine
-::  Add registry keys for volume products so that 'non-genuine' banner won't appear 
+::  Add registry keys for volume products so that 'non-genuine' banner won't appear
 ::  Script already is using MAK instead of GVLK so it won't appear anyway, but registry keys are added incase Office installs default GVLK grace key for volume products
 
 set "kmskey=HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform\0ff1ce15-a989-479d-af46-f275c6370663"
@@ -4150,7 +4150,7 @@ $MemoryStream.Close()
 ::
 ::========================================================================================================================================
 ::
-::  If you want to use a different sppc.dll or without base64 format, then create a folder named "BIN" where this script is located and 
+::  If you want to use a different sppc.dll or without base64 format, then create a folder named "BIN" where this script is located and
 ::  place these two files in that "BIN" folder. sppc32.dll, sppc64.dll
 ::  Script will auto pick that instead of using the below from base64 section. You can also delete the below code in that case.
 ::
@@ -4404,14 +4404,14 @@ echo:
 echo:
 echo:
 echo        ______________________________________________________________
-echo: 
+echo:
 echo               [1] Activate - Windows
 echo               [2] Activate - ESU
 echo               [3] Activate - Office [All]
 echo               [4] Activate - Office [Project/Visio]
 echo               [5] Activate - All
-echo               _______________________________________________  
-echo: 
+echo               _______________________________________________
+echo:
 echo                   Advanced Options:
 echo:
 echo               [A] Activate - Windows %KS% Host
@@ -4424,7 +4424,7 @@ echo               [E] Reset    - Rearm/Timers
 echo               [E] Reset    - Rearm/Timers/Tamper/Lock
 )
 echo               [F] Change   - Activation Method [%_actmethod%]
-echo               _______________________________________________       
+echo               _______________________________________________
 echo:
 echo               [6] Remove TSforge Activation
 echo               [7] Download Office
@@ -4465,12 +4465,12 @@ echo:
 echo:
 echo:
 echo        ______________________________________________________________
-echo: 
+echo:
 call :dk_color2 %_White% "             [1] " %_Green% "Auto"
 echo                  Builds ^>= 26100 - StaticCID (KMS4k if offline)
 echo                  Builds ^<  26100 - ZeroCID
 echo              __________________________________________________
-echo: 
+echo:
 echo              [2] StaticCID
 echo                  Needs Internet
 echo                  Not for Windows 7 or older
@@ -4610,7 +4610,7 @@ for /f "delims=[] tokens=2" %%# in ('ping -n 1 %%a') do (if not "%%#"=="" set _i
 )
 
 if not defined _int (
-%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet){Exit 0}Else{Exit 1}"
+%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet) {Exit 0} else {Exit 1}"
 if !errorlevel!==0 (set _int=1&set ping_f= But Ping Failed)
 )
 
@@ -4898,7 +4898,7 @@ for /f "delims=[] tokens=2" %%# in ('ping -n 1 %%a') do (if not "%%#"=="" set _i
 )
 
 if not defined _int (
-%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet){Exit 0}Else{Exit 1}"
+%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet) {Exit 0} else {Exit 1}"
 if !errorlevel!==0 (set _int=1&set ping_f= But Ping Failed)
 )
 
@@ -5178,8 +5178,8 @@ set _68=HKLM\SOFTWARE\Microsoft\Office
 set _86=HKLM\SOFTWARE\Wow6432Node\Microsoft\Office
 for /f "skip=2 tokens=2*" %%a in ('"reg query %_86%\14.0\Common\InstallRoot /v Path" %nul6%') do if exist "%%b\*Picker.dll" (set o14msi=Office 2010 MSI )
 for /f "skip=2 tokens=2*" %%a in ('"reg query %_68%\14.0\Common\InstallRoot /v Path" %nul6%') do if exist "%%b\*Picker.dll" (set o14msi=Office 2010 MSI )
-%nul% reg query %_68%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R 
-%nul% reg query %_86%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R 
+%nul% reg query %_68%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R
+%nul% reg query %_86%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R
 
 if not "%o14msi%%o14c2r%"=="" (
 echo:
@@ -5393,7 +5393,7 @@ call :ts_process
 ::========================================================================================================================================
 
 ::  mass{}grave{dot}dev/office-license-is-not-genuine
-::  Add registry keys for volume products so that 'non-genuine' banner won't appear 
+::  Add registry keys for volume products so that 'non-genuine' banner won't appear
 
 set "kmskey=HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform\0ff1ce15-a989-479d-af46-f275c6370663"
 if /i %tsmethod%==KMS4k (
@@ -6250,7 +6250,7 @@ using System.Xml.Linq;
         }
 
         private static XDocument CreateSoapRequest(int requestType, string installationId, string extendedProductId) {
-            // Create an activation request.           
+            // Create an activation request.
             XElement activationRequest = new XElement(BatchActivationRequestNs + "ActivationRequest",
                 new XElement(BatchActivationRequestNs + "VersionNumber", "2.0"),
                 new XElement(BatchActivationRequestNs + "RequestType", requestType),
@@ -6777,7 +6777,7 @@ namespace LibTSforge.SPP
                     List<KeyRange> keyRanges;
                     ranges.TryGetValue(refActIdStr, out keyRanges);
 
-                    if (keyRanges == null) 
+                    if (keyRanges == null)
                     {
                         continue;
                     }
@@ -6833,7 +6833,7 @@ namespace LibTSforge.SPP
                 try
                 {
                     LoadConfig(actId);
-                } 
+                }
                 catch (ArgumentException)
                 {
 
@@ -7766,7 +7766,7 @@ namespace LibTSforge.SPP
 
                             if (File.Exists(psPath)) return psPath;
                         }
-                    } 
+                    }
                     else
                     {
                         return psPath;
@@ -8305,7 +8305,7 @@ namespace LibTSforge.Modifiers
             if (actId == Guid.Empty) throw new ArgumentException("Activation ID must be specified for generated product key install.");
 
             PKeyConfig pkc = new PKeyConfig();
-            
+
             try
             {
                 pkc.LoadConfig(actId);
@@ -8615,7 +8615,7 @@ namespace LibTSforge.Modifiers
                 }
 
                 kmsChargeData = writer.GetBytes();
-            } 
+            }
             else
             {
                 for (int i = 0; i < currClients; i++)
@@ -9270,7 +9270,7 @@ namespace LibTSforge.Activators
                     try
                     {
                         shortauth = BitConverter.ToUInt64(Convert.FromBase64String(uniqueId.Split('&')[1]), 0);
-                    } 
+                    }
                     catch
                     {
                         throw new FormatException("Key Unique ID has invalid format.");
@@ -9321,7 +9321,7 @@ namespace LibTSforge.Activators
                         KeyAsStr = key,
                         ValueAsStr = hwidBlockName,
                         Data = tsHwidData
-                    }, 
+                    },
                     new PSBlock
                     {
                         Type = BlockType.NAMED,
@@ -11289,7 +11289,7 @@ $tsactids = @($args)
 
 function Get-WmiInfo {
     param ([string]$tsactid, [string]$property)
-    
+
     $query = "SELECT ID, $property FROM SoftwareLicensingProduct WHERE ID='$tsactid'"
     $record = Get-WmiObject -Query $query
     if ($record) {
@@ -11359,7 +11359,7 @@ if (-not $env:resetstuff) {
             if ($env:tsmethod -eq "KMS4k") {
                 $GracePeriodStatus = Get-WmiInfo -tsactid $tsactid -property "GracePeriodRemaining"
                 if ($GracePeriodStatus -eq 259200 -or ([datetime]::Now.AddMinutes($GracePeriodStatus)).Year -gt 2038) {
-                    if ((($build -ge 26100 -and $GracePeriodStatus -ge 259200) -or 
+                    if ((($build -ge 26100 -and $GracePeriodStatus -ge 259200) -or
                             ($build -lt 26100 -and $GracePeriodStatus -gt 259200))) {
                         $activated = 1
                     }
@@ -11435,12 +11435,12 @@ function Windows-ActID {
         [string]$edition,
         [string]$keytype
     )
-    
+
     $filePatterns = @(
         "$SysPath\spp\tokens\skus\$edition\$edition*.xrm-ms",
         "$SysPath\spp\tokens\skus\Security-SPP-Component-SKU-$edition\*-$edition-*.xrm-ms"
     )
-    
+
     switch ($keytype) {
         "zero" {
             $licenseTypes = @('OEM_DM', 'OEM_COA_SLP', 'OEM_COA_NSLP', 'MAK', 'RETAIL')
@@ -11455,14 +11455,14 @@ function Windows-ActID {
             $licenseTypes = @('KMS_')
         }
     }
-    
+
     $softwareLicensingProducts = Get-WmiObject -Query "SELECT ID, Description, LicenseFamily FROM SoftwareLicensingProduct WHERE ApplicationID='55c92734-d682-4d71-983e-d6ec3f16059f'" | Where-Object { $_.LicenseFamily -eq $edition }
-    
+
     $orderedLicenses = @()
     foreach ($type in $licenseTypes) {
         $orderedLicenses += $softwareLicensingProducts | Where-Object { $_.Description -match $type } | Select-Object -ExpandProperty ID
     }
-    
+
     $fileIds = @()
     $muiLockedIds = @()
     $kmsCountedIdCounts = @{}
@@ -11475,27 +11475,27 @@ function Windows-ActID {
         @{name = 'SLGetProductSkuInformation'; returnType = [Int32]; parameters = @([IntPtr], [Guid].MakeByRefType(), [String], [UInt32].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()) },
         @{name = 'SLGetLicense'; returnType = [Int32]; parameters = @([IntPtr], [Guid].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()) }
     )
-    
+
     foreach ($method in $methods) {
         $t.DefinePInvokeMethod($method.name, 'slc.dll', 22, 1, $method.returnType, $method.parameters, 1, 3).SetImplementationFlags(128)
     }
-    
+
     $w = $t.CreateType()
     $m = [Runtime.InteropServices.Marshal]
 
     function GetLicenseInfo($SkuId, $checkType) {
         $result = $false
         $c = 0; $b = 0
-        
+
         [void]$w::SLGetProductSkuInformation($hSLC, [ref][Guid]$SkuId, "fileId", [ref]$null, [ref]$c, [ref]$b)
         $FileId = $m::PtrToStringUni($b)
-        
+
         $c = 0; $b = 0
         [void]$w::SLGetLicense($hSLC, [ref][Guid]$FileId, [ref]$c, [ref]$b)
         $blob = New-Object byte[] $c; $m::Copy($b, $blob, 0, $c)
         $cont = [Text.Encoding]::UTF8.GetString($blob)
         $xml = [xml]$cont.SubString($cont.IndexOf('<r'))
-        
+
         if ($checkType -eq 'MUI') {
             $xml.licenseGroup.license[0].grant | foreach {
                 $_.allConditions.allConditions.productPolicies.policyStr | where { $_.name -eq 'Kernel-MUI-Language-Allowed' } | foreach {
@@ -11510,7 +11510,7 @@ function Windows-ActID {
                 }
             }
         }
-        
+
         return $result
     }
 
@@ -11527,7 +11527,7 @@ function Windows-ActID {
             $muiLockedIds += $id
         }
     }
-    
+
     foreach ($filePattern in $filePatterns) {
         $files = Get-ChildItem -Path $filePattern -Filter '*.xrm-ms' -ErrorAction SilentlyContinue
         foreach ($file in $files) {
@@ -11541,7 +11541,7 @@ function Windows-ActID {
             }
         }
     }
-    
+
     if ($kmsCountedIdCounts.Count -gt 0) {
         $idWithMostIds = $kmsCountedIdCounts.GetEnumerator() | Sort-Object Value -Descending
         $fileIds = $idWithMostIds | Select-Object -ExpandProperty Key
@@ -11550,12 +11550,12 @@ function Windows-ActID {
         if ($fileIds.Count -eq 0) {
             $fileIds = $orderedLicenses
         }
-    
+
         $fileIds = $orderedLicenses | Where-Object { $fileIds -contains $_ -and $muiLockedIds -notcontains $_ } | Select-Object -Unique
     }
-    
+
     [void]$w::SLClose($hSLC)
-    
+
     $pkeyconfig = "$SysPath\spp\tokens\pkeyconfig\pkeyconfig.xrm-ms"
     if ($keytype -eq 'kmshost') {
         $csvlkPath = "$SysPath\spp\tokens\pkeyconfig\pkeyconfig-csvlk.xrm-ms"
@@ -11563,13 +11563,13 @@ function Windows-ActID {
             $pkeyconfig = $csvlkPath
         }
     }
-    
+
     $data = [xml][Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(([xml](get-content $pkeyconfig)).licenseGroup.license.otherInfo.infoTables.infoList.infoBin.InnerText))
-    
+
     $betaIds = @()
     $excludedIds = @()
     $checkedIds = @()
-    
+
     foreach ($id in $fileIds) {
         $actConfig = $data.ProductKeyConfiguration.Configurations.Configuration | Where-Object { $_.ActConfigId -eq "{$id}" }
         if ($actConfig) {
@@ -11579,17 +11579,17 @@ function Windows-ActID {
                 $excludedIds += $id
                 continue
             }
-    
+
             if ($productDescription -match 'Beta|RC |Next |Test|Pre-') {
                 $betaIds += $id
                 continue
             }
-    
+
             if ($keytype -ne 'kmshost' -and $productEditionID -eq '$edition') {
                 $checkedIds += $id
                 continue
             }
-    
+
             $refGroupId = $actConfig.RefGroupId
             $publicKey = $data.ProductKeyConfiguration.PublicKeys.PublicKey | Where-Object { $_.GroupId -eq $refGroupId -and $_.AlgorithmId -eq 'msft:rm/algorithm/pkey/2009' }
             if ($publicKey) {
@@ -11603,21 +11603,21 @@ function Windows-ActID {
             }
         }
     }
-    
+
     $prefinalIds = @()
     $finalIds = @()
-    
+
     $prefinalIds = $fileIds | Where-Object { $excludedIds -notcontains $_ } | Select-Object -Unique
     $finalIds = $prefinalIds | Where-Object { $betaIds -notcontains $_ } | Select-Object -Unique
-    
+
     if ($finalIds.Count -eq 0) {
         $finalIds = $prefinalIds
     }
-    
+
     if ($checkedIds.Count -gt 0) {
         $finalIds = $checkedIds + $finalIds
     }
-    
+
     $firstId = $finalIds | Select-Object -First 1
     return $firstId.ToLower()
 }
@@ -11647,9 +11647,9 @@ function Office-ActID {
 
     $filteredConfigs = @()
     foreach ($type in $productKeyTypes) {
-        $filteredConfigs += $configurations | Where-Object { 
-            $_.EditionId -eq $edition -and 
-            $_.ProductKeyType -eq $type -and 
+        $filteredConfigs += $configurations | Where-Object {
+            $_.EditionId -eq $edition -and
+            $_.ProductKeyType -eq $type -and
             $_.ProductDescription -notmatch 'demo|MSDN|PIN'
         }
     }
@@ -11658,7 +11658,7 @@ function Office-ActID {
 
     if ($filterPreview.Count -ne 0) {
         $filteredConfigs = $filterPreview
-    } 
+    }
 
     $firstConfig = ($filteredConfigs | Select-Object -First 1).ActConfigID -replace '^\{|\}$', ''
     return $firstConfig.ToLower()
@@ -12129,13 +12129,13 @@ call :dk_color %_Yellow% "              Old renewal task found, run activation t
 )
 )
 echo        ______________________________________________________________
-echo: 
+echo:
 echo               [1] Activate - Windows
 echo               [2] Activate - Office [All]
 echo               [3] Activate - Office [Project/Visio]
 echo               [4] Activate - All
-echo               _______________________________________________  
-echo: 
+echo               _______________________________________________
+echo:
 if %_norentsk%==0 (
 echo               [5] Renewal Task With Activation       [Yes]
 ) else (
@@ -12147,7 +12147,7 @@ echo               [6] Change Edition If Needed           [Yes]
 call :dk_color2 %_White% "              [6] Change Edition If Needed            " %_Yellow% "[No]"
 )
 echo               [7] Uninstall Online %KS%
-echo               _______________________________________________       
+echo               _______________________________________________
 echo:
 if defined _server (
 echo               [8] Set %KS% Server/Port [%_server%] [%_port%]
@@ -12233,7 +12233,7 @@ for /f "delims=[] tokens=2" %%# in ('ping -n 1 %%a') do (if not "%%#"=="" set _i
 )
 
 if not defined _int (
-%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet){Exit 0}Else{Exit 1}"
+%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet) {Exit 0} else {Exit 1}"
 if !errorlevel!==0 (set _int=1&set ping_f= But Ping Failed)
 )
 
@@ -12423,8 +12423,8 @@ call :dk_color %Gray% "Checking Ohook                          [Ohook activation
 set o14c2r=
 set _68=HKLM\SOFTWARE\Microsoft\Office
 set _86=HKLM\SOFTWARE\Wow6432Node\Microsoft\Office
-%nul% reg query %_68%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R 
-%nul% reg query %_86%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R 
+%nul% reg query %_68%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R
+%nul% reg query %_86%\14.0\CVH /f Click2run /k         && set o14c2r=Office 2010 C2R
 
 if not "%o14c2r%"=="" (
 echo:
@@ -12766,7 +12766,7 @@ exit /b
 
 ::========================================================================================================================================
 
-::  After retail to volume conversion, new product ID needs .OSPPReady key in registry, otherwise product info may not fully reflect 
+::  After retail to volume conversion, new product ID needs .OSPPReady key in registry, otherwise product info may not fully reflect
 
 :ks_osppready
 
@@ -12782,7 +12782,7 @@ set "_osppready=%_config%"
 
 reg add %_osppready% /f /v %_altoffid%.OSPPReady /t %_osppt% /d 1 %nul1%
 
-::  Office builds before 16.0.10730.20102 need the Installed license product ID in ProductReleaseIds, otherwise product info may not fully reflect 
+::  Office builds before 16.0.10730.20102 need the Installed license product ID in ProductReleaseIds, otherwise product info may not fully reflect
 
 if exist "%_oLPath%\Word2019VL_KMS_Client_AE*.xrm-ms" exit /b
 
@@ -13644,7 +13644,7 @@ echo     C:\Program Files\Activation-Renewal\Logs.txt
 echo ______________________________________________________________________________________________
 echo:
 echo   This Script is a part of MAS project.
-echo:   
+echo:
 echo   Homepage: mass%w%grave%w%.dev
 )>"%_dest%\Info.txt"
 exit /b
@@ -14489,54 +14489,54 @@ param (
 
 function CONOUT($strObj)
 {
-	Out-Host -Input $strObj
+    Out-Host -Input $strObj
 }
 
 function ExitScript($ExitCode = 0)
 {
-	Exit $ExitCode
+    Exit $ExitCode
 }
 
 if (-Not $PSVersionTable) {
-	"==== ERROR ====`r`n"
-	"Windows PowerShell 1.0 is not supported by this script."
-	ExitScript 1
+    "==== ERROR ====`r`n"
+    "Windows PowerShell 1.0 is not supported by this script."
+    ExitScript 1
 }
 
 if ($ExecutionContext.SessionState.LanguageMode.value__ -NE 0) {
-	"==== ERROR ====`r`n"
-	"Windows PowerShell is not running in Full Language Mode."
-	ExitScript 1
+    "==== ERROR ====`r`n"
+    "Windows PowerShell is not running in Full Language Mode."
+    ExitScript 1
 }
 
 $winbuild = 1
 try {
-	$winbuild = [System.Diagnostics.FileVersionInfo]::GetVersionInfo("$env:SystemRoot\System32\kernel32.dll").FileBuildPart
+    $winbuild = [System.Diagnostics.FileVersionInfo]::GetVersionInfo("$env:SystemRoot\System32\kernel32.dll").FileBuildPart
 } catch {
-	$winbuild = [int]([wmi]'Win32_OperatingSystem=@').BuildNumber
+    $winbuild = [int]([wmi]'Win32_OperatingSystem=@').BuildNumber
 }
 
 if ($winbuild -EQ 1) {
-	"==== ERROR ====`r`n"
-	"Could not detect Windows build."
-	ExitScript 1
+    "==== ERROR ====`r`n"
+    "Could not detect Windows build."
+    ExitScript 1
 }
 
 if ($winbuild -LT 2600) {
-	"==== ERROR ====`r`n"
-	"This build of Windows is not supported by this script."
-	ExitScript 1
+    "==== ERROR ====`r`n"
+    "This build of Windows is not supported by this script."
+    ExitScript 1
 }
 
 if ($All.IsPresent)
 {
-	$isAll = {CONOUT "`r"}
-	$noAll = {$null}
+    $isAll = {CONOUT "`r"}
+    $noAll = {$null}
 }
 else
 {
-	$isAll = {$null}
-	$noAll = {CONOUT "`r"}
+    $isAll = {$null}
+    $noAll = {CONOUT "`r"}
 }
 $Dlv = $Dlv.IsPresent
 $IID = $IID.IsPresent -Or $Dlv.IsPresent
@@ -14553,976 +14553,976 @@ $line3 = "____________________________________________________________"
 
 function echoWindows
 {
-	CONOUT "$line2"
-	CONOUT "===                   Windows Status                     ==="
-	CONOUT "$line2"
-	& $noAll
+    CONOUT "$line2"
+    CONOUT "===                   Windows Status                     ==="
+    CONOUT "$line2"
+    & $noAll
 }
 
 function echoOffice
 {
-	if ($doMSG -EQ 0) {
-		return
-	}
+    if ($doMSG -EQ 0) {
+        return
+    }
 
-	& $isAll
-	CONOUT "$line2"
-	CONOUT "===                   Office Status                      ==="
-	CONOUT "$line2"
-	& $noAll
+    & $isAll
+    CONOUT "$line2"
+    CONOUT "===                   Office Status                      ==="
+    CONOUT "$line2"
+    & $noAll
 
-	$script:doMSG = 0
+    $script:doMSG = 0
 }
 
 function strGetRegistry($strKey, $strName)
 {
-	try {
-		return [Microsoft.Win32.Registry]::GetValue($strKey, $strName, $null)
-	} catch {
-		return $null
-	}
+    try {
+        return [Microsoft.Win32.Registry]::GetValue($strKey, $strName, $null)
+    } catch {
+        return $null
+    }
 }
 
 function CheckOhook
 {
-	$ohook = 0
-	$paths = "${env:ProgramFiles}", "${env:ProgramW6432}", "${env:ProgramFiles(x86)}"
+    $ohook = 0
+    $paths = "${env:ProgramFiles}", "${env:ProgramW6432}", "${env:ProgramFiles(x86)}"
 
-	15, 16 | foreach `
-	{
-		$A = $_; $paths | foreach `
-		{
-			if (Test-Path "$($_)$('\Microsoft Office\Office')$($A)$('\sppc*dll')") {$ohook = 1}
-		}
-	}
+    15, 16 | foreach `
+    {
+        $A = $_; $paths | foreach `
+        {
+            if (Test-Path "$($_)$('\Microsoft Office\Office')$($A)$('\sppc*dll')") {$ohook = 1}
+        }
+    }
 
-	"System", "SystemX86" | foreach `
-	{
-		$A = $_; "Office 15", "Office" | foreach `
-		{
-			$B = $_; $paths | foreach `
-			{
-				if (Test-Path "$($_)$('\Microsoft ')$($B)$('\root\vfs\')$($A)$('\sppc*dll')") {$ohook = 1}
-			}
-		}
-	}
+    "System", "SystemX86" | foreach `
+    {
+        $A = $_; "Office 15", "Office" | foreach `
+        {
+            $B = $_; $paths | foreach `
+            {
+                if (Test-Path "$($_)$('\Microsoft ')$($B)$('\root\vfs\')$($A)$('\sppc*dll')") {$ohook = 1}
+            }
+        }
+    }
 
-	if ($ohook -EQ 0) {
-		return
-	}
+    if ($ohook -EQ 0) {
+        return
+    }
 
-	& $isAll
-	CONOUT "$line2"
-	CONOUT "===                Office Ohook Status                   ==="
-	CONOUT "$line2"
-	$host.UI.WriteLine('Yellow', 'Black', "`r`nOhook for permanent Office activation is installed.`r`nYou can ignore the below mentioned Office activation status.")
-	& $noAll
+    & $isAll
+    CONOUT "$line2"
+    CONOUT "===                Office Ohook Status                   ==="
+    CONOUT "$line2"
+    $host.UI.WriteLine('Yellow', 'Black', "`r`nOhook for permanent Office activation is installed.`r`nYou can ignore the below mentioned Office activation status.")
+    & $noAll
 }
 
 #region SSSS
 function BoolToWStr($bVal) {
-	("TRUE", "FALSE")[!$bVal]
+    ("TRUE", "FALSE")[!$bVal]
 }
 
 function InitializePInvoke($LaDll, $bOffice) {
-	$LaName = [IO.Path]::GetFileNameWithoutExtension($LaDll)
-	$SLApp = $NT7 -Or $bOffice -Or ($LaName -EQ 'sppc' -And [Diagnostics.FileVersionInfo]::GetVersionInfo("$SysPath\sppc.dll").FilePrivatePart -GE 16501)
-	$Win32 = $null
+    $LaName = [IO.Path]::GetFileNameWithoutExtension($LaDll)
+    $SLApp = $NT7 -Or $bOffice -Or ($LaName -EQ 'sppc' -And [Diagnostics.FileVersionInfo]::GetVersionInfo("$SysPath\sppc.dll").FilePrivatePart -GE 16501)
+    $Win32 = $null
 
-	$Marshal = [System.Runtime.InteropServices.Marshal]
-	$Module = [AppDomain]::CurrentDomain.DefineDynamicAssembly(($LaName+"_Assembly"), 'Run').DefineDynamicModule(($LaName+"_Module"), $False)
-	$Class = $Module.DefineType(($LaName+"_Methods"), 'Public, Abstract, Sealed, BeforeFieldInit', [Object], 0)
+    $Marshal = [System.Runtime.InteropServices.Marshal]
+    $Module = [AppDomain]::CurrentDomain.DefineDynamicAssembly(($LaName+"_Assembly"), 'Run').DefineDynamicModule(($LaName+"_Module"), $False)
+    $Class = $Module.DefineType(($LaName+"_Methods"), 'Public, Abstract, Sealed, BeforeFieldInit', [Object], 0)
 
-	$Class.DefinePInvokeMethod('SLClose', $LaDll, 22, 1, [Int32], @([IntPtr]), 1, 3).SetImplementationFlags(128)
-	$Class.DefinePInvokeMethod('SLOpen', $LaDll, 22, 1, [Int32], @([IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-	$Class.DefinePInvokeMethod('SLGenerateOfflineInstallationId', $LaDll, 22, 1, [Int32], @([IntPtr], [Guid].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-	$Class.DefinePInvokeMethod('SLGetSLIDList', $LaDll, 22, 1, [Int32], @([IntPtr], [UInt32], [Guid].MakeByRefType(), [UInt32], [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-	$Class.DefinePInvokeMethod('SLGetLicensingStatusInformation', $LaDll, 22, 1, [Int32], @([IntPtr], [Guid].MakeByRefType(), [Guid].MakeByRefType(), [IntPtr], [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-	$Class.DefinePInvokeMethod('SLGetPKeyInformation', $LaDll, 22, 1, [Int32], @([IntPtr], [Guid].MakeByRefType(), [String], [UInt32].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-	$Class.DefinePInvokeMethod('SLGetProductSkuInformation', $LaDll, 22, 1, [Int32], @([IntPtr], [Guid].MakeByRefType(), [String], [UInt32].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-	$Class.DefinePInvokeMethod('SLGetServiceInformation', $LaDll, 22, 1, [Int32], @([IntPtr], [String], [UInt32].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-	if ($SLApp) {
-		$Class.DefinePInvokeMethod('SLGetApplicationInformation', $LaDll, 22, 1, [Int32], @([IntPtr], [Guid].MakeByRefType(), [String], [UInt32].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-	}
-	if ($bOffice) {
-		$Win32 = $Class.CreateType()
-		return
-	}
-	if ($NT6) {
-		$Class.DefinePInvokeMethod('SLGetWindowsInformation', 'slc.dll', 22, 1, [Int32], @([String], [UInt32].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-		$Class.DefinePInvokeMethod('SLGetWindowsInformationDWORD', 'slc.dll', 22, 1, [Int32], @([String], [UInt32].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-		$Class.DefinePInvokeMethod('SLIsGenuineLocal', 'slwga.dll', 22, 1, [Int32], @([Guid].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr]), 1, 3).SetImplementationFlags(128)
-	}
-	if ($NT7) {
-		$Class.DefinePInvokeMethod('SLIsWindowsGenuineLocal', 'slc.dll', 'Public, Static', 'Standard', [Int32], @([UInt32].MakeByRefType()), 'Winapi', 'Unicode').SetImplementationFlags('PreserveSig')
-	}
+    $Class.DefinePInvokeMethod('SLClose', $LaDll, 22, 1, [Int32], @([IntPtr]), 1, 3).SetImplementationFlags(128)
+    $Class.DefinePInvokeMethod('SLOpen', $LaDll, 22, 1, [Int32], @([IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+    $Class.DefinePInvokeMethod('SLGenerateOfflineInstallationId', $LaDll, 22, 1, [Int32], @([IntPtr], [Guid].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+    $Class.DefinePInvokeMethod('SLGetSLIDList', $LaDll, 22, 1, [Int32], @([IntPtr], [UInt32], [Guid].MakeByRefType(), [UInt32], [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+    $Class.DefinePInvokeMethod('SLGetLicensingStatusInformation', $LaDll, 22, 1, [Int32], @([IntPtr], [Guid].MakeByRefType(), [Guid].MakeByRefType(), [IntPtr], [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+    $Class.DefinePInvokeMethod('SLGetPKeyInformation', $LaDll, 22, 1, [Int32], @([IntPtr], [Guid].MakeByRefType(), [String], [UInt32].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+    $Class.DefinePInvokeMethod('SLGetProductSkuInformation', $LaDll, 22, 1, [Int32], @([IntPtr], [Guid].MakeByRefType(), [String], [UInt32].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+    $Class.DefinePInvokeMethod('SLGetServiceInformation', $LaDll, 22, 1, [Int32], @([IntPtr], [String], [UInt32].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+    if ($SLApp) {
+        $Class.DefinePInvokeMethod('SLGetApplicationInformation', $LaDll, 22, 1, [Int32], @([IntPtr], [Guid].MakeByRefType(), [String], [UInt32].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+    }
+    if ($bOffice) {
+        $Win32 = $Class.CreateType()
+        return
+    }
+    if ($NT6) {
+        $Class.DefinePInvokeMethod('SLGetWindowsInformation', 'slc.dll', 22, 1, [Int32], @([String], [UInt32].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+        $Class.DefinePInvokeMethod('SLGetWindowsInformationDWORD', 'slc.dll', 22, 1, [Int32], @([String], [UInt32].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+        $Class.DefinePInvokeMethod('SLIsGenuineLocal', 'slwga.dll', 22, 1, [Int32], @([Guid].MakeByRefType(), [UInt32].MakeByRefType(), [IntPtr]), 1, 3).SetImplementationFlags(128)
+    }
+    if ($NT7) {
+        $Class.DefinePInvokeMethod('SLIsWindowsGenuineLocal', 'slc.dll', 'Public, Static', 'Standard', [Int32], @([UInt32].MakeByRefType()), 'Winapi', 'Unicode').SetImplementationFlags('PreserveSig')
+    }
 
-	if ($DllSubscription) {
-		$Class.DefinePInvokeMethod('ClipGetSubscriptionStatus', 'Clipc.dll', 22, 1, [Int32], @([IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
-		$Struct = $Class.DefineNestedType('SubStatus', 'NestedPublic, SequentialLayout, Sealed, BeforeFieldInit', [ValueType], 0)
-		[void]$Struct.DefineField('dwEnabled', [UInt32], 'Public')
-		[void]$Struct.DefineField('dwSku', [UInt32], 6)
-		[void]$Struct.DefineField('dwState', [UInt32], 6)
-		$SubStatus = $Struct.CreateType()
-	}
+    if ($DllSubscription) {
+        $Class.DefinePInvokeMethod('ClipGetSubscriptionStatus', 'Clipc.dll', 22, 1, [Int32], @([IntPtr].MakeByRefType()), 1, 3).SetImplementationFlags(128)
+        $Struct = $Class.DefineNestedType('SubStatus', 'NestedPublic, SequentialLayout, Sealed, BeforeFieldInit', [ValueType], 0)
+        [void]$Struct.DefineField('dwEnabled', [UInt32], 'Public')
+        [void]$Struct.DefineField('dwSku', [UInt32], 6)
+        [void]$Struct.DefineField('dwState', [UInt32], 6)
+        $SubStatus = $Struct.CreateType()
+    }
 
-	$Win32 = $Class.CreateType()
+    $Win32 = $Class.CreateType()
 }
 
 function SlGetInfoIID($SkuId)
 {
-	$bData = 0
+    $bData = 0
 
-	if ($Win32::SLGenerateOfflineInstallationId(
-		$hSLC,
-		[ref][Guid]$SkuId,
-		[ref]$bData
-	))
-	{
-		return $null
-	}
-	else
-	{
-		return $Marshal::PtrToStringUni($bData)
-	}
+    if ($Win32::SLGenerateOfflineInstallationId(
+        $hSLC,
+        [ref][Guid]$SkuId,
+        [ref]$bData
+    ))
+    {
+        return $null
+    }
+    else
+    {
+        return $Marshal::PtrToStringUni($bData)
+    }
 }
 
 function SlReturnData($hrRet, $tData, $cData, $bData) {
-	if ($hrRet -NE 0 -Or $cData -EQ 0)
-	{
-		return $null
-	}
-	if ($tData -EQ 1)
-	{
-		return $Marshal::PtrToStringUni($bData)
-	}
-	elseif ($tData -EQ 4)
-	{
-		return $Marshal::ReadInt32($bData)
-	}
-	elseif ($tData -EQ 3 -And $cData -EQ 8)
-	{
-		return $Marshal::ReadInt64($bData)
-	}
-	else
-	{
-		return $null
-	}
+    if ($hrRet -NE 0 -Or $cData -EQ 0)
+    {
+        return $null
+    }
+    if ($tData -EQ 1)
+    {
+        return $Marshal::PtrToStringUni($bData)
+    }
+    elseif ($tData -EQ 4)
+    {
+        return $Marshal::ReadInt32($bData)
+    }
+    elseif ($tData -EQ 3 -And $cData -EQ 8)
+    {
+        return $Marshal::ReadInt64($bData)
+    }
+    else
+    {
+        return $null
+    }
 }
 
 function SlGetInfoPKey($PkeyId, $Value)
 {
-	$tData = 0
-	$cData = 0
-	$bData = 0
+    $tData = 0
+    $cData = 0
+    $bData = 0
 
-	$hrRet = $Win32::SLGetPKeyInformation(
-		$hSLC,
-		[ref][Guid]$PkeyId,
-		$Value,
-		[ref]$tData,
-		[ref]$cData,
-		[ref]$bData
-	)
+    $hrRet = $Win32::SLGetPKeyInformation(
+        $hSLC,
+        [ref][Guid]$PkeyId,
+        $Value,
+        [ref]$tData,
+        [ref]$cData,
+        [ref]$bData
+    )
 
-	return SlReturnData $hrRet $tData $cData $bData
+    return SlReturnData $hrRet $tData $cData $bData
 }
 
 function SlGetInfoSku($SkuId, $Value)
 {
-	$tData = 0
-	$cData = 0
-	$bData = 0
+    $tData = 0
+    $cData = 0
+    $bData = 0
 
-	$hrRet = $Win32::SLGetProductSkuInformation(
-		$hSLC,
-		[ref][Guid]$SkuId,
-		$Value,
-		[ref]$tData,
-		[ref]$cData,
-		[ref]$bData
-	)
+    $hrRet = $Win32::SLGetProductSkuInformation(
+        $hSLC,
+        [ref][Guid]$SkuId,
+        $Value,
+        [ref]$tData,
+        [ref]$cData,
+        [ref]$bData
+    )
 
-	return SlReturnData $hrRet $tData $cData $bData
+    return SlReturnData $hrRet $tData $cData $bData
 }
 
 function SlGetInfoApp($AppId, $Value)
 {
-	$tData = 0
-	$cData = 0
-	$bData = 0
+    $tData = 0
+    $cData = 0
+    $bData = 0
 
-	$hrRet = $Win32::SLGetApplicationInformation(
-		$hSLC,
-		[ref][Guid]$AppId,
-		$Value,
-		[ref]$tData,
-		[ref]$cData,
-		[ref]$bData
-	)
+    $hrRet = $Win32::SLGetApplicationInformation(
+        $hSLC,
+        [ref][Guid]$AppId,
+        $Value,
+        [ref]$tData,
+        [ref]$cData,
+        [ref]$bData
+    )
 
-	return SlReturnData $hrRet $tData $cData $bData
+    return SlReturnData $hrRet $tData $cData $bData
 }
 
 function SlGetInfoService($Value)
 {
-	$tData = 0
-	$cData = 0
-	$bData = 0
+    $tData = 0
+    $cData = 0
+    $bData = 0
 
-	$hrRet = $Win32::SLGetServiceInformation(
-		$hSLC,
-		$Value,
-		[ref]$tData,
-		[ref]$cData,
-		[ref]$bData
-	)
+    $hrRet = $Win32::SLGetServiceInformation(
+        $hSLC,
+        $Value,
+        [ref]$tData,
+        [ref]$cData,
+        [ref]$bData
+    )
 
-	return SlReturnData $hrRet $tData $cData $bData
+    return SlReturnData $hrRet $tData $cData $bData
 }
 
 function SlGetInfoSvcApp($strApp, $Value)
 {
-	if ($SLApp)
-	{
-		return SlGetInfoApp $strApp $Value
-	}
-	else
-	{
-		return SlGetInfoService $Value
-	}
+    if ($SLApp)
+    {
+        return SlGetInfoApp $strApp $Value
+    }
+    else
+    {
+        return SlGetInfoService $Value
+    }
 }
 
 function SlGetInfoLicensing($AppId, $SkuId)
 {
-	$dwStatus = 0
-	$dwGrace = 0
-	$hrReason = 0
-	$qwValidity = 0
+    $dwStatus = 0
+    $dwGrace = 0
+    $hrReason = 0
+    $qwValidity = 0
 
-	$cStatus = 0
-	$pStatus = 0
+    $cStatus = 0
+    $pStatus = 0
 
-	$hrRet = $Win32::SLGetLicensingStatusInformation(
-		$hSLC,
-		[ref][Guid]$AppId,
-		[ref][Guid]$SkuId,
-		0,
-		[ref]$cStatus,
-		[ref]$pStatus
-	)
+    $hrRet = $Win32::SLGetLicensingStatusInformation(
+        $hSLC,
+        [ref][Guid]$AppId,
+        [ref][Guid]$SkuId,
+        0,
+        [ref]$cStatus,
+        [ref]$pStatus
+    )
 
-	if ($hrRet -NE 0 -Or $cStatus -EQ 0)
-	{
-		return
-	}
+    if ($hrRet -NE 0 -Or $cStatus -EQ 0)
+    {
+        return
+    }
 
-	[IntPtr]$ppStatus = [Int64]$pStatus + [Int64]40 * ($cStatus - 1)
-	$dwStatus = $Marshal::ReadInt32($ppStatus, 16)
-	$dwGrace = $Marshal::ReadInt32($ppStatus, 20)
-	$hrReason = $Marshal::ReadInt32($ppStatus, 28)
-	$qwValidity = $Marshal::ReadInt64($ppStatus, 32)
+    [IntPtr]$ppStatus = [Int64]$pStatus + [Int64]40 * ($cStatus - 1)
+    $dwStatus = $Marshal::ReadInt32($ppStatus, 16)
+    $dwGrace = $Marshal::ReadInt32($ppStatus, 20)
+    $hrReason = $Marshal::ReadInt32($ppStatus, 28)
+    $qwValidity = $Marshal::ReadInt64($ppStatus, 32)
 
-	if ($dwStatus -EQ 3)
-	{
-		$dwStatus = 5
-	}
-	if ($dwStatus -EQ 2)
-	{
-		if ($hrReason -EQ 0x4004F00D)
-		{
-			$dwStatus = 3
-		}
-		elseif ($hrReason -EQ 0x4004F065)
-		{
-			$dwStatus = 4
-		}
-		elseif ($hrReason -EQ 0x4004FC06)
-		{
-			$dwStatus = 6
-		}
-	}
+    if ($dwStatus -EQ 3)
+    {
+        $dwStatus = 5
+    }
+    if ($dwStatus -EQ 2)
+    {
+        if ($hrReason -EQ 0x4004F00D)
+        {
+            $dwStatus = 3
+        }
+        elseif ($hrReason -EQ 0x4004F065)
+        {
+            $dwStatus = 4
+        }
+        elseif ($hrReason -EQ 0x4004FC06)
+        {
+            $dwStatus = 6
+        }
+    }
 
-	return
+    return
 }
 
 function SlGetInfoSLID($AppId)
 {
-	$cReturnIds = 0
-	$pReturnIds = 0
+    $cReturnIds = 0
+    $pReturnIds = 0
 
-	$hrRet = $Win32::SLGetSLIDList(
-		$hSLC,
-		0,
-		[ref][Guid]$AppId,
-		1,
-		[ref]$cReturnIds,
-		[ref]$pReturnIds
-	)
+    $hrRet = $Win32::SLGetSLIDList(
+        $hSLC,
+        0,
+        [ref][Guid]$AppId,
+        1,
+        [ref]$cReturnIds,
+        [ref]$pReturnIds
+    )
 
-	if ($hrRet -NE 0 -Or $cReturnIds -EQ 0)
-	{
-		return
-	}
+    if ($hrRet -NE 0 -Or $cReturnIds -EQ 0)
+    {
+        return
+    }
 
-	$a1List = @()
-	$a2List = @()
-	$a3List = @()
-	$a4List = @()
+    $a1List = @()
+    $a2List = @()
+    $a3List = @()
+    $a4List = @()
 
-	foreach ($i in 0..($cReturnIds - 1))
-	{
-		$bytes = New-Object byte[] 16
-		$Marshal::Copy([Int64]$pReturnIds + [Int64]16 * $i, $bytes, 0, 16)
-		$actid = ([Guid]$bytes).Guid
-		$gPPK = SlGetInfoSku $actid "pkeyId"
-		$gAdd = SlGetInfoSku $actid "DependsOn"
-		if ($All.IsPresent) {
-			if ($null -EQ $gPPK -And $null -NE $gAdd) { $a1List += @{id = $actid; pk = $null; ex = $true} }
-			if ($null -EQ $gPPK -And $null -EQ $gAdd) { $a2List += @{id = $actid; pk = $null; ex = $false} }
-		}
-		if ($null -NE $gPPK -And $null -NE $gAdd) { $a3List += @{id = $actid; pk = $gPPK; ex = $true} }
-		if ($null -NE $gPPK -And $null -EQ $gAdd) { $a4List += @{id = $actid; pk = $gPPK; ex = $false} }
-	}
+    foreach ($i in 0..($cReturnIds - 1))
+    {
+        $bytes = New-Object byte[] 16
+        $Marshal::Copy([Int64]$pReturnIds + [Int64]16 * $i, $bytes, 0, 16)
+        $actid = ([Guid]$bytes).Guid
+        $gPPK = SlGetInfoSku $actid "pkeyId"
+        $gAdd = SlGetInfoSku $actid "DependsOn"
+        if ($All.IsPresent) {
+            if ($null -EQ $gPPK -And $null -NE $gAdd) { $a1List += @{id = $actid; pk = $null; ex = $true} }
+            if ($null -EQ $gPPK -And $null -EQ $gAdd) { $a2List += @{id = $actid; pk = $null; ex = $false} }
+        }
+        if ($null -NE $gPPK -And $null -NE $gAdd) { $a3List += @{id = $actid; pk = $gPPK; ex = $true} }
+        if ($null -NE $gPPK -And $null -EQ $gAdd) { $a4List += @{id = $actid; pk = $gPPK; ex = $false} }
+    }
 
-	return ($a1List + $a2List + $a3List + $a4List)
+    return ($a1List + $a2List + $a3List + $a4List)
 }
 
 function DetectSubscription {
-	try
-	{
-		$objSvc = New-Object PSObject
-		$wmiSvc = [wmisearcher]"SELECT SubscriptionType, SubscriptionStatus, SubscriptionEdition, SubscriptionExpiry FROM SoftwareLicensingService"
-		$wmiSvc.Options.Rewindable = $false
-		$wmiSvc.Get() | select -Expand Properties -EA 0 | foreach { $objSvc | Add-Member 8 $_.Name $_.Value }
-		$wmiSvc.Dispose()
-	}
-	catch
-	{
-		return
-	}
+    try
+    {
+        $objSvc = New-Object PSObject
+        $wmiSvc = [wmisearcher]"SELECT SubscriptionType, SubscriptionStatus, SubscriptionEdition, SubscriptionExpiry FROM SoftwareLicensingService"
+        $wmiSvc.Options.Rewindable = $false
+        $wmiSvc.Get() | select -Expand Properties -EA 0 | foreach { $objSvc | Add-Member 8 $_.Name $_.Value }
+        $wmiSvc.Dispose()
+    }
+    catch
+    {
+        return
+    }
 
-	if ($null -EQ $objSvc.SubscriptionType -Or $objSvc.SubscriptionType -EQ 120) {
-		return
-	}
+    if ($null -EQ $objSvc.SubscriptionType -Or $objSvc.SubscriptionType -EQ 120) {
+        return
+    }
 
-	if ($objSvc.SubscriptionType -EQ 1) {
-		$SubMsgType = "Device based"
-	} else {
-		$SubMsgType = "User based"
-	}
+    if ($objSvc.SubscriptionType -EQ 1) {
+        $SubMsgType = "Device based"
+    } else {
+        $SubMsgType = "User based"
+    }
 
-	if ($objSvc.SubscriptionStatus -EQ 120) {
-		$SubMsgStatus = "Expired"
-	} elseif ($objSvc.SubscriptionStatus -EQ 100) {
-		$SubMsgStatus = "Disabled"
-	} elseif ($objSvc.SubscriptionStatus -EQ 1) {
-		$SubMsgStatus = "Active"
-	} else {
-		$SubMsgStatus = "Not active"
-	}
+    if ($objSvc.SubscriptionStatus -EQ 120) {
+        $SubMsgStatus = "Expired"
+    } elseif ($objSvc.SubscriptionStatus -EQ 100) {
+        $SubMsgStatus = "Disabled"
+    } elseif ($objSvc.SubscriptionStatus -EQ 1) {
+        $SubMsgStatus = "Active"
+    } else {
+        $SubMsgStatus = "Not active"
+    }
 
-	$SubMsgExpiry = "Unknown"
-	if ($objSvc.SubscriptionExpiry) {
-		if ($objSvc.SubscriptionExpiry.Contains("unspecified") -EQ $false) {$SubMsgExpiry = $objSvc.SubscriptionExpiry}
-	}
+    $SubMsgExpiry = "Unknown"
+    if ($objSvc.SubscriptionExpiry) {
+        if ($objSvc.SubscriptionExpiry.Contains("unspecified") -EQ $false) {$SubMsgExpiry = $objSvc.SubscriptionExpiry}
+    }
 
-	$SubMsgEdition = "Unknown"
-	if ($objSvc.SubscriptionEdition) {
-		if ($objSvc.SubscriptionEdition.Contains("UNKNOWN") -EQ $false) {$SubMsgEdition = $objSvc.SubscriptionEdition}
-	}
+    $SubMsgEdition = "Unknown"
+    if ($objSvc.SubscriptionEdition) {
+        if ($objSvc.SubscriptionEdition.Contains("UNKNOWN") -EQ $false) {$SubMsgEdition = $objSvc.SubscriptionEdition}
+    }
 
-	CONOUT "`nSubscription information:"
-	CONOUT "    Type   : $SubMsgType"
-	CONOUT "    Status : $SubMsgStatus"
-	CONOUT "    Edition: $SubMsgEdition"
-	CONOUT "    Expiry : $SubMsgExpiry"
+    CONOUT "`nSubscription information:"
+    CONOUT "    Type   : $SubMsgType"
+    CONOUT "    Status : $SubMsgStatus"
+    CONOUT "    Edition: $SubMsgEdition"
+    CONOUT "    Expiry : $SubMsgExpiry"
 }
 
 function DetectAdbaClient
 {
-	$propADBA | foreach { set $_ (SlGetInfoSku $licID $_) }
-	DetectActType
-	CONOUT "`nAD Activation client information:"
-	CONOUT "    Object Name: $ADActivationObjectName"
-	CONOUT "    Domain Name: $ADActivationObjectDN"
-	CONOUT "    CSVLK Extended PID: $ADActivationCsvlkPID"
-	CONOUT "    CSVLK Activation ID: $ADActivationCsvlkSkuID"
+    $propADBA | foreach { set $_ (SlGetInfoSku $licID $_) }
+    DetectActType
+    CONOUT "`nAD Activation client information:"
+    CONOUT "    Object Name: $ADActivationObjectName"
+    CONOUT "    Domain Name: $ADActivationObjectDN"
+    CONOUT "    CSVLK Extended PID: $ADActivationCsvlkPID"
+    CONOUT "    CSVLK Activation ID: $ADActivationCsvlkSkuID"
 }
 
 function DetectAvmClient
 {
-	$propAVMA | foreach { set $_ (SlGetInfoSku $licID $_) }
-	CONOUT "`nAutomatic VM Activation client information:"
-	if (-Not [String]::IsNullOrEmpty($InheritedActivationId)) {
-		CONOUT "    Guest IAID: $InheritedActivationId"
-	} else {
-		CONOUT "    Guest IAID: Not Available"
-	}
-	if (-Not [String]::IsNullOrEmpty($InheritedActivationHostMachineName)) {
-		CONOUT "    Host machine name: $InheritedActivationHostMachineName"
-	} else {
-		CONOUT "    Host machine name: Not Available"
-	}
-	if (-Not [String]::IsNullOrEmpty($InheritedActivationHostDigitalPid2)) {
-		CONOUT "    Host Digital PID2: $InheritedActivationHostDigitalPid2"
-	} else {
-		CONOUT "    Host Digital PID2: Not Available"
-	}
-	if ($InheritedActivationActivationTime) {
-		$IAAT = [DateTime]::FromFileTime($InheritedActivationActivationTime).ToString('yyyy-MM-dd hh:mm:ss tt')
-		CONOUT "    Activation time: $IAAT"
-	} else {
-		CONOUT "    Activation time: Not Available"
-	}
+    $propAVMA | foreach { set $_ (SlGetInfoSku $licID $_) }
+    CONOUT "`nAutomatic VM Activation client information:"
+    if (-Not [String]::IsNullOrEmpty($InheritedActivationId)) {
+        CONOUT "    Guest IAID: $InheritedActivationId"
+    } else {
+        CONOUT "    Guest IAID: Not Available"
+    }
+    if (-Not [String]::IsNullOrEmpty($InheritedActivationHostMachineName)) {
+        CONOUT "    Host machine name: $InheritedActivationHostMachineName"
+    } else {
+        CONOUT "    Host machine name: Not Available"
+    }
+    if (-Not [String]::IsNullOrEmpty($InheritedActivationHostDigitalPid2)) {
+        CONOUT "    Host Digital PID2: $InheritedActivationHostDigitalPid2"
+    } else {
+        CONOUT "    Host Digital PID2: Not Available"
+    }
+    if ($InheritedActivationActivationTime) {
+        $IAAT = [DateTime]::FromFileTime($InheritedActivationActivationTime).ToString('yyyy-MM-dd hh:mm:ss tt')
+        CONOUT "    Activation time: $IAAT"
+    } else {
+        CONOUT "    Activation time: Not Available"
+    }
 }
 
 function DetectKmsHost
 {
-	$IsKeyManagementService = SlGetInfoSvcApp $strApp 'IsKeyManagementService'
-	if (-Not $IsKeyManagementService) {
-		return
-	}
+    $IsKeyManagementService = SlGetInfoSvcApp $strApp 'IsKeyManagementService'
+    if (-Not $IsKeyManagementService) {
+        return
+    }
 
-	if ($Vista -Or $NT5) {
-		$regk = $SLKeyPath
-	} elseif ($strSLP -EQ $oslp) {
-		$regk = $OPKeyPath
-	} else {
-		$regk = $SPKeyPath
-	}
-	$KMSListening = strGetRegistry $regk "KeyManagementServiceListeningPort"
-	$KMSPublishing = strGetRegistry $regk "DisableDnsPublishing"
-	$KMSPriority = strGetRegistry $regk "EnableKmsLowPriority"
+    if ($Vista -Or $NT5) {
+        $regk = $SLKeyPath
+    } elseif ($strSLP -EQ $oslp) {
+        $regk = $OPKeyPath
+    } else {
+        $regk = $SPKeyPath
+    }
+    $KMSListening = strGetRegistry $regk "KeyManagementServiceListeningPort"
+    $KMSPublishing = strGetRegistry $regk "DisableDnsPublishing"
+    $KMSPriority = strGetRegistry $regk "EnableKmsLowPriority"
 
-	if (-Not $KMSListening) {$KMSListening = 1688}
-	if (-Not $KMSPublishing) {$KMSPublishing = "TRUE"} else {$KMSPublishing = BoolToWStr (!$KMSPublishing)}
-	if (-Not $KMSPriority) {$KMSPriority = "FALSE"} else {$KMSPriority = BoolToWStr $KMSPriority}
+    if (-Not $KMSListening) {$KMSListening = 1688}
+    if (-Not $KMSPublishing) {$KMSPublishing = "TRUE"} else {$KMSPublishing = BoolToWStr (!$KMSPublishing)}
+    if (-Not $KMSPriority) {$KMSPriority = "FALSE"} else {$KMSPriority = BoolToWStr $KMSPriority}
 
-	if ($KMSPublishing -EQ "TRUE") {$KMSPublishing = "Enabled"} else {$KMSPublishing = "Disabled"}
-	if ($KMSPriority -EQ "TRUE") {$KMSPriority = "Low"} else {$KMSPriority = "Normal"}
+    if ($KMSPublishing -EQ "TRUE") {$KMSPublishing = "Enabled"} else {$KMSPublishing = "Disabled"}
+    if ($KMSPriority -EQ "TRUE") {$KMSPriority = "Low"} else {$KMSPriority = "Normal"}
 
-	if ($SLApp)
-	{
-		$propKMSServer | foreach { set $_ (SlGetInfoApp $strApp $_) }
-	}
-	else
-	{
-		$propKMSServer | foreach { set $_ (SlGetInfoService $_) }
-	}
+    if ($SLApp)
+    {
+        $propKMSServer | foreach { set $_ (SlGetInfoApp $strApp $_) }
+    }
+    else
+    {
+        $propKMSServer | foreach { set $_ (SlGetInfoService $_) }
+    }
 
-	$KMSRequests = $KeyManagementServiceTotalRequests
-	$NoRequests = ($null -EQ $KMSRequests) -Or ($KMSRequests -EQ -1) -Or ($KMSRequests -EQ 4294967295)
+    $KMSRequests = $KeyManagementServiceTotalRequests
+    $NoRequests = ($null -EQ $KMSRequests) -Or ($KMSRequests -EQ -1) -Or ($KMSRequests -EQ 4294967295)
 
-	CONOUT "`nKey Management Service host information:"
-	CONOUT "    Current count: $KeyManagementServiceCurrentCount"
-	CONOUT "    Listening on Port: $KMSListening"
-	CONOUT "    DNS publishing: $KMSPublishing"
-	CONOUT "    KMS priority: $KMSPriority"
-	if ($NoRequests) {
-		return
-	}
-	CONOUT "`nKey Management Service cumulative requests received from clients:"
-	CONOUT "    Total: $KeyManagementServiceTotalRequests"
-	CONOUT "    Failed: $KeyManagementServiceFailedRequests"
-	CONOUT "    Unlicensed: $KeyManagementServiceUnlicensedRequests"
-	CONOUT "    Licensed: $KeyManagementServiceLicensedRequests"
-	CONOUT "    Initial grace period: $KeyManagementServiceOOBGraceRequests"
-	CONOUT "    Expired or Hardware out of tolerance: $KeyManagementServiceOOTGraceRequests"
-	CONOUT "    Non-genuine grace period: $KeyManagementServiceNonGenuineGraceRequests"
-	if ($null -NE $KeyManagementServiceNotificationRequests) {CONOUT "    Notification: $KeyManagementServiceNotificationRequests"}
+    CONOUT "`nKey Management Service host information:"
+    CONOUT "    Current count: $KeyManagementServiceCurrentCount"
+    CONOUT "    Listening on Port: $KMSListening"
+    CONOUT "    DNS publishing: $KMSPublishing"
+    CONOUT "    KMS priority: $KMSPriority"
+    if ($NoRequests) {
+        return
+    }
+    CONOUT "`nKey Management Service cumulative requests received from clients:"
+    CONOUT "    Total: $KeyManagementServiceTotalRequests"
+    CONOUT "    Failed: $KeyManagementServiceFailedRequests"
+    CONOUT "    Unlicensed: $KeyManagementServiceUnlicensedRequests"
+    CONOUT "    Licensed: $KeyManagementServiceLicensedRequests"
+    CONOUT "    Initial grace period: $KeyManagementServiceOOBGraceRequests"
+    CONOUT "    Expired or Hardware out of tolerance: $KeyManagementServiceOOTGraceRequests"
+    CONOUT "    Non-genuine grace period: $KeyManagementServiceNonGenuineGraceRequests"
+    if ($null -NE $KeyManagementServiceNotificationRequests) {CONOUT "    Notification: $KeyManagementServiceNotificationRequests"}
 }
 
 function DetectActType
 {
-	$VLType = strGetRegistry ($SPKeyPath + '\' + $strApp + '\' + $licID) "VLActivationType"
-	if ($null -EQ $VLType) {$VLType = strGetRegistry ($SPKeyPath + '\' + $strApp) "VLActivationType"}
-	if ($null -EQ $VLType) {$VLType = strGetRegistry ($SPKeyPath) "VLActivationType"}
-	if ($null -EQ $VLType -Or $VLType -GT 3) {$VLType = 0}
-	if ($null -NE $VLType) {CONOUT "Configured Activation Type: $($VLActTypes[$VLType])"}
+    $VLType = strGetRegistry ($SPKeyPath + '\' + $strApp + '\' + $licID) "VLActivationType"
+    if ($null -EQ $VLType) {$VLType = strGetRegistry ($SPKeyPath + '\' + $strApp) "VLActivationType"}
+    if ($null -EQ $VLType) {$VLType = strGetRegistry ($SPKeyPath) "VLActivationType"}
+    if ($null -EQ $VLType -Or $VLType -GT 3) {$VLType = 0}
+    if ($null -NE $VLType) {CONOUT "Configured Activation Type: $($VLActTypes[$VLType])"}
 }
 
 function DetectKmsClient
 {
-	if ($win8) {DetectActType}
-	CONOUT "`r"
-	if ($LicenseStatus -NE 1) {
-		CONOUT "Please activate the product in order to update KMS client information values."
-		return
-	}
+    if ($win8) {DetectActType}
+    CONOUT "`r"
+    if ($LicenseStatus -NE 1) {
+        CONOUT "Please activate the product in order to update KMS client information values."
+        return
+    }
 
-	if ($NT7 -Or $strSLP -EQ $oslp) {
-		$propKMSClient | foreach { set $_ (SlGetInfoSku $licID $_) }
-		if ($strSLP -EQ $oslp) {$regk = $OPKeyPath} else {$regk = $SPKeyPath}
-		$KMSCaching = strGetRegistry $regk "DisableKeyManagementServiceHostCaching"
-		if (-Not $KMSCaching) {$KMSCaching = "TRUE"} else {$KMSCaching = BoolToWStr (!$KMSCaching)}
-	}
+    if ($NT7 -Or $strSLP -EQ $oslp) {
+        $propKMSClient | foreach { set $_ (SlGetInfoSku $licID $_) }
+        if ($strSLP -EQ $oslp) {$regk = $OPKeyPath} else {$regk = $SPKeyPath}
+        $KMSCaching = strGetRegistry $regk "DisableKeyManagementServiceHostCaching"
+        if (-Not $KMSCaching) {$KMSCaching = "TRUE"} else {$KMSCaching = BoolToWStr (!$KMSCaching)}
+    }
 
-	"ClientMachineID" | foreach { set $_ (SlGetInfoService $_) }
+    "ClientMachineID" | foreach { set $_ (SlGetInfoService $_) }
 
-	if ($Vista) {
-		$propKMSVista | foreach { set $_ (SlGetInfoService $_) }
-		$KeyManagementServicePort = strGetRegistry $SLKeyPath "KeyManagementServicePort"
-		$DiscoveredKeyManagementServiceName = strGetRegistry $NSKeyPath "DiscoveredKeyManagementServiceName"
-		$DiscoveredKeyManagementServicePort = strGetRegistry $NSKeyPath "DiscoveredKeyManagementServicePort"
-	}
+    if ($Vista) {
+        $propKMSVista | foreach { set $_ (SlGetInfoService $_) }
+        $KeyManagementServicePort = strGetRegistry $SLKeyPath "KeyManagementServicePort"
+        $DiscoveredKeyManagementServiceName = strGetRegistry $NSKeyPath "DiscoveredKeyManagementServiceName"
+        $DiscoveredKeyManagementServicePort = strGetRegistry $NSKeyPath "DiscoveredKeyManagementServicePort"
+    }
 
-	if ([String]::IsNullOrEmpty($KeyManagementServiceName)) {
-		$KmsReg = $null
-	} else {
-		if (-Not $KeyManagementServicePort) {$KeyManagementServicePort = 1688}
-		$KmsReg = "Registered KMS machine name: ${KeyManagementServiceName}:${KeyManagementServicePort}"
-	}
+    if ([String]::IsNullOrEmpty($KeyManagementServiceName)) {
+        $KmsReg = $null
+    } else {
+        if (-Not $KeyManagementServicePort) {$KeyManagementServicePort = 1688}
+        $KmsReg = "Registered KMS machine name: ${KeyManagementServiceName}:${KeyManagementServicePort}"
+    }
 
-	if ([String]::IsNullOrEmpty($DiscoveredKeyManagementServiceName)) {
-		$KmsDns = "DNS auto-discovery: KMS name not available"
-		if ($Vista -And -Not $Admin) {$KmsDns = "DNS auto-discovery: Run the script as administrator to retrieve info"}
-	} else {
-		if (-Not $DiscoveredKeyManagementServicePort) {$DiscoveredKeyManagementServicePort = 1688}
-		$KmsDns = "KMS machine name from DNS: ${DiscoveredKeyManagementServiceName}:${DiscoveredKeyManagementServicePort}"
-	}
+    if ([String]::IsNullOrEmpty($DiscoveredKeyManagementServiceName)) {
+        $KmsDns = "DNS auto-discovery: KMS name not available"
+        if ($Vista -And -Not $Admin) {$KmsDns = "DNS auto-discovery: Run the script as administrator to retrieve info"}
+    } else {
+        if (-Not $DiscoveredKeyManagementServicePort) {$DiscoveredKeyManagementServicePort = 1688}
+        $KmsDns = "KMS machine name from DNS: ${DiscoveredKeyManagementServiceName}:${DiscoveredKeyManagementServicePort}"
+    }
 
-	if ($null -NE $KMSCaching) {
-		if ($KMSCaching -EQ "TRUE") {$KMSCaching = "Enabled"} else {$KMSCaching = "Disabled"}
-	}
+    if ($null -NE $KMSCaching) {
+        if ($KMSCaching -EQ "TRUE") {$KMSCaching = "Enabled"} else {$KMSCaching = "Disabled"}
+    }
 
-	if ($strSLP -EQ $wslp -And $NT9) {
-		if ([String]::IsNullOrEmpty($DiscoveredKeyManagementServiceIpAddress)) {
-			$DiscoveredKeyManagementServiceIpAddress = "not available"
-		}
-	}
+    if ($strSLP -EQ $wslp -And $NT9) {
+        if ([String]::IsNullOrEmpty($DiscoveredKeyManagementServiceIpAddress)) {
+            $DiscoveredKeyManagementServiceIpAddress = "not available"
+        }
+    }
 
-	CONOUT "Key Management Service client information:"
-	CONOUT "    Client Machine ID (CMID): $ClientMachineID"
-	if ($null -EQ $KmsReg) {
-		CONOUT "    $KmsDns"
-		CONOUT "    Registered KMS machine name: KMS name not available"
-	} else {
-		CONOUT "    $KmsReg"
-	}
-	if ($null -NE $DiscoveredKeyManagementServiceIpAddress) {CONOUT "    KMS machine IP address: $DiscoveredKeyManagementServiceIpAddress"}
-	CONOUT "    KMS machine extended PID: $CustomerPID"
-	CONOUT "    Activation interval: $VLActivationInterval minutes"
-	CONOUT "    Renewal interval: $VLRenewalInterval minutes"
-	if ($null -NE $KMSCaching) {CONOUT "    KMS host caching: $KMSCaching"}
-	if (-Not [String]::IsNullOrEmpty($KeyManagementServiceLookupDomain)) {CONOUT "    KMS SRV record lookup domain: $KeyManagementServiceLookupDomain"}
+    CONOUT "Key Management Service client information:"
+    CONOUT "    Client Machine ID (CMID): $ClientMachineID"
+    if ($null -EQ $KmsReg) {
+        CONOUT "    $KmsDns"
+        CONOUT "    Registered KMS machine name: KMS name not available"
+    } else {
+        CONOUT "    $KmsReg"
+    }
+    if ($null -NE $DiscoveredKeyManagementServiceIpAddress) {CONOUT "    KMS machine IP address: $DiscoveredKeyManagementServiceIpAddress"}
+    CONOUT "    KMS machine extended PID: $CustomerPID"
+    CONOUT "    Activation interval: $VLActivationInterval minutes"
+    CONOUT "    Renewal interval: $VLRenewalInterval minutes"
+    if ($null -NE $KMSCaching) {CONOUT "    KMS host caching: $KMSCaching"}
+    if (-Not [String]::IsNullOrEmpty($KeyManagementServiceLookupDomain)) {CONOUT "    KMS SRV record lookup domain: $KeyManagementServiceLookupDomain"}
 }
 
 function GetResult($strSLP, $strApp, $entry)
 {
-	$licID = $entry.id
-	$propPrd | foreach { set $_ (SlGetInfoSku $licID $_) }
-	. SlGetInfoLicensing $strApp $licID
-	$LicenseStatus = $dwStatus
-	$LicReason = $hrReason
-	$EvaluationEndDate = $qwValidity
-	$gprMnt = $dwGrace
+    $licID = $entry.id
+    $propPrd | foreach { set $_ (SlGetInfoSku $licID $_) }
+    . SlGetInfoLicensing $strApp $licID
+    $LicenseStatus = $dwStatus
+    $LicReason = $hrReason
+    $EvaluationEndDate = $qwValidity
+    $gprMnt = $dwGrace
 
-	$pkid = $entry.pk
-	$isPPK = $null -NE $pkid
+    $pkid = $entry.pk
+    $isPPK = $null -NE $pkid
 
-	$add_on = $Name.IndexOf("add-on for", 5)
-	if ($add_on -NE -1) {
-		$Name = $Name.Substring(0, $add_on + 7)
-	}
+    $add_on = $Name.IndexOf("add-on for", 5)
+    if ($add_on -NE -1) {
+        $Name = $Name.Substring(0, $add_on + 7)
+    }
 
-	$licPHN = "empty"
-	if ($Dlv -Or $All.IsPresent) {
-		$licPHN = SlGetInfoSku $licID "msft:sl/EUL/PHONE/PUBLIC"
-	}
+    $licPHN = "empty"
+    if ($Dlv -Or $All.IsPresent) {
+        $licPHN = SlGetInfoSku $licID "msft:sl/EUL/PHONE/PUBLIC"
+    }
 
-	if ($LicenseStatus -EQ 0 -And !$isPPK) {
-		& $isAll
-		CONOUT "Name: $Name"
-		CONOUT "Description: $Description"
-		CONOUT "Activation ID: $licID"
-		CONOUT "License Status: Unlicensed"
-		if ($licPHN -NE "empty") {
-			$gPHN = [String]::IsNullOrEmpty($licPHN) -NE $true
-			CONOUT "Phone activatable: $($gPHN.ToString())"
-		}
-		return
-	}
+    if ($LicenseStatus -EQ 0 -And !$isPPK) {
+        & $isAll
+        CONOUT "Name: $Name"
+        CONOUT "Description: $Description"
+        CONOUT "Activation ID: $licID"
+        CONOUT "License Status: Unlicensed"
+        if ($licPHN -NE "empty") {
+            $gPHN = [String]::IsNullOrEmpty($licPHN) -NE $true
+            CONOUT "Phone activatable: $($gPHN.ToString())"
+        }
+        return
+    }
 
-	$winID = ($strApp -EQ $winApp)
-	$winPR = ($winID -And -Not $entry.ex)
-	$Vista = ($winID -And $NT6 -And -Not $NT7)
-	$NT5 = ($strSLP -EQ $wslp -And $winbuild -LT 6001)
-	$win8 = ($strSLP -EQ $wslp -And $NT8)
-	$reapp = ("Windows", "App")[!$winID]
-	$prmnt = ("machine", "product")[!$winPR]
+    $winID = ($strApp -EQ $winApp)
+    $winPR = ($winID -And -Not $entry.ex)
+    $Vista = ($winID -And $NT6 -And -Not $NT7)
+    $NT5 = ($strSLP -EQ $wslp -And $winbuild -LT 6001)
+    $win8 = ($strSLP -EQ $wslp -And $NT8)
+    $reapp = ("Windows", "App")[!$winID]
+    $prmnt = ("machine", "product")[!$winPR]
 
-	if ($Description.Contains("VOLUME_KMSCLIENT")) {$cKmsClient = 1; $actTag = "Volume"}
-	if ($Description.Contains("TIMEBASED_")) {$cTblClient = 1; $actTag = "Timebased"}
-	if ($Description.Contains("VIRTUAL_MACHINE_ACTIVATION")) {$cAvmClient = 1; $actTag = "Automatic VM"}
-	if ($null -EQ $cKmsClient -And $Description.Contains("VOLUME_KMS")) {$cKmsServer = 1}
+    if ($Description.Contains("VOLUME_KMSCLIENT")) {$cKmsClient = 1; $actTag = "Volume"}
+    if ($Description.Contains("TIMEBASED_")) {$cTblClient = 1; $actTag = "Timebased"}
+    if ($Description.Contains("VIRTUAL_MACHINE_ACTIVATION")) {$cAvmClient = 1; $actTag = "Automatic VM"}
+    if ($null -EQ $cKmsClient -And $Description.Contains("VOLUME_KMS")) {$cKmsServer = 1}
 
-	$gprDay = [Math]::Round($gprMnt/1440)
-	$_xpr = ""
-	$inGrace = $false
-	if ($gprMnt -GT 0) {
-		$_xpr = [DateTime]::Now.AddMinutes($gprMnt).ToString('yyyy-MM-dd hh:mm:ss tt')
-		$inGrace = $true
-	}
+    $gprDay = [Math]::Round($gprMnt/1440)
+    $_xpr = ""
+    $inGrace = $false
+    if ($gprMnt -GT 0) {
+        $_xpr = [DateTime]::Now.AddMinutes($gprMnt).ToString('yyyy-MM-dd hh:mm:ss tt')
+        $inGrace = $true
+    }
 
-	$LicenseMsg = "Time remaining: $gprMnt minute(s) ($gprDay day(s))"
-	if ($LicenseStatus -EQ 0) {
-		$LicenseInf = "Unlicensed"
-		$LicenseMsg = $null
-	}
-	if ($LicenseStatus -EQ 1) {
-		$LicenseInf = "Licensed"
-		if ($gprMnt -EQ 0) {
-			$LicenseMsg = $null
-			$ExpireMsg = "The $prmnt is permanently activated."
-		} else {
-			$LicenseMsg = "$actTag activation expiration: $gprMnt minute(s) ($gprDay day(s))"
-			if ($inGrace) {$ExpireMsg = "$actTag activation will expire $_xpr"}
-		}
-	}
-	if ($LicenseStatus -EQ 2) {
-		$LicenseInf = "Initial grace period"
-		if ($inGrace) {$ExpireMsg = "$LicenseInf ends $_xpr"}
-	}
-	if ($LicenseStatus -EQ 3) {
-		$LicenseInf = "Additional grace period (KMS license expired or hardware out of tolerance)"
-		if ($inGrace) {$ExpireMsg = "Additional grace period ends $_xpr"}
-	}
-	if ($LicenseStatus -EQ 4) {
-		$LicenseInf = "Non-genuine grace period"
-		if ($inGrace) {$ExpireMsg = "$LicenseInf ends $_xpr"}
-	}
-	if ($LicenseStatus -EQ 5 -And -Not $NT5) {
-		$LicenseReason = '0x{0:X}' -f $LicReason
-		$LicenseInf = "Notification"
-		$LicenseMsg = "Notification Reason: $LicenseReason"
-		if ($LicenseReason -EQ "0xC004F00F") {if ($null -NE $cKmsClient) {$LicenseMsg = $LicenseMsg + " (KMS license expired)."} else {$LicenseMsg = $LicenseMsg + " (hardware out of tolerance)."}}
-		if ($LicenseReason -EQ "0xC004F200") {$LicenseMsg = $LicenseMsg + " (non-genuine)."}
-		if ($LicenseReason -EQ "0xC004F009" -Or $LicenseReason -EQ "0xC004F064") {$LicenseMsg = $LicenseMsg + " (grace time expired)."}
-	}
-	if ($LicenseStatus -GT 5 -Or ($LicenseStatus -GT 4 -And $NT5)) {
-		$LicenseInf = "Unknown"
-		$LicenseMsg = $null
-	}
-	if ($LicenseStatus -EQ 6 -And -Not $Vista -And -Not $NT5) {
-		$LicenseInf = "Extended grace period"
-		if ($inGrace) {$ExpireMsg = "$LicenseInf ends $_xpr"}
-	}
+    $LicenseMsg = "Time remaining: $gprMnt minute(s) ($gprDay day(s))"
+    if ($LicenseStatus -EQ 0) {
+        $LicenseInf = "Unlicensed"
+        $LicenseMsg = $null
+    }
+    if ($LicenseStatus -EQ 1) {
+        $LicenseInf = "Licensed"
+        if ($gprMnt -EQ 0) {
+            $LicenseMsg = $null
+            $ExpireMsg = "The $prmnt is permanently activated."
+        } else {
+            $LicenseMsg = "$actTag activation expiration: $gprMnt minute(s) ($gprDay day(s))"
+            if ($inGrace) {$ExpireMsg = "$actTag activation will expire $_xpr"}
+        }
+    }
+    if ($LicenseStatus -EQ 2) {
+        $LicenseInf = "Initial grace period"
+        if ($inGrace) {$ExpireMsg = "$LicenseInf ends $_xpr"}
+    }
+    if ($LicenseStatus -EQ 3) {
+        $LicenseInf = "Additional grace period (KMS license expired or hardware out of tolerance)"
+        if ($inGrace) {$ExpireMsg = "Additional grace period ends $_xpr"}
+    }
+    if ($LicenseStatus -EQ 4) {
+        $LicenseInf = "Non-genuine grace period"
+        if ($inGrace) {$ExpireMsg = "$LicenseInf ends $_xpr"}
+    }
+    if ($LicenseStatus -EQ 5 -And -Not $NT5) {
+        $LicenseReason = '0x{0:X}' -f $LicReason
+        $LicenseInf = "Notification"
+        $LicenseMsg = "Notification Reason: $LicenseReason"
+        if ($LicenseReason -EQ "0xC004F00F") {if ($null -NE $cKmsClient) {$LicenseMsg = $LicenseMsg + " (KMS license expired)."} else {$LicenseMsg = $LicenseMsg + " (hardware out of tolerance)."}}
+        if ($LicenseReason -EQ "0xC004F200") {$LicenseMsg = $LicenseMsg + " (non-genuine)."}
+        if ($LicenseReason -EQ "0xC004F009" -Or $LicenseReason -EQ "0xC004F064") {$LicenseMsg = $LicenseMsg + " (grace time expired)."}
+    }
+    if ($LicenseStatus -GT 5 -Or ($LicenseStatus -GT 4 -And $NT5)) {
+        $LicenseInf = "Unknown"
+        $LicenseMsg = $null
+    }
+    if ($LicenseStatus -EQ 6 -And -Not $Vista -And -Not $NT5) {
+        $LicenseInf = "Extended grace period"
+        if ($inGrace) {$ExpireMsg = "$LicenseInf ends $_xpr"}
+    }
 
-	if ($isPPK) {
-		$propPkey | foreach { set $_ (SlGetInfoPKey $pkid $_) }
-	}
+    if ($isPPK) {
+        $propPkey | foreach { set $_ (SlGetInfoPKey $pkid $_) }
+    }
 
-	if ($winPR -And $isPPK -And -Not $NT8) {
-		$uxd = SlGetInfoSku $licID 'UXDifferentiator'
-		$script:primary += @{
-			aid = $licID;
-			ppk = $PartialProductKey;
-			chn = $Channel;
-			lst = $LicenseStatus;
-			lcr = $LicReason;
-			ged = $gprMnt;
-			evl = $EvaluationEndDate;
-			dff = $uxd
-		}
-	}
+    if ($winPR -And $isPPK -And -Not $NT8) {
+        $uxd = SlGetInfoSku $licID 'UXDifferentiator'
+        $script:primary += @{
+            aid = $licID;
+            ppk = $PartialProductKey;
+            chn = $Channel;
+            lst = $LicenseStatus;
+            lcr = $LicReason;
+            ged = $gprMnt;
+            evl = $EvaluationEndDate;
+            dff = $uxd
+        }
+    }
 
-	if ($IID -And $isPPK) {
-		$OfflineInstallationId = SlGetInfoIID $licID
-	}
+    if ($IID -And $isPPK) {
+        $OfflineInstallationId = SlGetInfoIID $licID
+    }
 
-	if ($Dlv) {
-		if ($win8)
-		{
-			$RemainingSkuReArmCount = SlGetInfoSku $licID 'RemainingRearmCount'
-			$RemainingAppReArmCount = SlGetInfoApp $strApp 'RemainingRearmCount'
-		}
-		else
-		{
-			if (($winID -And $NT7) -Or $strSLP -EQ $oslp)
-			{
-				$RemainingSLReArmCount = SlGetInfoApp $strApp 'RemainingRearmCount'
-			}
-			else
-			{
-				$RemainingSLReArmCount = SlGetInfoService 'RearmCount'
-			}
-		}
-		if ($null -EQ $TrustedTime)
-		{
-			$TrustedTime = SlGetInfoSvcApp $strApp 'TrustedTime'
-		}
-	}
+    if ($Dlv) {
+        if ($win8)
+        {
+            $RemainingSkuReArmCount = SlGetInfoSku $licID 'RemainingRearmCount'
+            $RemainingAppReArmCount = SlGetInfoApp $strApp 'RemainingRearmCount'
+        }
+        else
+        {
+            if (($winID -And $NT7) -Or $strSLP -EQ $oslp)
+            {
+                $RemainingSLReArmCount = SlGetInfoApp $strApp 'RemainingRearmCount'
+            }
+            else
+            {
+                $RemainingSLReArmCount = SlGetInfoService 'RearmCount'
+            }
+        }
+        if ($null -EQ $TrustedTime)
+        {
+            $TrustedTime = SlGetInfoSvcApp $strApp 'TrustedTime'
+        }
+    }
 
-	& $isAll
-	CONOUT "Name: $Name"
-	CONOUT "Description: $Description"
-	CONOUT "Activation ID: $licID"
-	if ($null -NE $DigitalPID) {CONOUT "Extended PID: $DigitalPID"}
-	if ($null -NE $DigitalPID2 -And $Dlv) {CONOUT "Product ID: $DigitalPID2"}
-	if ($null -NE $OfflineInstallationId -And $IID) {CONOUT "Installation ID: $OfflineInstallationId"}
-	if ($null -NE $Channel) {CONOUT "Product Key Channel: $Channel"}
-	if ($null -NE $PartialProductKey) {CONOUT "Partial Product Key: $PartialProductKey"}
-	CONOUT "License Status: $LicenseInf"
-	if ($null -NE $LicenseMsg) {CONOUT "$LicenseMsg"}
-	if ($LicenseStatus -NE 0 -And $EvaluationEndDate) {
-		$EED = [DateTime]::FromFileTimeUtc($EvaluationEndDate).ToString('yyyy-MM-dd hh:mm:ss tt')
-		CONOUT "Evaluation End Date: $EED UTC"
-	}
-	if ($LicenseStatus -NE 1 -And $licPHN -NE "empty") {
-		$gPHN = [String]::IsNullOrEmpty($licPHN) -NE $true
-		CONOUT "Phone activatable: $($gPHN.ToString())"
-	}
-	if ($Dlv) {
-		if ($null -NE $RemainingSLReArmCount) {
-			CONOUT "Remaining $reapp rearm count: $RemainingSLReArmCount"
-		}
-		if ($null -NE $RemainingSkuReArmCount) {
-			CONOUT "Remaining $reapp rearm count: $RemainingAppReArmCount"
-			CONOUT "Remaining SKU rearm count: $RemainingSkuReArmCount"
-		}
-		if ($LicenseStatus -NE 0 -And $TrustedTime) {
-			$TTD = [DateTime]::FromFileTime($TrustedTime).ToString('yyyy-MM-dd hh:mm:ss tt')
-			CONOUT "Trusted time: $TTD"
-		}
-	}
-	if (!$isPPK) {
-		return
-	}
+    & $isAll
+    CONOUT "Name: $Name"
+    CONOUT "Description: $Description"
+    CONOUT "Activation ID: $licID"
+    if ($null -NE $DigitalPID) {CONOUT "Extended PID: $DigitalPID"}
+    if ($null -NE $DigitalPID2 -And $Dlv) {CONOUT "Product ID: $DigitalPID2"}
+    if ($null -NE $OfflineInstallationId -And $IID) {CONOUT "Installation ID: $OfflineInstallationId"}
+    if ($null -NE $Channel) {CONOUT "Product Key Channel: $Channel"}
+    if ($null -NE $PartialProductKey) {CONOUT "Partial Product Key: $PartialProductKey"}
+    CONOUT "License Status: $LicenseInf"
+    if ($null -NE $LicenseMsg) {CONOUT "$LicenseMsg"}
+    if ($LicenseStatus -NE 0 -And $EvaluationEndDate) {
+        $EED = [DateTime]::FromFileTimeUtc($EvaluationEndDate).ToString('yyyy-MM-dd hh:mm:ss tt')
+        CONOUT "Evaluation End Date: $EED UTC"
+    }
+    if ($LicenseStatus -NE 1 -And $licPHN -NE "empty") {
+        $gPHN = [String]::IsNullOrEmpty($licPHN) -NE $true
+        CONOUT "Phone activatable: $($gPHN.ToString())"
+    }
+    if ($Dlv) {
+        if ($null -NE $RemainingSLReArmCount) {
+            CONOUT "Remaining $reapp rearm count: $RemainingSLReArmCount"
+        }
+        if ($null -NE $RemainingSkuReArmCount) {
+            CONOUT "Remaining $reapp rearm count: $RemainingAppReArmCount"
+            CONOUT "Remaining SKU rearm count: $RemainingSkuReArmCount"
+        }
+        if ($LicenseStatus -NE 0 -And $TrustedTime) {
+            $TTD = [DateTime]::FromFileTime($TrustedTime).ToString('yyyy-MM-dd hh:mm:ss tt')
+            CONOUT "Trusted time: $TTD"
+        }
+    }
+    if (!$isPPK) {
+        return
+    }
 
-	if ($win8 -And $VLActivationType -EQ 1) {
-		DetectAdbaClient
-		$cKmsClient = $null
-	}
+    if ($win8 -And $VLActivationType -EQ 1) {
+        DetectAdbaClient
+        $cKmsClient = $null
+    }
 
-	if ($winID -And $null -NE $cAvmClient) {
-		DetectAvmClient
-	}
+    if ($winID -And $null -NE $cAvmClient) {
+        DetectAvmClient
+    }
 
-	$chkSub = ($winPR -And $isSub)
+    $chkSub = ($winPR -And $isSub)
 
-	$chkSLS = ($null -NE $cKmsClient -Or $null -NE $cKmsServer -Or $chkSub)
+    $chkSLS = ($null -NE $cKmsClient -Or $null -NE $cKmsServer -Or $chkSub)
 
-	if (!$chkSLS) {
-		if ($null -NE $ExpireMsg) {CONOUT "`n    $ExpireMsg"}
-		return
-	}
+    if (!$chkSLS) {
+        if ($null -NE $ExpireMsg) {CONOUT "`n    $ExpireMsg"}
+        return
+    }
 
-	if ($null -NE $cKmsClient) {
-		DetectKmsClient
-	}
+    if ($null -NE $cKmsClient) {
+        DetectKmsClient
+    }
 
-	if ($null -NE $cKmsServer) {
-		if ($null -NE $ExpireMsg) {CONOUT "`n    $ExpireMsg"}
-		DetectKmsHost
-	} else {
-		if ($null -NE $ExpireMsg) {CONOUT "`n    $ExpireMsg"}
-	}
+    if ($null -NE $cKmsServer) {
+        if ($null -NE $ExpireMsg) {CONOUT "`n    $ExpireMsg"}
+        DetectKmsHost
+    } else {
+        if ($null -NE $ExpireMsg) {CONOUT "`n    $ExpireMsg"}
+    }
 
-	if ($chkSub) {
-		DetectSubscription
-	}
+    if ($chkSub) {
+        DetectSubscription
+    }
 
 }
 
 function ParseList($strSLP, $strApp, $arrList)
 {
-	foreach ($entry in $arrList)
-	{
-		GetResult $strSLP $strApp $entry
-		CONOUT "$line3"
-		& $noAll
-	}
+    foreach ($entry in $arrList)
+    {
+        GetResult $strSLP $strApp $entry
+        CONOUT "$line3"
+        & $noAll
+    }
 }
 #endregion
 
 #region vNextDiag
 if ($PSVersionTable.PSVersion.Major -Lt 3)
 {
-	function ConvertFrom-Json
-	{
-		[CmdletBinding()]
-		Param(
-			[Parameter(ValueFromPipeline=$true)][Object]$item
-		)
-		[void][System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions")
-		$psjs = New-Object System.Web.Script.Serialization.JavaScriptSerializer
-		Return ,$psjs.DeserializeObject($item)
-	}
-	function ConvertTo-Json
-	{
-		[CmdletBinding()]
-		Param(
-			[Parameter(ValueFromPipeline=$true)][Object]$item
-		)
-		[void][System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions")
-		$psjs = New-Object System.Web.Script.Serialization.JavaScriptSerializer
-		Return $psjs.Serialize($item)
-	}
+    function ConvertFrom-Json
+    {
+        [CmdletBinding()]
+        Param(
+            [Parameter(ValueFromPipeline=$true)][Object]$item
+        )
+        [void][System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions")
+        $psjs = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+        Return ,$psjs.DeserializeObject($item)
+    }
+    function ConvertTo-Json
+    {
+        [CmdletBinding()]
+        Param(
+            [Parameter(ValueFromPipeline=$true)][Object]$item
+        )
+        [void][System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions")
+        $psjs = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+        Return $psjs.Serialize($item)
+    }
 }
 
 function PrintModePerPridFromRegistry
 {
-	$vNextRegkey = "HKCU:\SOFTWARE\Microsoft\Office\16.0\Common\Licensing\LicensingNext"
-	$vNextPrids = Get-Item -Path $vNextRegkey -ErrorAction SilentlyContinue | Select-Object -ExpandProperty 'property' -ErrorAction SilentlyContinue | Where-Object -FilterScript {$_.ToLower() -like "*retail" -or $_.ToLower() -like "*volume"}
-	If ($null -Eq $vNextPrids)
-	{
-		CONOUT "`nNo registry keys found."
-		Return
-	}
-	CONOUT "`r"
-	$vNextPrids | ForEach `
-	{
-		$mode = (Get-ItemProperty -Path $vNextRegkey -Name $_).$_
-		Switch ($mode)
-		{
-			2 { $mode = "vNext"; Break }
-			3 { $mode = "Device"; Break }
-			Default { $mode = "Legacy"; Break }
-		}
-		CONOUT "$_ = $mode"
-	}
+    $vNextRegkey = "HKCU:\SOFTWARE\Microsoft\Office\16.0\Common\Licensing\LicensingNext"
+    $vNextPrids = Get-Item -Path $vNextRegkey -ErrorAction SilentlyContinue | Select-Object -ExpandProperty 'property' -ErrorAction SilentlyContinue | Where-Object -FilterScript {$_.ToLower() -like "*retail" -or $_.ToLower() -like "*volume"}
+    If ($null -Eq $vNextPrids)
+    {
+        CONOUT "`nNo registry keys found."
+        Return
+    }
+    CONOUT "`r"
+    $vNextPrids | ForEach `
+    {
+        $mode = (Get-ItemProperty -Path $vNextRegkey -Name $_).$_
+        Switch ($mode)
+        {
+            2 { $mode = "vNext"; Break }
+            3 { $mode = "Device"; Break }
+            Default { $mode = "Legacy"; Break }
+        }
+        CONOUT "$_ = $mode"
+    }
 }
 
 function PrintSharedComputerLicensing
 {
-	$scaRegKey = "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration"
-	$scaValue = Get-ItemProperty -Path $scaRegKey -ErrorAction SilentlyContinue | Select-Object -ExpandProperty "SharedComputerLicensing" -ErrorAction SilentlyContinue
-	$scaRegKey2 = "HKLM:\SOFTWARE\Microsoft\Office\16.0\Common\Licensing"
-	$scaValue2 = Get-ItemProperty -Path $scaRegKey2 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty "SharedComputerLicensing" -ErrorAction SilentlyContinue
-	$scaPolicyKey = "HKLM:\SOFTWARE\Policies\Microsoft\Office\16.0\Common\Licensing"
-	$scaPolicyValue = Get-ItemProperty -Path $scaPolicyKey -ErrorAction SilentlyContinue | Select-Object -ExpandProperty "SharedComputerLicensing" -ErrorAction SilentlyContinue
-	If ($null -Eq $scaValue -And $null -Eq $scaValue2 -And $null -Eq $scaPolicyValue)
-	{
-		CONOUT "`nNo registry keys found."
-		Return
-	}
-	$scaModeValue = $scaValue -Or $scaValue2 -Or $scaPolicyValue
-	If ($scaModeValue -Eq 0)
-	{
-		$scaMode = "Disabled"
-	}
-	If ($scaModeValue -Eq 1)
-	{
-		$scaMode = "Enabled"
-	}
-	CONOUT "`nStatus: $scaMode"
-	CONOUT "`r"
-	$tokenFiles = $null
-	$tokenPath = "${env:LOCALAPPDATA}\Microsoft\Office\16.0\Licensing"
-	If (Test-Path $tokenPath)
-	{
-		$tokenFiles = Get-ChildItem -Path $tokenPath -Filter "*authString*" -Recurse | Where-Object { !$_.PSIsContainer }
-	}
-	If ($null -Eq $tokenFiles -Or $tokenFiles.Length -Eq 0)
-	{
-		CONOUT "No tokens found."
-		Return
-	}
-	$tokenFiles | ForEach `
-	{
-		$tokenParts = (Get-Content -Encoding Unicode -Path $_.FullName).Split('_')
-		$output = New-Object PSObject
-		$output | Add-Member 8 'ACID' $tokenParts[0];
-		$output | Add-Member 8 'User' $tokenParts[3];
-		$output | Add-Member 8 'NotBefore' $tokenParts[4];
-		$output | Add-Member 8 'NotAfter' $tokenParts[5];
-		Write-Output $output
-	}
+    $scaRegKey = "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration"
+    $scaValue = Get-ItemProperty -Path $scaRegKey -ErrorAction SilentlyContinue | Select-Object -ExpandProperty "SharedComputerLicensing" -ErrorAction SilentlyContinue
+    $scaRegKey2 = "HKLM:\SOFTWARE\Microsoft\Office\16.0\Common\Licensing"
+    $scaValue2 = Get-ItemProperty -Path $scaRegKey2 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty "SharedComputerLicensing" -ErrorAction SilentlyContinue
+    $scaPolicyKey = "HKLM:\SOFTWARE\Policies\Microsoft\Office\16.0\Common\Licensing"
+    $scaPolicyValue = Get-ItemProperty -Path $scaPolicyKey -ErrorAction SilentlyContinue | Select-Object -ExpandProperty "SharedComputerLicensing" -ErrorAction SilentlyContinue
+    If ($null -Eq $scaValue -And $null -Eq $scaValue2 -And $null -Eq $scaPolicyValue)
+    {
+        CONOUT "`nNo registry keys found."
+        Return
+    }
+    $scaModeValue = $scaValue -Or $scaValue2 -Or $scaPolicyValue
+    If ($scaModeValue -Eq 0)
+    {
+        $scaMode = "Disabled"
+    }
+    If ($scaModeValue -Eq 1)
+    {
+        $scaMode = "Enabled"
+    }
+    CONOUT "`nStatus: $scaMode"
+    CONOUT "`r"
+    $tokenFiles = $null
+    $tokenPath = "${env:LOCALAPPDATA}\Microsoft\Office\16.0\Licensing"
+    If (Test-Path $tokenPath)
+    {
+        $tokenFiles = Get-ChildItem -Path $tokenPath -Filter "*authString*" -Recurse | Where-Object { !$_.PSIsContainer }
+    }
+    If ($null -Eq $tokenFiles -Or $tokenFiles.Length -Eq 0)
+    {
+        CONOUT "No tokens found."
+        Return
+    }
+    $tokenFiles | ForEach `
+    {
+        $tokenParts = (Get-Content -Encoding Unicode -Path $_.FullName).Split('_')
+        $output = New-Object PSObject
+        $output | Add-Member 8 'ACID' $tokenParts[0];
+        $output | Add-Member 8 'User' $tokenParts[3];
+        $output | Add-Member 8 'NotBefore' $tokenParts[4];
+        $output | Add-Member 8 'NotAfter' $tokenParts[5];
+        Write-Output $output
+    }
 }
 
 function PrintLicensesInformation
 {
-	Param(
-		[ValidateSet("NUL", "Device")]
-		[String]$mode
-	)
-	If ($mode -Eq "NUL")
-	{
-		$licensePath = "${env:LOCALAPPDATA}\Microsoft\Office\Licenses"
-	}
-	ElseIf ($mode -Eq "Device")
-	{
-		$licensePath = "${env:PROGRAMDATA}\Microsoft\Office\Licenses"
-	}
-	$licenseFiles = $null
-	If (Test-Path $licensePath)
-	{
-		$licenseFiles = Get-ChildItem -Path $licensePath -Recurse | Where-Object { !$_.PSIsContainer }
-	}
-	If ($null -Eq $licenseFiles -Or $licenseFiles.Length -Eq 0)
-	{
-		CONOUT "`nNo licenses found."
-		Return
-	}
-	$licenseFiles | ForEach `
-	{
-		$license = (Get-Content -Encoding Unicode $_.FullName | ConvertFrom-Json).License
-		$decodedLicense = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($license)) | ConvertFrom-Json
-		$licenseType = $decodedLicense.LicenseType
-		If ($null -Ne $decodedLicense.ExpiresOn)
-		{
-			$expiry = [System.DateTime]::Parse($decodedLicense.ExpiresOn, $null, 'AdjustToUniversal')
-		}
-		Else
-		{
-			$expiry = New-Object System.DateTime
-		}
-		$licenseState = "Grace"
-		If ((Get-Date) -Gt (Get-Date $decodedLicense.Metadata.NotAfter))
-		{
-			$licenseState = "RFM"
-		}
-		ElseIf ((Get-Date) -Lt (Get-Date $expiry))
-		{
-			$licenseState = "Licensed"
-		}
-		$output = New-Object PSObject
-		$output | Add-Member 8 'File' $_.PSChildName;
-		$output | Add-Member 8 'Version' $_.Directory.Name;
-		$output | Add-Member 8 'Type' "User|${licenseType}";
-		$output | Add-Member 8 'Product' $decodedLicense.ProductReleaseId;
-		$output | Add-Member 8 'Acid' $decodedLicense.Acid;
-		If ($mode -Eq "Device") { $output | Add-Member 8 'DeviceId' $decodedLicense.Metadata.DeviceId; }
-		$output | Add-Member 8 'LicenseState' $licenseState;
-		$output | Add-Member 8 'EntitlementStatus' $decodedLicense.Status;
-		$output | Add-Member 8 'EntitlementExpiration' ("N/A", $decodedLicense.ExpiresOn)[!($null -eq $decodedLicense.ExpiresOn)];
-		$output | Add-Member 8 'ReasonCode' ("N/A", $decodedLicense.ReasonCode)[!($null -eq $decodedLicense.ReasonCode)];
-		$output | Add-Member 8 'NotBefore' $decodedLicense.Metadata.NotBefore;
-		$output | Add-Member 8 'NotAfter' $decodedLicense.Metadata.NotAfter;
-		$output | Add-Member 8 'NextRenewal' $decodedLicense.Metadata.RenewAfter;
-		$output | Add-Member 8 'TenantId' ("N/A", $decodedLicense.Metadata.TenantId)[!($null -eq $decodedLicense.Metadata.TenantId)];
-		#$output.PSObject.Properties | foreach { $ht = @{} } { $ht[$_.Name] = $_.Value } { $output = $ht | ConvertTo-Json }
-		Write-Output $output
-	}
+    Param(
+        [ValidateSet("NUL", "Device")]
+        [String]$mode
+    )
+    If ($mode -Eq "NUL")
+    {
+        $licensePath = "${env:LOCALAPPDATA}\Microsoft\Office\Licenses"
+    }
+    ElseIf ($mode -Eq "Device")
+    {
+        $licensePath = "${env:PROGRAMDATA}\Microsoft\Office\Licenses"
+    }
+    $licenseFiles = $null
+    If (Test-Path $licensePath)
+    {
+        $licenseFiles = Get-ChildItem -Path $licensePath -Recurse | Where-Object { !$_.PSIsContainer }
+    }
+    If ($null -Eq $licenseFiles -Or $licenseFiles.Length -Eq 0)
+    {
+        CONOUT "`nNo licenses found."
+        Return
+    }
+    $licenseFiles | ForEach `
+    {
+        $license = (Get-Content -Encoding Unicode $_.FullName | ConvertFrom-Json).License
+        $decodedLicense = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($license)) | ConvertFrom-Json
+        $licenseType = $decodedLicense.LicenseType
+        If ($null -Ne $decodedLicense.ExpiresOn)
+        {
+            $expiry = [System.DateTime]::Parse($decodedLicense.ExpiresOn, $null, 'AdjustToUniversal')
+        }
+        Else
+        {
+            $expiry = New-Object System.DateTime
+        }
+        $licenseState = "Grace"
+        If ((Get-Date) -Gt (Get-Date $decodedLicense.Metadata.NotAfter))
+        {
+            $licenseState = "RFM"
+        }
+        ElseIf ((Get-Date) -Lt (Get-Date $expiry))
+        {
+            $licenseState = "Licensed"
+        }
+        $output = New-Object PSObject
+        $output | Add-Member 8 'File' $_.PSChildName;
+        $output | Add-Member 8 'Version' $_.Directory.Name;
+        $output | Add-Member 8 'Type' "User|${licenseType}";
+        $output | Add-Member 8 'Product' $decodedLicense.ProductReleaseId;
+        $output | Add-Member 8 'Acid' $decodedLicense.Acid;
+        If ($mode -Eq "Device") { $output | Add-Member 8 'DeviceId' $decodedLicense.Metadata.DeviceId; }
+        $output | Add-Member 8 'LicenseState' $licenseState;
+        $output | Add-Member 8 'EntitlementStatus' $decodedLicense.Status;
+        $output | Add-Member 8 'EntitlementExpiration' ("N/A", $decodedLicense.ExpiresOn)[!($null -eq $decodedLicense.ExpiresOn)];
+        $output | Add-Member 8 'ReasonCode' ("N/A", $decodedLicense.ReasonCode)[!($null -eq $decodedLicense.ReasonCode)];
+        $output | Add-Member 8 'NotBefore' $decodedLicense.Metadata.NotBefore;
+        $output | Add-Member 8 'NotAfter' $decodedLicense.Metadata.NotAfter;
+        $output | Add-Member 8 'NextRenewal' $decodedLicense.Metadata.RenewAfter;
+        $output | Add-Member 8 'TenantId' ("N/A", $decodedLicense.Metadata.TenantId)[!($null -eq $decodedLicense.Metadata.TenantId)];
+        #$output.PSObject.Properties | foreach { $ht = @{} } { $ht[$_.Name] = $_.Value } { $output = $ht | ConvertTo-Json }
+        Write-Output $output
+    }
 }
 
 function vNextDiagRun
 {
-	$fNUL = ([IO.Directory]::Exists("${env:LOCALAPPDATA}\Microsoft\Office\Licenses")) -and ([IO.Directory]::GetFiles("${env:LOCALAPPDATA}\Microsoft\Office\Licenses", "*", 1).Length -GT 0)
-	$fDev = ([IO.Directory]::Exists("${env:PROGRAMDATA}\Microsoft\Office\Licenses")) -and ([IO.Directory]::GetFiles("${env:PROGRAMDATA}\Microsoft\Office\Licenses", "*", 1).Length -GT 0)
-	$rPID = $null -NE (GP "HKCU:\SOFTWARE\Microsoft\Office\16.0\Common\Licensing\LicensingNext" -EA 0 | select -Expand 'property' -EA 0 | where -Filter {$_.ToLower() -like "*retail" -or $_.ToLower() -like "*volume"})
-	$rSCA = $null -NE (GP "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration" -EA 0 | select -Expand "SharedComputerLicensing" -EA 0)
-	$rSCL = $null -NE (GP "HKLM:\SOFTWARE\Microsoft\Office\16.0\Common\Licensing" -EA 0 | select -Expand "SharedComputerLicensing" -EA 0)
+    $fNUL = ([IO.Directory]::Exists("${env:LOCALAPPDATA}\Microsoft\Office\Licenses")) -and ([IO.Directory]::GetFiles("${env:LOCALAPPDATA}\Microsoft\Office\Licenses", "*", 1).Length -GT 0)
+    $fDev = ([IO.Directory]::Exists("${env:PROGRAMDATA}\Microsoft\Office\Licenses")) -and ([IO.Directory]::GetFiles("${env:PROGRAMDATA}\Microsoft\Office\Licenses", "*", 1).Length -GT 0)
+    $rPID = $null -NE (GP "HKCU:\SOFTWARE\Microsoft\Office\16.0\Common\Licensing\LicensingNext" -EA 0 | select -Expand 'property' -EA 0 | where -Filter {$_.ToLower() -like "*retail" -or $_.ToLower() -like "*volume"})
+    $rSCA = $null -NE (GP "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration" -EA 0 | select -Expand "SharedComputerLicensing" -EA 0)
+    $rSCL = $null -NE (GP "HKLM:\SOFTWARE\Microsoft\Office\16.0\Common\Licensing" -EA 0 | select -Expand "SharedComputerLicensing" -EA 0)
 
-	if (($fNUL -Or $fDev -Or $rPID -Or $rSCA -Or $rSCL) -EQ $false) {
-		Return
-	}
+    if (($fNUL -Or $fDev -Or $rPID -Or $rSCA -Or $rSCL) -EQ $false) {
+        Return
+    }
 
-	& $isAll
-	CONOUT "$line2"
-	CONOUT "===                  Office vNext Status                 ==="
-	CONOUT "$line2"
-	CONOUT "`n========== Mode per ProductReleaseId =========="
-	PrintModePerPridFromRegistry
-	CONOUT "`n========== Shared Computer Licensing =========="
-	PrintSharedComputerLicensing
-	CONOUT "`n========== vNext licenses ==========="
-	PrintLicensesInformation -Mode "NUL"
-	CONOUT "`n========== Device licenses =========="
-	PrintLicensesInformation -Mode "Device"
-	CONOUT "$line3"
-	CONOUT "`r"
+    & $isAll
+    CONOUT "$line2"
+    CONOUT "===                  Office vNext Status                 ==="
+    CONOUT "$line2"
+    CONOUT "`n========== Mode per ProductReleaseId =========="
+    PrintModePerPridFromRegistry
+    CONOUT "`n========== Shared Computer Licensing =========="
+    PrintSharedComputerLicensing
+    CONOUT "`n========== vNext licenses ==========="
+    PrintLicensesInformation -Mode "NUL"
+    CONOUT "`n========== Device licenses =========="
+    PrintLicensesInformation -Mode "Device"
+    CONOUT "$line3"
+    CONOUT "`r"
 }
 #endregion
 
@@ -15553,307 +15553,307 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #>
 
 function InitializeDigitalLicenseCheck {
-	$CAB = [System.Reflection.Emit.CustomAttributeBuilder]
+    $CAB = [System.Reflection.Emit.CustomAttributeBuilder]
 
-	$ICom = $Module.DefineType('EUM.IEUM', 'Public, Interface, Abstract, Import')
-	$ICom.SetCustomAttribute($CAB::new([System.Runtime.InteropServices.ComImportAttribute].GetConstructor(@()), @()))
-	$ICom.SetCustomAttribute($CAB::new([System.Runtime.InteropServices.GuidAttribute].GetConstructor(@([String])), @('F2DCB80D-0670-44BC-9002-CD18688730AF')))
-	$ICom.SetCustomAttribute($CAB::new([System.Runtime.InteropServices.InterfaceTypeAttribute].GetConstructor(@([Int16])), @([Int16]1)))
+    $ICom = $Module.DefineType('EUM.IEUM', 'Public, Interface, Abstract, Import')
+    $ICom.SetCustomAttribute($CAB::new([System.Runtime.InteropServices.ComImportAttribute].GetConstructor(@()), @()))
+    $ICom.SetCustomAttribute($CAB::new([System.Runtime.InteropServices.GuidAttribute].GetConstructor(@([String])), @('F2DCB80D-0670-44BC-9002-CD18688730AF')))
+    $ICom.SetCustomAttribute($CAB::new([System.Runtime.InteropServices.InterfaceTypeAttribute].GetConstructor(@([Int16])), @([Int16]1)))
 
-	1..4 | % { [void]$ICom.DefineMethod('VF'+$_, 'Public, Virtual, HideBySig, NewSlot, Abstract', 'Standard, HasThis', [Void], @()) }
-	[void]$ICom.DefineMethod('AcquireModernLicenseForWindows', 1478, 33, [Int32], @([Int32], [Int32].MakeByRefType()))
+    1..4 | % { [void]$ICom.DefineMethod('VF'+$_, 'Public, Virtual, HideBySig, NewSlot, Abstract', 'Standard, HasThis', [Void], @()) }
+    [void]$ICom.DefineMethod('AcquireModernLicenseForWindows', 1478, 33, [Int32], @([Int32], [Int32].MakeByRefType()))
 
-	$IEUM = $ICom.CreateType()
+    $IEUM = $ICom.CreateType()
 }
 
 function PrintStateData {
-	$pwszStateData = 0
-	$cbSize = 0
+    $pwszStateData = 0
+    $cbSize = 0
 
-	if ($Win32::SLGetWindowsInformation(
-		"Security-SPP-Action-StateData",
-		[ref]$null,
-		[ref]$cbSize,
-		[ref]$pwszStateData
-	)) {
-		return $FALSE
-	}
+    if ($Win32::SLGetWindowsInformation(
+        "Security-SPP-Action-StateData",
+        [ref]$null,
+        [ref]$cbSize,
+        [ref]$pwszStateData
+    )) {
+        return $FALSE
+    }
 
-	[string[]]$pwszStateString = $Marshal::PtrToStringUni($pwszStateData) -replace ";", "`n    "
-	CONOUT ("    $pwszStateString")
+    [string[]]$pwszStateString = $Marshal::PtrToStringUni($pwszStateData) -replace ";", "`n    "
+    CONOUT ("    $pwszStateString")
 
-	$Marshal::FreeHGlobal($pwszStateData)
-	return $TRUE
+    $Marshal::FreeHGlobal($pwszStateData)
+    return $TRUE
 }
 
 function PrintLastActivationHResult {
-	$pdwLastHResult = 0
-	$cbSize = 0
+    $pdwLastHResult = 0
+    $cbSize = 0
 
-	if ($Win32::SLGetWindowsInformation(
-		"Security-SPP-LastWindowsActivationHResult",
-		[ref]$null,
-		[ref]$cbSize,
-		[ref]$pdwLastHResult
-	)) {
-		return $FALSE
-	}
+    if ($Win32::SLGetWindowsInformation(
+        "Security-SPP-LastWindowsActivationHResult",
+        [ref]$null,
+        [ref]$cbSize,
+        [ref]$pdwLastHResult
+    )) {
+        return $FALSE
+    }
 
-	CONOUT ("    LastActivationHResult=0x{0:x8}" -f $Marshal::ReadInt32($pdwLastHResult))
+    CONOUT ("    LastActivationHResult=0x{0:x8}" -f $Marshal::ReadInt32($pdwLastHResult))
 
-	$Marshal::FreeHGlobal($pdwLastHResult)
-	return $TRUE
+    $Marshal::FreeHGlobal($pdwLastHResult)
+    return $TRUE
 }
 
 function PrintLastActivationTime {
-	$pqwLastTime = 0
-	$cbSize = 0
+    $pqwLastTime = 0
+    $cbSize = 0
 
-	if ($Win32::SLGetWindowsInformation(
-		"Security-SPP-LastWindowsActivationTime",
-		[ref]$null,
-		[ref]$cbSize,
-		[ref]$pqwLastTime
-	)) {
-		return $FALSE
-	}
+    if ($Win32::SLGetWindowsInformation(
+        "Security-SPP-LastWindowsActivationTime",
+        [ref]$null,
+        [ref]$cbSize,
+        [ref]$pqwLastTime
+    )) {
+        return $FALSE
+    }
 
-	$actTime = $Marshal::ReadInt64($pqwLastTime)
-	if ($actTime -ne 0) {
-		CONOUT ("    LastActivationTime={0}" -f [DateTime]::FromFileTimeUtc($actTime).ToString("yyyy/MM/dd:HH:mm:ss"))
-	}
+    $actTime = $Marshal::ReadInt64($pqwLastTime)
+    if ($actTime -ne 0) {
+        CONOUT ("    LastActivationTime={0}" -f [DateTime]::FromFileTimeUtc($actTime).ToString("yyyy/MM/dd:HH:mm:ss"))
+    }
 
-	$Marshal::FreeHGlobal($pqwLastTime)
-	return $TRUE
+    $Marshal::FreeHGlobal($pqwLastTime)
+    return $TRUE
 }
 
 function PrintIsWindowsGenuine {
-	$dwGenuine = 0
+    $dwGenuine = 0
 
-	if ($Win32::SLIsWindowsGenuineLocal([ref]$dwGenuine)) {
-		return $FALSE
-	}
+    if ($Win32::SLIsWindowsGenuineLocal([ref]$dwGenuine)) {
+        return $FALSE
+    }
 
-	if ($dwGenuine -lt 5) {
-		CONOUT ("    IsWindowsGenuine={0}" -f $ppwszGenuineStates[$dwGenuine])
-	} else {
-		CONOUT ("    IsWindowsGenuine={0}" -f $dwGenuine)
-	}
+    if ($dwGenuine -lt 5) {
+        CONOUT ("    IsWindowsGenuine={0}" -f $ppwszGenuineStates[$dwGenuine])
+    } else {
+        CONOUT ("    IsWindowsGenuine={0}" -f $dwGenuine)
+    }
 
-	return $TRUE
+    return $TRUE
 }
 
 function PrintDigitalLicenseStatus {
-	try {
-		. InitializeDigitalLicenseCheck
-		$ComObj = New-Object -Com EditionUpgradeManagerObj.EditionUpgradeManager
-	} catch {
-		return $FALSE
-	}
+    try {
+        . InitializeDigitalLicenseCheck
+        $ComObj = New-Object -Com EditionUpgradeManagerObj.EditionUpgradeManager
+    } catch {
+        return $FALSE
+    }
 
-	$parameters = 1, $null
+    $parameters = 1, $null
 
-	if ([EUM.IEUM].GetMethod("AcquireModernLicenseForWindows").Invoke($ComObj, $parameters)) {
-		return $FALSE
-	}
+    if ([EUM.IEUM].GetMethod("AcquireModernLicenseForWindows").Invoke($ComObj, $parameters)) {
+        return $FALSE
+    }
 
-	$dwReturnCode = $parameters[1]
-	[bool]$bDigitalLicense = $FALSE
+    $dwReturnCode = $parameters[1]
+    [bool]$bDigitalLicense = $FALSE
 
-	$bDigitalLicense = (($dwReturnCode -ge 0) -and ($dwReturnCode -ne 1))
-	CONOUT ("    IsDigitalLicense={0}" -f (BoolToWStr $bDigitalLicense))
+    $bDigitalLicense = (($dwReturnCode -ge 0) -and ($dwReturnCode -ne 1))
+    CONOUT ("    IsDigitalLicense={0}" -f (BoolToWStr $bDigitalLicense))
 
-	return $TRUE
+    return $TRUE
 }
 
 function PrintSubscriptionStatus {
-	$dwSupported = 0
+    $dwSupported = 0
 
-	if ($winbuild -ge 15063) {
-		$pwszPolicy = "ConsumeAddonPolicySet"
-	} else {
-		$pwszPolicy = "Allow-WindowsSubscription"
-	}
+    if ($winbuild -ge 15063) {
+        $pwszPolicy = "ConsumeAddonPolicySet"
+    } else {
+        $pwszPolicy = "Allow-WindowsSubscription"
+    }
 
-	if ($Win32::SLGetWindowsInformationDWORD($pwszPolicy, [ref]$dwSupported)) {
-		return $FALSE
-	}
+    if ($Win32::SLGetWindowsInformationDWORD($pwszPolicy, [ref]$dwSupported)) {
+        return $FALSE
+    }
 
-	CONOUT ("    SubscriptionSupportedEdition={0}" -f (BoolToWStr $dwSupported))
+    CONOUT ("    SubscriptionSupportedEdition={0}" -f (BoolToWStr $dwSupported))
 
-	$pStatus = $Marshal::AllocHGlobal($Marshal::SizeOf([Type]$SubStatus))
-	if ($Win32::ClipGetSubscriptionStatus([ref]$pStatus)) {
-		return $FALSE
-	}
+    $pStatus = $Marshal::AllocHGlobal($Marshal::SizeOf([Type]$SubStatus))
+    if ($Win32::ClipGetSubscriptionStatus([ref]$pStatus)) {
+        return $FALSE
+    }
 
-	$sStatus = [Activator]::CreateInstance($SubStatus)
-	$sStatus = $Marshal::PtrToStructure($pStatus, [Type]$SubStatus)
-	$Marshal::FreeHGlobal($pStatus)
+    $sStatus = [Activator]::CreateInstance($SubStatus)
+    $sStatus = $Marshal::PtrToStructure($pStatus, [Type]$SubStatus)
+    $Marshal::FreeHGlobal($pStatus)
 
-	CONOUT ("    SubscriptionEnabled={0}" -f (BoolToWStr $sStatus.dwEnabled))
+    CONOUT ("    SubscriptionEnabled={0}" -f (BoolToWStr $sStatus.dwEnabled))
 
-	if ($sStatus.dwEnabled -eq 0) {
-		return $TRUE
-	}
+    if ($sStatus.dwEnabled -eq 0) {
+        return $TRUE
+    }
 
-	CONOUT ("    SubscriptionSku={0}" -f $sStatus.dwSku)
-	CONOUT ("    SubscriptionState={0}" -f $sStatus.dwState)
+    CONOUT ("    SubscriptionSku={0}" -f $sStatus.dwSku)
+    CONOUT ("    SubscriptionState={0}" -f $sStatus.dwState)
 
-	return $TRUE
+    return $TRUE
 }
 
 function ClicRun
 {
-	& $isAll
-	CONOUT "Client Licensing Check information:"
+    & $isAll
+    CONOUT "Client Licensing Check information:"
 
-	$null = PrintStateData
-	$null = PrintLastActivationHResult
-	$null = PrintLastActivationTime
-	$null = PrintIsWindowsGenuine
+    $null = PrintStateData
+    $null = PrintLastActivationHResult
+    $null = PrintLastActivationTime
+    $null = PrintIsWindowsGenuine
 
-	if ($DllDigital) {
-		$null = PrintDigitalLicenseStatus
-	}
+    if ($DllDigital) {
+        $null = PrintDigitalLicenseStatus
+    }
 
-	if ($DllSubscription) {
-		$null = PrintSubscriptionStatus
-	}
+    if ($DllSubscription) {
+        $null = PrintSubscriptionStatus
+    }
 
-	CONOUT "$line3"
-	& $noAll
+    CONOUT "$line3"
+    & $noAll
 }
 #endregion
 
 #region clc
 function clcGetExpireKrn
 {
-	$tData = 0
-	$cData = 0
-	$bData = 0
+    $tData = 0
+    $cData = 0
+    $bData = 0
 
-	$hrRet = $Win32::SLGetWindowsInformation(
-		"Kernel-ExpirationDate",
-		[ref]$tData,
-		[ref]$cData,
-		[ref]$bData
-	)
+    $hrRet = $Win32::SLGetWindowsInformation(
+        "Kernel-ExpirationDate",
+        [ref]$tData,
+        [ref]$cData,
+        [ref]$bData
+    )
 
-	if ($hrRet -Or !$cData -Or $tData -NE 3)
-	{
-		return $null
-	}
+    if ($hrRet -Or !$cData -Or $tData -NE 3)
+    {
+        return $null
+    }
 
-	$year = $Marshal::ReadInt16($bData, 0)
-	if ($year -EQ 0 -Or $year -EQ 1601)
-	{
-		$rData = $null
-	}
-	else
-	{
-		$rData = '{0}/{1}/{2}:{3}:{4}:{5}' -f $year, $Marshal::ReadInt16($bData, 2), $Marshal::ReadInt16($bData, 4), $Marshal::ReadInt16($bData, 6), $Marshal::ReadInt16($bData, 8), $Marshal::ReadInt16($bData, 10)
-	}
+    $year = $Marshal::ReadInt16($bData, 0)
+    if ($year -EQ 0 -Or $year -EQ 1601)
+    {
+        $rData = $null
+    }
+    else
+    {
+        $rData = '{0}/{1}/{2}:{3}:{4}:{5}' -f $year, $Marshal::ReadInt16($bData, 2), $Marshal::ReadInt16($bData, 4), $Marshal::ReadInt16($bData, 6), $Marshal::ReadInt16($bData, 8), $Marshal::ReadInt16($bData, 10)
+    }
 
-	#$Marshal::FreeHGlobal($bData)
-	return $rData
+    #$Marshal::FreeHGlobal($bData)
+    return $rData
 }
 
 function clcGetExpireSys
 {
-	$kuser = $Marshal::ReadInt64((New-Object IntPtr(0x7FFE02C8)))
+    $kuser = $Marshal::ReadInt64((New-Object IntPtr(0x7FFE02C8)))
 
-	if ($kuser -EQ 0)
-	{
-		return $null
-	}
+    if ($kuser -EQ 0)
+    {
+        return $null
+    }
 
-	$rData = [DateTime]::FromFileTimeUtc($kuser).ToString('yyyy/MM/dd:HH:mm:ss')
-	return $rData
+    $rData = [DateTime]::FromFileTimeUtc($kuser).ToString('yyyy/MM/dd:HH:mm:ss')
+    return $rData
 }
 
 function clcGetLicensingState($dwState)
 {
-	if ($dwState -EQ 5) {
-		$dwState = 3
-	} elseif ($dwState -EQ 3 -Or $dwState -EQ 4 -Or $dwState -EQ 6) {
-		$dwState = 2
-	} elseif ($dwState -GT 6) {
-		$dwState = 4
-	}
+    if ($dwState -EQ 5) {
+        $dwState = 3
+    } elseif ($dwState -EQ 3 -Or $dwState -EQ 4 -Or $dwState -EQ 6) {
+        $dwState = 2
+    } elseif ($dwState -GT 6) {
+        $dwState = 4
+    }
 
-	$rData = '{0}' -f $ppwszLicensingStates[$dwState]
-	return $rData
+    $rData = '{0}' -f $ppwszLicensingStates[$dwState]
+    return $rData
 }
 
 function clcGetGenuineState($AppId)
 {
-	$dwGenuine = 0
+    $dwGenuine = 0
 
-	if ($NT7) {
-		$hrRet = $Win32::SLIsWindowsGenuineLocal([ref]$dwGenuine)
-	} else {
-		$hrRet = $Win32::SLIsGenuineLocal([ref][Guid]$AppId, [ref]$dwGenuine, 0)
-	}
+    if ($NT7) {
+        $hrRet = $Win32::SLIsWindowsGenuineLocal([ref]$dwGenuine)
+    } else {
+        $hrRet = $Win32::SLIsGenuineLocal([ref][Guid]$AppId, [ref]$dwGenuine, 0)
+    }
 
-	if ($hrRet)
-	{
-		$dwGenuine = 4
-	}
+    if ($hrRet)
+    {
+        $dwGenuine = 4
+    }
 
-	if ($dwGenuine -LT 5) {
-		$rData = '{0}' -f $ppwszGenuineStates[$dwGenuine]
-	} else {
-		$rData = $dwGenuine
-	}
-	return $rData
+    if ($dwGenuine -LT 5) {
+        $rData = '{0}' -f $ppwszGenuineStates[$dwGenuine]
+    } else {
+        $rData = $dwGenuine
+    }
+    return $rData
 }
 
 function ClcRun
 {
-	$prs = $script:primary[0]
-	if ($null -EQ $prs) {
-		return
-	}
+    $prs = $script:primary[0]
+    if ($null -EQ $prs) {
+        return
+    }
 
-	$lState = clcGetLicensingState $prs.lst
-	$uState = clcGetGenuineState $winApp
-	$TbbKrn = clcGetExpireKrn
-	$TbbSys = clcGetExpireSys
-	if ($null -NE $TbbKrn) {
-		$ked = $TbbKrn
-	} elseif ($null -NE $TbbSys) {
-		$ked = $TbbSys
-	}
+    $lState = clcGetLicensingState $prs.lst
+    $uState = clcGetGenuineState $winApp
+    $TbbKrn = clcGetExpireKrn
+    $TbbSys = clcGetExpireSys
+    if ($null -NE $TbbKrn) {
+        $ked = $TbbKrn
+    } elseif ($null -NE $TbbSys) {
+        $ked = $TbbSys
+    }
 
-	& $isAll
-	CONOUT "Client Licensing Check information:"
+    & $isAll
+    CONOUT "Client Licensing Check information:"
 
-	CONOUT ("    AppId={0}" -f $winApp)
-	if ($prs.ged) { CONOUT ("    GraceEndDate={0}" -f ([DateTime]::UtcNow.AddMinutes($prs.ged).ToString('yyyy/MM/dd:HH:mm:ss'))) }
-	if ($null -NE $ked) { CONOUT ("    KernelTimebombDate={0}" -f $ked) }
-	CONOUT ("    LastConsumptionReason=0x{0:x8}" -f $prs.lcr)
-	if ($prs.evl) { CONOUT ("    LicenseExpirationDate={0}" -f ([DateTime]::FromFileTimeUtc($prs.evl).ToString('yyyy/MM/dd:HH:mm:ss'))) }
-	CONOUT ("    LicenseState={0}" -f $lState)
-	CONOUT ("    PartialProductKey={0}" -f $prs.ppk)
-	CONOUT ("    ProductKeyType={0}" -f $prs.chn)
-	CONOUT ("    SkuId={0}" -f $prs.aid)
-	CONOUT ("    uxDifferentiator={0}" -f $prs.dff)
-	CONOUT ("    IsWindowsGenuine={0}" -f $uState)
+    CONOUT ("    AppId={0}" -f $winApp)
+    if ($prs.ged) { CONOUT ("    GraceEndDate={0}" -f ([DateTime]::UtcNow.AddMinutes($prs.ged).ToString('yyyy/MM/dd:HH:mm:ss'))) }
+    if ($null -NE $ked) { CONOUT ("    KernelTimebombDate={0}" -f $ked) }
+    CONOUT ("    LastConsumptionReason=0x{0:x8}" -f $prs.lcr)
+    if ($prs.evl) { CONOUT ("    LicenseExpirationDate={0}" -f ([DateTime]::FromFileTimeUtc($prs.evl).ToString('yyyy/MM/dd:HH:mm:ss'))) }
+    CONOUT ("    LicenseState={0}" -f $lState)
+    CONOUT ("    PartialProductKey={0}" -f $prs.ppk)
+    CONOUT ("    ProductKeyType={0}" -f $prs.chn)
+    CONOUT ("    SkuId={0}" -f $prs.aid)
+    CONOUT ("    uxDifferentiator={0}" -f $prs.dff)
+    CONOUT ("    IsWindowsGenuine={0}" -f $uState)
 
-	CONOUT "$line3"
-	& $noAll
+    CONOUT "$line3"
+    & $noAll
 }
 #endregion
 
 $Host.UI.RawUI.WindowTitle = "Check Activation Status"
 if ($All.IsPresent) {
-	$B=$Host.UI.RawUI.BufferSize;$B.Height=3000;$Host.UI.RawUI.BufferSize=$B;
-	if (!$Pass.IsPresent) {clear;}
+    $B=$Host.UI.RawUI.BufferSize;$B.Height=3000;$Host.UI.RawUI.BufferSize=$B;
+    if (!$Pass.IsPresent) {clear;}
 }
 
 $SysPath = "$env:SystemRoot\System32"
 if (Test-Path "$env:SystemRoot\Sysnative\reg.exe") {
-	$SysPath = "$env:SystemRoot\Sysnative"
+    $SysPath = "$env:SystemRoot\Sysnative"
 }
 
 $wslp = "SoftwareLicensingProduct"
@@ -15880,18 +15880,18 @@ $propADBA = 'ADActivationObjectName', 'ADActivationObjectDN', 'ADActivationCsvlk
 $propAVMA = 'InheritedActivationId', 'InheritedActivationHostMachineName', 'InheritedActivationHostDigitalPid2', 'InheritedActivationActivationTime'
 $primary = @()
 $ppwszGenuineStates = @(
-	"SL_GEN_STATE_IS_GENUINE",
-	"SL_GEN_STATE_INVALID_LICENSE",
-	"SL_GEN_STATE_TAMPERED",
-	"SL_GEN_STATE_OFFLINE",
-	"SL_GEN_STATE_LAST"
+    "SL_GEN_STATE_IS_GENUINE",
+    "SL_GEN_STATE_INVALID_LICENSE",
+    "SL_GEN_STATE_TAMPERED",
+    "SL_GEN_STATE_OFFLINE",
+    "SL_GEN_STATE_LAST"
 )
 $ppwszLicensingStates = @(
-	"SL_LICENSING_STATUS_UNLICENSED",
-	"SL_LICENSING_STATUS_LICENSED",
-	"SL_LICENSING_STATUS_IN_GRACE_PERIOD",
-	"SL_LICENSING_STATUS_NOTIFICATION",
-	"SL_LICENSING_STATUS_LAST"
+    "SL_LICENSING_STATUS_UNLICENSED",
+    "SL_LICENSING_STATUS_LICENSED",
+    "SL_LICENSING_STATUS_IN_GRACE_PERIOD",
+    "SL_LICENSING_STATUS_NOTIFICATION",
+    "SL_LICENSING_STATUS_LAST"
 )
 
 'cW1nd0ws', 'c0ff1ce15', 'c0ff1ce14', 'ospp14', 'ospp15' | foreach {set $_ @()}
@@ -15903,105 +15903,105 @@ try {gsv $winsvc -EA 1 | Out-Null; $WsppHook = 1} catch {$WsppHook = 0}
 try {gsv $offsvc -EA 1 | Out-Null; $OsppHook = 1} catch {$OsppHook = 0}
 
 if (Test-Path "$SysPath\sppc.dll") {
-	$SLdll = 'sppc.dll'
+    $SLdll = 'sppc.dll'
 } elseif (Test-Path "$SysPath\slc.dll") {
-	$SLdll = 'slc.dll'
+    $SLdll = 'slc.dll'
 } else {
-	$WsppHook = 0
+    $WsppHook = 0
 }
 
 if ($OsppHook -NE 0) {
-	$OLdll = (strGetRegistry $OPKeyPath "Path") + 'osppc.dll'
-	if (!(Test-Path "$OLdll")) {$OsppHook = 0}
+    $OLdll = (strGetRegistry $OPKeyPath "Path") + 'osppc.dll'
+    if (!(Test-Path "$OLdll")) {$OsppHook = 0}
 }
 
 if ($WsppHook -NE 0) {
-	if ($NT6 -And -Not $NT7 -And -Not $Admin) {
-		if ($null -EQ [Diagnostics.Process]::GetProcessesByName("$winsvc")[0].ProcessName) {$WsppHook = 0; CONOUT "`nError: failed to start $winsvc Service.`n"}
-	} else {
-		try {sasv $winsvc -EA 1} catch {$WsppHook = 0; CONOUT "`nError: failed to start $winsvc Service.`n"}
-	}
+    if ($NT6 -And -Not $NT7 -And -Not $Admin) {
+        if ($null -EQ [Diagnostics.Process]::GetProcessesByName("$winsvc")[0].ProcessName) {$WsppHook = 0; CONOUT "`nError: failed to start $winsvc Service.`n"}
+    } else {
+        try {sasv $winsvc -EA 1} catch {$WsppHook = 0; CONOUT "`nError: failed to start $winsvc Service.`n"}
+    }
 }
 
 if ($WsppHook -NE 0) {
-	. InitializePInvoke $SLdll $false
-	$hSLC = 0
-	[void]$Win32::SLOpen([ref]$hSLC)
+    . InitializePInvoke $SLdll $false
+    $hSLC = 0
+    [void]$Win32::SLOpen([ref]$hSLC)
 
-	$cW1nd0ws  = SlGetInfoSLID $winApp
-	$c0ff1ce15 = SlGetInfoSLID $o15App
-	$c0ff1ce14 = SlGetInfoSLID $o14App
+    $cW1nd0ws  = SlGetInfoSLID $winApp
+    $c0ff1ce15 = SlGetInfoSLID $o15App
+    $c0ff1ce14 = SlGetInfoSLID $o14App
 }
 
 if ($cW1nd0ws.Count -GT 0)
 {
-	echoWindows
-	ParseList $wslp $winApp $cW1nd0ws
+    echoWindows
+    ParseList $wslp $winApp $cW1nd0ws
 }
 elseif ($NT6)
 {
-	echoWindows
-	CONOUT "Error: product key not found.`n"
+    echoWindows
+    CONOUT "Error: product key not found.`n"
 }
 
 if ($NT6 -And -Not $NT8) {
-	ClcRun
+    ClcRun
 }
 
 if ($NT8) {
-	ClicRun
+    ClicRun
 }
 
 $doMSG = 1
 
 if ($c0ff1ce15.Count -GT 0)
 {
-	CheckOhook
-	echoOffice
-	ParseList $wslp $o15App $c0ff1ce15
+    CheckOhook
+    echoOffice
+    ParseList $wslp $o15App $c0ff1ce15
 }
 
 if ($c0ff1ce14.Count -GT 0)
 {
-	echoOffice
-	ParseList $wslp $o14App $c0ff1ce14
+    echoOffice
+    ParseList $wslp $o14App $c0ff1ce14
 }
 
 if ($hSLC) {
-	[void]$Win32::SLClose($hSLC)
+    [void]$Win32::SLClose($hSLC)
 }
 
 if ($OsppHook -NE 0) {
-	try {sasv $offsvc -EA 1} catch {$OsppHook = 0; CONOUT "`nError: failed to start $offsvc Service.`n"}
+    try {sasv $offsvc -EA 1} catch {$OsppHook = 0; CONOUT "`nError: failed to start $offsvc Service.`n"}
 }
 
 if ($OsppHook -NE 0) {
-	. InitializePInvoke "$OLdll" $true
-	$hSLC = 0
-	[void]$Win32::SLOpen([ref]$hSLC)
+    . InitializePInvoke "$OLdll" $true
+    $hSLC = 0
+    [void]$Win32::SLOpen([ref]$hSLC)
 
-	$ospp15 = SlGetInfoSLID $o15App
-	$ospp14 = SlGetInfoSLID $o14App
+    $ospp15 = SlGetInfoSLID $o15App
+    $ospp14 = SlGetInfoSLID $o14App
 }
 
 if ($ospp15.Count -GT 0)
 {
-	echoOffice
-	ParseList $oslp $o15App $ospp15
+    echoOffice
+    ParseList $oslp $o15App $ospp15
 }
 
 if ($ospp14.Count -GT 0)
 {
-	echoOffice
-	ParseList $oslp $o14App $ospp14
+    echoOffice
+    ParseList $oslp $o14App $ospp14
 }
 
 if ($hSLC) {
-	[void]$Win32::SLClose($hSLC)
+    [void]$Win32::SLClose($hSLC)
 }
 
 if ($NT7) {
-	vNextDiagRun
+    vNextDiagRun
 }
 
 ExitScript 0
@@ -16024,13 +16024,13 @@ echo:
 echo:
 echo:
 echo:       _______________________________________________________________
-echo:                                                   
+echo:
 call :dk_color2 %_White% "             [1] " %_Green% "Help"
 echo:             ___________________________________________________
-echo:                                                                      
+echo:
 echo:             [2] Dism RestoreHealth
 echo:             [3] SFC Scannow
-echo:                                                                      
+echo:
 echo:             [4] Fix WMI
 echo:             [5] Fix Licensing
 echo:             [6] Fix WPA Registry
@@ -16038,7 +16038,7 @@ echo:             ___________________________________________________
 echo:
 echo:             [0] %_exitmsg%
 echo:       _______________________________________________________________
-echo:          
+echo:
 call :dk_color2 %_White% "            " %_Green% "Choose a menu option using your keyboard :"
 choice /C:1234560 /N
 set _erl=%errorlevel%
@@ -16142,15 +16142,15 @@ title  sfc /scannow
 
 echo:
 echo %line%
-echo:    
+echo:
 echo      SFC will repair missing or corrupted system files.
 echo      It is recommended you run the DISM option first before this one.
 echo      This will take 10-15 minutes or more..
 echo:
-echo      If SFC could not fix something, then run the command again to see if it may be able 
+echo      If SFC could not fix something, then run the command again to see if it may be able
 echo      to the next time. Sometimes it may take running the sfc /scannow command 3 times
 echo      restarting the PC after each time to completely fix everything that it's able to.
-echo:   
+echo:
 echo %line%
 echo:
 choice /C:09 /N /M ">    [9] Continue [0] Go back : "
@@ -16203,7 +16203,7 @@ goto :at_back
 
 echo:
 echo %line%
-echo:   
+echo:
 echo      Notes:
 echo:
 echo       - This option helps in troubleshooting activation issues.
@@ -16260,7 +16260,7 @@ echo Skipping...
 goto :rebuildspptok
 )
 
-%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet){Exit 0}Else{Exit 1}"
+%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet) {Exit 0} else {Exit 1}"
 if errorlevel 1 (
 echo Internet is not connected.
 echo Skipping...
@@ -16273,7 +16273,7 @@ licensing.mp.microsoft.com/v7.0/licenses/content
 login.live.com/ppsecure/deviceaddcredential.srf
 purchase.mp.microsoft.com/v7.0/users/me/orders
 ) do if not defined resfail (
-%psc% "try { [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; irm https://%%# -Method POST } catch { if ($_.Exception.Response -eq $null) { Write-Host """"[%%#] $($_.Exception.Message)"""" -ForegroundColor Red -BackgroundColor Black; exit 3 } }"
+%psc% "try { [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; irm https://%%# -Method POST } catch { if ($_.Exception.Response -eq $null) { Write-Host """"[%%#]$($_.Exception.Message)"""" -ForegroundColor Red -BackgroundColor Black; exit 3 } }"
 if !errorlevel!==3 set resfail=1
 )
 
@@ -16303,14 +16303,14 @@ echo [Successful]
 )
 )
 
-::  Below registry key (Volatile & Protected) gets created after the ClipSVC License cleanup command, and gets automatically deleted after 
+::  Below registry key (Volatile & Protected) gets created after the ClipSVC License cleanup command, and gets automatically deleted after
 ::  system restart. It needs to be deleted to activate the system without restart.
 
 set "RegKey=HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ClipSVC\Volatile\PersistedSystemState"
 set "_ident=HKU\S-1-5-19\SOFTWARE\Microsoft\IdentityCRL"
 
 reg query "%RegKey%" %nul% && %nul% call :regownstart
-reg delete "%RegKey%" /f %nul% 
+reg delete "%RegKey%" /f %nul%
 
 echo:
 echo Deleting a Volatile ^& Protected Registry Key...
@@ -16658,7 +16658,7 @@ pause %nul1%
 
 if defined uwp16 (
 echo:
-echo Skipping repair for Office 16.0 UWP... 
+echo Skipping repair for Office 16.0 UWP...
 echo:
 )
 
@@ -16985,7 +16985,7 @@ if ($env:permerror -eq 'Error Found In SPP Registries') {
     $acl.ResetAccessRule($rule)
     $acl.SetAccessRule($rule)
     Set-Acl -Path 'HKLM:\SYSTEM\WPA' -AclObject $acl
-	
+
     $acl = Get-Acl 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform'
     $rule = New-Object System.Security.AccessControl.RegistryAccessRule ('NT Service\sppsvc', 'SetValue', 'ContainerInherit, ObjectInherit', 'None', 'Allow')
     $acl.ResetAccessRule($rule)
@@ -17008,7 +17008,7 @@ if (-not (Test-Path 'Registry::HKU\S-1-5-20\Software\Microsoft\Windows NT\Curren
 
 function Take-Permissions {
     param($rootKey, $key, [System.Security.Principal.SecurityIdentifier]$sid = 'S-1-5-32-545', $recurse = $true)
-    
+
     switch -regex ($rootKey) {
         'HKCU|HKEY_CURRENT_USER' { $rootKey = 'CurrentUser' }
         'HKLM|HKEY_LOCAL_MACHINE' { $rootKey = 'LocalMachine' }
@@ -17385,7 +17385,7 @@ if /i "%targetedition%"=="ServerRdsh" (
 echo:
 call :dk_color %Red% "==== Note ===="
 echo:
-echo Once the edition is changed to "%targetedition%", 
+echo Once the edition is changed to "%targetedition%",
 echo the system may not be able to properly change edition later.
 echo:
 echo [1] Continue Anyway
@@ -18204,7 +18204,7 @@ echo:
 echo                 [5] Change Office Update Channel
 echo                 [0] %_exitmsg%
 echo         ____________________________________________________________
-echo: 
+echo:
 call :dk_color2 %_White% "           " %_Green% "Choose a menu option using your keyboard [1,2,3,4,5,0]"
 choice /C:123450 /N
 set _el=!errorlevel!
@@ -18238,7 +18238,7 @@ echo:
 echo:
 echo:
 echo:
-echo                 O365/Mondo editions have the latest features.     
+echo                 O365/Mondo editions have the latest features.
 echo         ____________________________________________________________
 echo:
 echo                 [1] Office Suites     - Retail
@@ -18249,7 +18249,7 @@ echo                 ____________________________________________
 echo:
 echo                 [0] Go Back
 echo         ____________________________________________________________
-echo: 
+echo:
 call :dk_color2 %_White% "            " %_Green% "Choose a menu option using your keyboard [1,2,3,4,0]"
 choice /C:12340 /N
 set _el=!errorlevel!
@@ -19095,7 +19095,7 @@ for /f "delims=[] tokens=2" %%# in ('ping -n 1 %%a') do (if not "%%#"=="" set _i
 )
 
 if not defined _int (
-%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet){Exit 0}Else{Exit 1}"
+%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet) {Exit 0} else {Exit 1}"
 if !errorlevel!==0 (set _int=1)
 )
 

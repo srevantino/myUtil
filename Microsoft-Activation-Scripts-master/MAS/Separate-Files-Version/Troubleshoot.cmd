@@ -399,13 +399,13 @@ echo:
 echo:
 echo:
 echo:       _______________________________________________________________
-echo:                                                   
+echo:
 call :dk_color2 %_White% "             [1] " %_Green% "Help"
 echo:             ___________________________________________________
-echo:                                                                      
+echo:
 echo:             [2] Dism RestoreHealth
 echo:             [3] SFC Scannow
-echo:                                                                      
+echo:
 echo:             [4] Fix WMI
 echo:             [5] Fix Licensing
 echo:             [6] Fix WPA Registry
@@ -413,7 +413,7 @@ echo:             ___________________________________________________
 echo:
 echo:             [0] %_exitmsg%
 echo:       _______________________________________________________________
-echo:          
+echo:
 call :dk_color2 %_White% "            " %_Green% "Choose a menu option using your keyboard :"
 choice /C:1234560 /N
 set _erl=%errorlevel%
@@ -517,15 +517,15 @@ title  sfc /scannow
 
 echo:
 echo %line%
-echo:    
+echo:
 echo      SFC will repair missing or corrupted system files.
 echo      It is recommended you run the DISM option first before this one.
 echo      This will take 10-15 minutes or more..
 echo:
-echo      If SFC could not fix something, then run the command again to see if it may be able 
+echo      If SFC could not fix something, then run the command again to see if it may be able
 echo      to the next time. Sometimes it may take running the sfc /scannow command 3 times
 echo      restarting the PC after each time to completely fix everything that it's able to.
-echo:   
+echo:
 echo %line%
 echo:
 choice /C:09 /N /M ">    [9] Continue [0] Go back : "
@@ -578,7 +578,7 @@ goto :at_back
 
 echo:
 echo %line%
-echo:   
+echo:
 echo      Notes:
 echo:
 echo       - This option helps in troubleshooting activation issues.
@@ -635,7 +635,7 @@ echo Skipping...
 goto :rebuildspptok
 )
 
-%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet){Exit 0}Else{Exit 1}"
+%psc% "If([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]'{DCB00C01-570F-4A9B-8D69-199FDBA5723B}')).IsConnectedToInternet) {Exit 0} else {Exit 1}"
 if errorlevel 1 (
 echo Internet is not connected.
 echo Skipping...
@@ -648,7 +648,7 @@ licensing.mp.microsoft.com/v7.0/licenses/content
 login.live.com/ppsecure/deviceaddcredential.srf
 purchase.mp.microsoft.com/v7.0/users/me/orders
 ) do if not defined resfail (
-%psc% "try { [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; irm https://%%# -Method POST } catch { if ($_.Exception.Response -eq $null) { Write-Host """"[%%#] $($_.Exception.Message)"""" -ForegroundColor Red -BackgroundColor Black; exit 3 } }"
+%psc% "try { [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; irm https://%%# -Method POST } catch { if ($_.Exception.Response -eq $null) { Write-Host """"[%%#]$($_.Exception.Message)"""" -ForegroundColor Red -BackgroundColor Black; exit 3 } }"
 if !errorlevel!==3 set resfail=1
 )
 
@@ -678,14 +678,14 @@ echo [Successful]
 )
 )
 
-::  Below registry key (Volatile & Protected) gets created after the ClipSVC License cleanup command, and gets automatically deleted after 
+::  Below registry key (Volatile & Protected) gets created after the ClipSVC License cleanup command, and gets automatically deleted after
 ::  system restart. It needs to be deleted to activate the system without restart.
 
 set "RegKey=HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ClipSVC\Volatile\PersistedSystemState"
 set "_ident=HKU\S-1-5-19\SOFTWARE\Microsoft\IdentityCRL"
 
 reg query "%RegKey%" %nul% && %nul% call :regownstart
-reg delete "%RegKey%" /f %nul% 
+reg delete "%RegKey%" /f %nul%
 
 echo:
 echo Deleting a Volatile ^& Protected Registry Key...
@@ -1033,7 +1033,7 @@ pause %nul1%
 
 if defined uwp16 (
 echo:
-echo Skipping repair for Office 16.0 UWP... 
+echo Skipping repair for Office 16.0 UWP...
 echo:
 )
 
@@ -1413,7 +1413,7 @@ if ($env:permerror -eq 'Error Found In SPP Registries') {
     $acl.ResetAccessRule($rule)
     $acl.SetAccessRule($rule)
     Set-Acl -Path 'HKLM:\SYSTEM\WPA' -AclObject $acl
-	
+
     $acl = Get-Acl 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform'
     $rule = New-Object System.Security.AccessControl.RegistryAccessRule ('NT Service\sppsvc', 'SetValue', 'ContainerInherit, ObjectInherit', 'None', 'Allow')
     $acl.ResetAccessRule($rule)
@@ -1436,7 +1436,7 @@ if (-not (Test-Path 'Registry::HKU\S-1-5-20\Software\Microsoft\Windows NT\Curren
 
 function Take-Permissions {
     param($rootKey, $key, [System.Security.Principal.SecurityIdentifier]$sid = 'S-1-5-32-545', $recurse = $true)
-    
+
     switch -regex ($rootKey) {
         'HKCU|HKEY_CURRENT_USER' { $rootKey = 'CurrentUser' }
         'HKLM|HKEY_LOCAL_MACHINE' { $rootKey = 'LocalMachine' }
@@ -1506,13 +1506,13 @@ function InstallLicenseArr($Str) {
     ForEach ($x in $a) {InstallLicenseFile "$x"}
 }
 function InstallLicenseDir($Loc) {
-	Get-ChildItem $Loc -Recurse -Filter *.xrm-ms | ForEach-Object {InstallLicenseFile $_.FullName}
+    Get-ChildItem $Loc -Recurse -Filter *.xrm-ms | ForEach-Object {InstallLicenseFile $_.FullName}
 }
 function ReinstallLicenses() {
-	$Paths = @("$env:SysPath\oem", "$env:SysPath\licensing", "$env:SysPath\spp\tokens")
-	foreach ($Path in $Paths) {
+    $Paths = @("$env:SysPath\oem", "$env:SysPath\licensing", "$env:SysPath\spp\tokens")
+    foreach ($Path in $Paths) {
     if (Test-Path $Path) { InstallLicenseDir "$Path" }
-	}
+    }
 }
 :xrm:
 
