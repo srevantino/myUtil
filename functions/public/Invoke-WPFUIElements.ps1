@@ -72,6 +72,7 @@ function Invoke-WPFUIElements {
             Category    = $entryInfo.Category
             Content     = $entryInfo.Content
             Panel       = if ($entryInfo.Panel) { $entryInfo.Panel } else { "0" }
+            Order       = if ($entryInfo.Order) { [int]$entryInfo.Order } else { [int]::MaxValue }
             Link        = $entryInfo.link
             Description = $entryInfo.description
             Type        = $entryInfo.type
@@ -143,8 +144,8 @@ function Invoke-WPFUIElements {
             $itemsControl.Items.Add($label) | Out-Null
             $sync[$category] = $label
 
-            # Sort entries by type (checkboxes first, then buttons, then comboboxes) and then alphabetically by Content
-            $entries = $organizedData[$panelKey][$category] | Sort-Object @{Expression = {
+            # Sort entries by explicit Order first, then by type, then alphabetically by Content.
+            $entries = $organizedData[$panelKey][$category] | Sort-Object Order, @{Expression = {
                 switch ($_.Type) {
                     'Button' { 1 }
                     'Combobox' { 2 }

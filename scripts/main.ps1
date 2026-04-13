@@ -466,7 +466,7 @@ $sync["Form"].Add_Loaded({
 
 $NavLogoPanel = $sync["Form"].FindName("NavLogoPanel")
 $navBrand = New-Object Windows.Controls.TextBlock
-$navBrand.Text = "A-SYS_clark"
+$navBrand.Text = "as clark"
 $navBrand.FontStyle = [Windows.FontStyles]::Italic
 $navBrand.VerticalAlignment = [Windows.VerticalAlignment]::Center
 $navBrand.SetResourceReference([Windows.Controls.Control]::FontSizeProperty, "HeaderFontSize")

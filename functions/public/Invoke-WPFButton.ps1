@@ -62,6 +62,8 @@ function Invoke-WPFButton {
         "WPFUpdatesdefault" {Invoke-WPFUpdatesdefault}
         "WPFUpdatesdisable" {Invoke-WPFUpdatesdisable}
         "WPFUpdatessecurity" {Invoke-WPFUpdatessecurity}
+        "WPFUpdateDestroyer" {Invoke-WPFUpdateDestroyer}
+        "WPFUpdateDestroyerUndo" {Invoke-WPFUpdateDestroyerUndo}
         "WPFGetInstalled" {Invoke-WPFGetInstalled -CheckBox "winget"}
         "WPFGetInstalledTweaks" {Invoke-WPFGetInstalled -CheckBox "tweaks"}
         "WPFMinimizeButton" { $sync.Form.WindowState = [Windows.WindowState]::Minimized }

@@ -12,7 +12,7 @@
         Height="Auto"
         MinWidth="800"
         MinHeight="600"
-        Title="A-SYS_clark">
+        Title="as clark">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="0" CornerRadius="10"/>
     </WindowChrome.WindowChrome>
@@ -1056,7 +1056,7 @@
                     Margin="0,0,2,0"
                     FontFamily="Segoe MDL2 Assets"
                     Content="N/A"
-                    ToolTip="Change the A-SYS_clark UI theme (Advance Systems 4042)"
+                    ToolTip="Change the as clark UI theme (Advance Systems 4042)"
                 />
                     <Popup Name="ThemePopup"
                     IsOpen="False"
@@ -1299,13 +1299,15 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="{DynamicResource TabContentMargin}">
                     <Grid Background="Transparent" MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>  <!-- Row for the 3 columns -->
+                            <RowDefinition Height="Auto"/>  <!-- Row for update action cards -->
                             <RowDefinition Height="Auto"/>  <!-- Row for Windows Version -->
                         </Grid.RowDefinitions>
 
-                        <!-- Three columns container -->
+                        <!-- Update action cards -->
                         <Grid Grid.Row="0">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
@@ -1382,6 +1384,43 @@
                                          - Only use for isolated systems
                                         <LineBreak/><LineBreak/>
                                         <Run FontStyle="Italic" FontSize="11">Warning: Your system will be vulnerable without security updates.</Run>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Update Destroyer -->
+                            <Border Grid.Column="3" Style="{StaticResource BorderStyle}">
+                                <StackPanel>
+                                    <Button Name="WPFUpdateDestroyer"
+                                            FontSize="{DynamicResource ConfigTabButtonFontSize}"
+                                            Content="Update Destroyer"
+                                            Foreground="Red"
+                                            Margin="10,5"
+                                            Padding="10"/>
+                                    <TextBlock Margin="10"
+                                             TextWrapping="Wrap"
+                                             Foreground="{DynamicResource MainForegroundColor}">
+                                        Placeholder action card for your custom Update Destroyer logic.
+                                        <LineBreak/><LineBreak/>
+                                        <Run FontStyle="Italic" FontSize="11">Paste your code in Invoke-WPFUpdateDestroyer.ps1.</Run>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Update Destroyer Undo -->
+                            <Border Grid.Column="4" Style="{StaticResource BorderStyle}">
+                                <StackPanel>
+                                    <Button Name="WPFUpdateDestroyerUndo"
+                                            FontSize="{DynamicResource ConfigTabButtonFontSize}"
+                                            Content="Update Destroyer Undo"
+                                            Margin="10,5"
+                                            Padding="10"/>
+                                    <TextBlock Margin="10"
+                                             TextWrapping="Wrap"
+                                             Foreground="{DynamicResource MainForegroundColor}">
+                                        Placeholder action card for reverting your Update Destroyer changes.
+                                        <LineBreak/><LineBreak/>
+                                        <Run FontStyle="Italic" FontSize="11">Paste your code in Invoke-WPFUpdateDestroyerUndo.ps1.</Run>
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -1503,7 +1542,7 @@
                                         <TextBlock FontSize="{DynamicResource FontSize}"
                                                    Foreground="{DynamicResource MainForegroundColor}"
                                                    TextWrapping="Wrap" Margin="0,0,0,8">
-                                            Choose Windows version and release, then A-SYS_clark will fetch an official Microsoft ISO link and download it directly.
+                                            Choose Windows version and release, then as clark will fetch an official Microsoft ISO link and download it directly.
                                         </TextBlock>
                                         <Grid Margin="0,0,0,8">
                                             <Grid.ColumnDefinitions>
