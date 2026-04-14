@@ -1,4 +1,5 @@
-..NOTES
+<#
+.NOTES
     Product        : clark
     Organization   : Advance Systems 4042 (developed & managed)
     Version        : 26.04.14
