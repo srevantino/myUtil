@@ -8624,6 +8624,15 @@ $sync.configs.applications = @'
                               "link":  "https://discord.com/",
                               "winget":  "Discord.Discord"
                           },
+    "WPFInstallvencord":  {
+                              "category":  "Productivity",
+                              "choco":  "na",
+                              "content":  "Vencord (Vesktop)",
+                              "description":  "Vesktop is a Vencord-powered desktop client compatible with Discord, adding customization and quality-of-life features.",
+                              "link":  "https://vesktop.dev/",
+                              "winget":  "Vencord.Vesktop",
+                              "foss":  true
+                          },
     "WPFInstallntlite":  {
                              "category":  "Developer",
                              "choco":  "ntlite-free",
