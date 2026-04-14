@@ -10,19 +10,17 @@ function Invoke-WPFInstallUpgrade {
         $chocoUpgradeStatus = (Start-Process "choco" -ArgumentList "upgrade all -y" -Wait -PassThru -NoNewWindow).ExitCode
         if ($chocoUpgradeStatus -eq 0) {
             Write-Host "Upgrade Successful"
-        }
-        else{
+        } else {
             Write-Host "Error Occurred. Return Code: $chocoUpgradeStatus"
         }
-    }
-    else{
+    } else {
         if((Test-WinUtilPackageManager -winget) -eq "not-installed") {
             return
         }
 
         if(Get-WinUtilInstallerProcess -Process $global:WinGetInstall) {
             $msg = "[Invoke-WPFInstallUpgrade] Install process is currently running. Please check for a powershell window labeled 'Winget Install'"
-            [System.Windows.MessageBox]::Show($msg, "A-SYS_clark", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
+            [System.Windows.MessageBox]::Show($msg, "clark", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
             return
         }
 

@@ -1,22 +1,169 @@
+function Get-Win11ISOLogFilePath {
+    if (-not $sync["Win11ISOGlobalLogPath"]) {
+        $logDir = Join-Path $env:TEMP "ASYS_Win11ISO_Logs"
+        if (-not (Test-Path $logDir)) {
+            New-Item -Path $logDir -ItemType Directory -Force | Out-Null
+        }
+        $sync["Win11ISOGlobalLogPath"] = Join-Path $logDir ("ASYS_Win11ISO_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
+    }
+
+    return $sync["Win11ISOGlobalLogPath"]
+}
+
+function Write-Win11ISOLogCore {
+    <#
+        .SYNOPSIS
+            Append one ISO status line to file + WPF log. Safe from any thread (uses Form.Dispatcher.Invoke).
+            Does not depend on Invoke-WPFUIThread so it can be dot-sourced into ISO worker runspaces.
+        .NOTES
+            Uses DispatcherOperationCallback + state argument so the line text is not lost when PowerShell
+            converts scriptblocks to delegates (broken closure capture with [System.Action]).
+    #>
+    param([string]$Line)
+
+    try {
+        $logPath = Get-Win11ISOLogFilePath
+        Add-Content -LiteralPath $logPath -Value $Line -ErrorAction SilentlyContinue
+    } catch {}
+
+    if ($PARAM_NOUI) {
+        Write-Host $Line
+        return
+    }
+
+    $win = $sync["Form"]
+    if (-not $win) {
+        Write-Host $Line
+        return
+    }
+
+    try {
+        [void]$win.Dispatcher.Invoke(
+            [System.Windows.Threading.DispatcherPriority]::Normal,
+            [System.Windows.Threading.DispatcherOperationCallback]{
+                param($state)
+                $appendLine = [string]$state
+                $tb = $sync["WPFWin11ISOStatusLog"]
+                if (-not $tb) { return $null }
+                $current = [string]$tb.Text
+                if ($current -eq "Ready. Please select a Windows 10 or Windows 11 ISO to begin.") {
+                    $tb.Text = $appendLine
+                } else {
+                    $tb.Text += "`n$appendLine"
+                }
+                $tb.CaretIndex = $tb.Text.Length
+                $tb.ScrollToEnd()
+                return $null
+            },
+            $Line
+        )
+    } catch {
+        Write-Host $Line
+    }
+}
+
+function Add-Win11ISOStatusLogLineUIThread {
+    <#
+        .SYNOPSIS
+            Append a line to the ISO status TextBox on the UI thread only. Call from click handlers (already on UI thread).
+    #>
+    param([string]$Line)
+
+    $tb = $sync["WPFWin11ISOStatusLog"]
+    if (-not $tb) { return }
+    $current = [string]$tb.Text
+    if ($current -eq "Ready. Please select a Windows 10 or Windows 11 ISO to begin.") {
+        $tb.Text = $Line
+    } else {
+        $tb.Text += "`n$Line"
+    }
+    $tb.CaretIndex = $tb.Text.Length
+    $tb.ScrollToEnd()
+}
+
 function Write-Win11ISOLog {
     param([string]$Message)
     $ts = (Get-Date).ToString("HH:mm:ss")
-    $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
-        $current = $sync["WPFWin11ISOStatusLog"].Text
-        if ($current -eq "Ready. Please select a Windows 10 or Windows 11 ISO to begin.") {
-            $sync["WPFWin11ISOStatusLog"].Text = "[$ts] $Message"
-        } else {
-            $sync["WPFWin11ISOStatusLog"].Text += "`n[$ts] $Message"
+    $line = "[$ts] $Message"
+    Write-Win11ISOLogCore -Line $line
+}
+
+function Set-WinUtilISODownloadProgress {
+    param(
+        [int]$Percent,
+        [string]$Text,
+        [switch]$Hide
+    )
+
+    Invoke-WPFUIThread -ScriptBlock {
+        if (-not $sync["WPFWinISODownloadProgressBar"] -or -not $sync["WPFWinISODownloadProgressText"]) {
+            return
         }
-        $sync["WPFWin11ISOStatusLog"].CaretIndex = $sync["WPFWin11ISOStatusLog"].Text.Length
-        $sync["WPFWin11ISOStatusLog"].ScrollToEnd()
-    })
+
+        if ($Hide) {
+            $sync["WPFWinISODownloadProgressBar"].Visibility = "Collapsed"
+            $sync["WPFWinISODownloadProgressText"].Visibility = "Collapsed"
+            $sync["WPFWinISODownloadProgressBar"].Value = 0
+            $sync["WPFWinISODownloadProgressText"].Text = ""
+            return
+        }
+
+        $safePercent = [Math]::Max(0, [Math]::Min(100, $Percent))
+        $sync["WPFWinISODownloadProgressBar"].Visibility = "Visible"
+        $sync["WPFWinISODownloadProgressText"].Visibility = "Visible"
+        $sync["WPFWinISODownloadProgressBar"].Value = $safePercent
+        $sync["WPFWinISODownloadProgressText"].Text = $Text
+    }
+}
+
+function Show-WinUtilISOMessageBox {
+    <#
+        .SYNOPSIS
+            Shows a WPF MessageBox on the UI thread. Required when calling from ISO worker runspaces;
+            MessageBox from a pool thread can deadlock or freeze the app after the dialog closes.
+    #>
+    param(
+        [Parameter(Mandatory)][string]$Message,
+        [Parameter(Mandatory)][string]$Title,
+        [System.Windows.MessageBoxButton]$Button = 'OK',
+        [System.Windows.MessageBoxImage]$Image = 'Information'
+    )
+
+    if ($PARAM_NOUI) {
+        return [System.Windows.MessageBoxResult]::None
+    }
+
+    $win = $sync["Form"]
+    if (-not $win) {
+        return [System.Windows.MessageBox]::Show($Message, $Title, $Button, $Image)
+    }
+
+    $state = [pscustomobject]@{
+        Body   = $Message
+        Title  = $Title
+        Button = $Button
+        Image  = $Image
+        Result = [System.Windows.MessageBoxResult]::None
+    }
+    [void]$win.Dispatcher.Invoke(
+        [System.Windows.Threading.DispatcherPriority]::Normal,
+        [System.Windows.Threading.DispatcherOperationCallback]{
+            param($s)
+            $o = $s
+            $o.Result = [System.Windows.MessageBox]::Show($o.Body, $o.Title, $o.Button, $o.Image)
+            return $null
+        },
+        $state
+    )
+    return $state.Result
 }
 
 function Get-WinUtilISODirectDownloadCatalog {
+    # Passed to Fido.ps1 as -Rel. Fido matches with release.StartsWith(Rel) or Rel eq 'Latest'.
+    # Microsoft/Fido refresh often drops older builds; stale labels (e.g. 24H2) make Fido exit before any URL is returned.
     return @{
-        "Windows 11" = @("24H2", "23H2", "22H2")
-        "Windows 10" = @("22H2", "21H2")
+        "Windows 11" = @("Latest", "25H2")
+        "Windows 10" = @("Latest", "22H2")
     }
 }
 
@@ -44,6 +191,14 @@ function Set-WinUtilISODirectDownloadVersions {
 }
 
 function Get-WinUtilFidoScriptPath {
+    # Prefer repo-shipped Fido (works offline / when GitHub is blocked); else cache under LocalAppData\asys\tools.
+    if ($sync.PSScriptRoot) {
+        $bundledFido = Join-Path $sync.PSScriptRoot "tools\Fido.ps1"
+        if (Test-Path -LiteralPath $bundledFido) {
+            return $bundledFido
+        }
+    }
+
     $toolsDir = Join-Path $sync.asysdir "tools"
     if (-not (Test-Path $toolsDir)) {
         New-Item -Path $toolsDir -ItemType Directory -Force | Out-Null
@@ -51,12 +206,136 @@ function Get-WinUtilFidoScriptPath {
 
     $fidoPath = Join-Path $toolsDir "Fido.ps1"
     if (-not (Test-Path $fidoPath)) {
-        Write-Win11ISOLog "Downloading Fido helper script..."
+        Write-Win11ISOLog "Downloading Fido helper script from GitHub..."
         Invoke-WebRequest -Uri "https://raw.githubusercontent.com/pbatard/Fido/master/Fido.ps1" -OutFile $fidoPath -UseBasicParsing
         Write-Win11ISOLog "Fido helper script downloaded."
     }
 
     return $fidoPath
+}
+
+function Get-WinUtilInternetArchiveIsoUrlFromConfig {
+    param(
+        [Parameter(Mandatory)][string]$WindowsProduct,
+        [Parameter(Mandatory)][string]$WindowsRelease
+    )
+
+    try {
+        $root = $sync.configs.isomirrors
+        if (-not $root) { return $null }
+        $urls = $root.internetArchiveIsoUrls
+        if (-not $urls) { return $null }
+
+        $prodNode = $null
+        foreach ($p in $urls.PSObject.Properties) {
+            if ($p.Name -eq $WindowsProduct) {
+                $prodNode = $p.Value
+                break
+            }
+        }
+        if (-not $prodNode) { return $null }
+
+        foreach ($r in $prodNode.PSObject.Properties) {
+            if ($r.Name -eq $WindowsRelease) {
+                $cand = [string]$r.Value
+                if ([string]::IsNullOrWhiteSpace($cand)) { return $null }
+                $cand = $cand.Trim()
+                if ($cand -match '^https?://') { return $cand }
+                return $null
+            }
+        }
+    } catch {}
+
+    return $null
+}
+
+function Invoke-WinUtilISOBitsOrHttpDownload {
+    param(
+        [Parameter(Mandatory)][string]$Url,
+        [Parameter(Mandatory)][string]$Destination,
+        [string]$WindowsProduct = "",
+        [string]$WindowsRelease = ""
+    )
+
+    $bitsDescription = if ($WindowsProduct) { "$WindowsProduct $WindowsRelease" } else { "ISO download" }
+
+    try {
+        Import-Module BitsTransfer -ErrorAction Stop
+        $bitsJob = Start-BitsTransfer -Source $Url -Destination $Destination -DisplayName "clark ISO Download" -Description $bitsDescription -Asynchronous
+        if (-not $bitsJob -or [string]::IsNullOrWhiteSpace([string]$bitsJob.JobId)) {
+            throw "BITS did not return a transfer job (JobId empty)."
+        }
+        $bitsJobId = $bitsJob.JobId
+        $downloadStart = Get-Date
+
+        do {
+            Start-Sleep -Seconds 1
+            $bitsJob = Get-BitsTransfer -Id $bitsJobId -ErrorAction SilentlyContinue
+            if (-not $bitsJob) {
+                throw "BITS job was not found (it may have been cancelled or cleared). JobId: $bitsJobId"
+            }
+
+            $bytesTotal = [double]$bitsJob.BytesTotal
+            $bytesTransferred = [double]$bitsJob.BytesTransferred
+            $percent = if ($bytesTotal -gt 0) { [int][Math]::Round(($bytesTransferred / $bytesTotal) * 100, 0) } else { 0 }
+
+            $elapsedSeconds = [Math]::Max(1.0, ((Get-Date) - $downloadStart).TotalSeconds)
+            $speedBps = if ($bytesTransferred -gt 0) { $bytesTransferred / $elapsedSeconds } else { 0.0 }
+            $remainingBytes = [Math]::Max(0.0, $bytesTotal - $bytesTransferred)
+            $etaText = if ($speedBps -gt 0 -and $bytesTotal -gt 0) {
+                $etaSeconds = [int][Math]::Ceiling($remainingBytes / $speedBps)
+                [TimeSpan]::FromSeconds($etaSeconds).ToString("hh\:mm\:ss")
+            } else {
+                "estimating..."
+            }
+
+            $downloadedMb = [Math]::Round($bytesTransferred / 1MB, 1)
+            $totalMb = if ($bytesTotal -gt 0) { [Math]::Round($bytesTotal / 1MB, 1) } else { 0 }
+            $label = if ($bytesTotal -gt 0) {
+                "Downloading ISO... $percent% ($downloadedMb MB / $totalMb MB, ETA $etaText)"
+            } else {
+                "Downloading ISO... $percent% (ETA $etaText)"
+            }
+
+            Set-WinUtilProgressBar -Label $label -Percent ([Math]::Max(5, $percent))
+            Set-WinUtilISODownloadProgress -Percent $percent -Text $label
+        } while ($bitsJob.JobState -in @("Queued", "Connecting", "Transferring"))
+
+        if ($bitsJob.JobState -eq "Transferred") {
+            Complete-BitsTransfer -BitsJob $bitsJob -ErrorAction Stop
+        } elseif ($bitsJob.JobState -eq "Error") {
+            $errorText = if ($bitsJob.ErrorDescription) { $bitsJob.ErrorDescription } else { "BITS download failed." }
+            throw $errorText
+        } else {
+            throw "BITS download did not complete successfully. Final state: $($bitsJob.JobState)"
+        }
+    } catch {
+        Write-Win11ISOLog "BITS path failed ($($_.Exception.Message)); using HTTP fallback (no per-percent progress)."
+        try { Get-BitsTransfer -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq "clark ISO Download" } | Remove-BitsTransfer -ErrorAction SilentlyContinue } catch {}
+        if (Test-Path -LiteralPath $Destination) {
+            Remove-Item -LiteralPath $Destination -Force -ErrorAction SilentlyContinue
+        }
+        Set-WinUtilProgressBar -Label "Downloading ISO via HTTP..." -Percent 15
+        Set-WinUtilISODownloadProgress -Percent 5 -Text "Downloading ISO via HTTP (large file, please wait)..."
+        Invoke-WebRequest -Uri $Url -OutFile $Destination -UseBasicParsing
+    }
+}
+
+function Test-WinUtilFidoMicrosoftAccessDenied {
+    param([string]$Text)
+    if ([string]::IsNullOrWhiteSpace($Text)) { return $false }
+    return $Text -match '715-123130' -or
+        $Text -match 'banned from using this service' -or
+        $Text -match 'location hiding technologies' -or
+        $Text -match 'unable to complete your request at this time'
+}
+
+function Get-WinUtilMicrosoftSoftwareDownloadUrl {
+    param([string]$WindowsProduct)
+    if ($WindowsProduct -match '11') {
+        return 'https://www.microsoft.com/software-download/windows11'
+    }
+    return 'https://www.microsoft.com/software-download/windows10'
 }
 
 function Get-WinUtilDirectISODownloadUrl {
@@ -78,20 +357,37 @@ function Get-WinUtilDirectISODownloadUrl {
     )
 
     $output = & powershell.exe @arguments 2>&1
+    $outputText = ($output | ForEach-Object { "$_" }) -join ' '
+
     if ($LASTEXITCODE -ne 0) {
-        throw "Unable to get Microsoft ISO link for $WindowsProduct $WindowsRelease. Fido output: $($output -join ' ')"
+        if (Test-WinUtilFidoMicrosoftAccessDenied -Text $outputText) {
+            $official = Get-WinUtilMicrosoftSoftwareDownloadUrl -WindowsProduct $WindowsProduct
+            throw (
+                "Microsoft blocked the automated ISO link request (message often includes 715-123130). " +
+                "This usually happens with VPN/proxy/Tor, some datacenter or restricted networks, or regional limits - not a bug in clark.`n`n" +
+                "What to try: disconnect VPN/proxy, use another network (e.g. home ISP or phone hotspot), wait and retry, or download the ISO in a browser from:`n$official"
+            )
+        }
+        throw "Unable to get Microsoft ISO link for $WindowsProduct $WindowsRelease. Fido output: $outputText"
     }
 
-    $url = ($output | Where-Object { $_ -match '^https?://.*\.iso(\?.*)?$' } | Select-Object -Last 1)
+    $url = ($output | ForEach-Object { "$_".Trim() } | Where-Object { $_ -match '^https?://.+\.iso(\?.*)?$' } | Select-Object -Last 1)
     if ([string]::IsNullOrWhiteSpace($url)) {
-        $url = ($output | Select-Object -Last 1)
+        $url = ($output | ForEach-Object { "$_".Trim() } | Where-Object { $_ -match '^https?://' } | Select-Object -Last 1)
     }
 
     if ([string]::IsNullOrWhiteSpace($url) -or $url -notmatch '^https?://') {
+        if (Test-WinUtilFidoMicrosoftAccessDenied -Text $outputText) {
+            $official = Get-WinUtilMicrosoftSoftwareDownloadUrl -WindowsProduct $WindowsProduct
+            throw (
+                "Microsoft blocked the automated ISO link request. " +
+                "Try without VPN/proxy or use another network, or download from:`n$official"
+            )
+        }
         throw "No valid ISO URL was returned for $WindowsProduct $WindowsRelease."
     }
 
-    return [string]$url
+    return [string]$url.Trim()
 }
 
 function Invoke-WinUtilISODirectDownload {
@@ -124,26 +420,67 @@ function Invoke-WinUtilISODirectDownload {
 
     $destination = $dlg.FileName
     $sync["WPFWinISODownloadDirectButton"].IsEnabled = $false
+    Add-Win11ISOStatusLogLineUIThread "Starting direct download: $windowsProduct $windowsRelease -> $destination"
 
     Invoke-WPFRunspace -ParameterList @(("windowsProduct", $windowsProduct), ("windowsRelease", $windowsRelease), ("destination", $destination)) -ScriptBlock {
         param($windowsProduct, $windowsRelease, $destination)
         try {
             $sync.ProcessRunning = $true
-            Write-Win11ISOLog "Resolving official ISO link for $windowsProduct $windowsRelease..."
-            Set-WinUtilProgressBar -Label "Resolving ISO URL..." -Percent 10
+            Set-WinUtilISODownloadProgress -Percent 0 -Text "Preparing download..."
 
-            $url = Get-WinUtilDirectISODownloadUrl -WindowsProduct $windowsProduct -WindowsRelease $windowsRelease
-            Write-Win11ISOLog "Download URL resolved. Starting download to: $destination"
-            Set-WinUtilProgressBar -Label "Downloading ISO..." -Percent 40
+            $archiveUrl = Get-WinUtilInternetArchiveIsoUrlFromConfig -WindowsProduct $windowsProduct -WindowsRelease $windowsRelease
+            $url = $null
+            $triedArchive = $false
 
-            Start-BitsTransfer -Source $url -Destination $destination -DisplayName "A-SYS_clark ISO Download" -Description "$windowsProduct $windowsRelease"
+            if (-not [string]::IsNullOrWhiteSpace($archiveUrl)) {
+                $url = $archiveUrl
+                $triedArchive = $true
+                Write-Win11ISOLog "Using mirror URL from config\\isomirrors.json for $windowsProduct $windowsRelease."
+                Set-WinUtilProgressBar -Label "Downloading ISO (configured mirror)..." -Percent 15
+            } else {
+                Write-Win11ISOLog "No mirror URL in config for $windowsProduct $windowsRelease; resolving via Fido (Microsoft)..."
+                Set-WinUtilProgressBar -Label "Resolving ISO URL (Fido)..." -Percent 10
+                $url = Get-WinUtilDirectISODownloadUrl -WindowsProduct $windowsProduct -WindowsRelease $windowsRelease
+                Set-WinUtilProgressBar -Label "Starting ISO download..." -Percent 20
+            }
+
+            Write-Win11ISOLog "Download target: $destination"
+            try {
+                Invoke-WinUtilISOBitsOrHttpDownload -Url $url -Destination $destination -WindowsProduct $windowsProduct -WindowsRelease $windowsRelease
+            } catch {
+                if ($triedArchive) {
+                    Write-Win11ISOLog "Mirror download failed ($($_.Exception.Message)); falling back to Fido (Microsoft)."
+                    if (Test-Path -LiteralPath $destination) {
+                        Remove-Item -LiteralPath $destination -Force -ErrorAction SilentlyContinue
+                    }
+                    Set-WinUtilProgressBar -Label "Resolving ISO URL (Fido fallback)..." -Percent 12
+                    $url = Get-WinUtilDirectISODownloadUrl -WindowsProduct $windowsProduct -WindowsRelease $windowsRelease
+                    Write-Win11ISOLog "Fido URL resolved; starting download."
+                    Set-WinUtilProgressBar -Label "Starting ISO download (Fido)..." -Percent 20
+                    Invoke-WinUtilISOBitsOrHttpDownload -Url $url -Destination $destination -WindowsProduct $windowsProduct -WindowsRelease $windowsRelease
+                } else {
+                    throw
+                }
+            }
 
             Set-WinUtilProgressBar -Label "Download complete" -Percent 100
+            Set-WinUtilISODownloadProgress -Percent 100 -Text "Download complete: $destination"
             Write-Win11ISOLog "ISO download completed: $destination"
-            [System.Windows.MessageBox]::Show("ISO download complete:`n`n$destination", "Download Complete", "OK", "Information") | Out-Null
+            $null = Show-WinUtilISOMessageBox -Message "ISO download complete:`n`n$destination" -Title "Download Complete" -Button OK -Image Information
         } catch {
             Write-Win11ISOLog "ERROR during direct ISO download: $_"
-            [System.Windows.MessageBox]::Show("Direct ISO download failed:`n`n$($_.Exception.Message)", "Download Error", "OK", "Error") | Out-Null
+            Set-WinUtilISODownloadProgress -Percent 0 -Text "Download failed. Check the log for details."
+            $errMsg = [string]$_.Exception.Message
+            $officialPage = Get-WinUtilMicrosoftSoftwareDownloadUrl -WindowsProduct $windowsProduct
+            if (Test-WinUtilFidoMicrosoftAccessDenied -Text $errMsg) {
+                $prompt = "$errMsg`n`nOpen Microsoft's official download page in your browser?"
+                $answer = Show-WinUtilISOMessageBox -Message $prompt -Title "Microsoft blocked automated download" -Button YesNo -Image Warning
+                if ($answer -eq [System.Windows.MessageBoxResult]::Yes) {
+                    Start-Process $officialPage
+                }
+            } else {
+                $null = Show-WinUtilISOMessageBox -Message "Direct ISO download failed:`n`n$errMsg" -Title "Download Error" -Button OK -Image Error
+            }
         } finally {
             $sync.ProcessRunning = $false
             Set-WinUtilProgressBar -Label "" -Percent 0
@@ -173,7 +510,9 @@ function Invoke-WinUtilISOBrowse {
     $sync["WPFWin11ISOModifySection"].Visibility      = "Collapsed"
     $sync["WPFWin11ISOOutputSection"].Visibility      = "Collapsed"
 
+    $logPath = Get-Win11ISOLogFilePath
     Write-Win11ISOLog "ISO selected: $isoPath  ($fileSizeGB GB)"
+    Write-Win11ISOLog "Logging to: $logPath"
 }
 
 function Invoke-WinUtilISOMountAndVerify {
@@ -184,88 +523,217 @@ function Invoke-WinUtilISOMountAndVerify {
         return
     }
 
-    Write-Win11ISOLog "Mounting ISO: $isoPath"
-    Set-WinUtilProgressBar -Label "Mounting ISO..." -Percent 10
+    # Recover stuck UI if a previous run left flags set but the pipeline is gone or finished
+    if ($sync["Win11ISOMountVerifyRunning"]) {
+        $ar = $sync["_isoMountAsyncResult"]
+        $psRef = $sync["_isoMountPowerShell"]
+        if (-not $ar -and -not $psRef) {
+            $sync["Win11ISOMountVerifyRunning"] = $false
+            if ($sync["WPFWin11ISOMountButton"]) { $sync["WPFWin11ISOMountButton"].IsEnabled = $true }
+        } elseif ($ar -and $ar.IsCompleted) {
+            try {
+                if ($psRef) { [void]$psRef.EndInvoke($ar); $psRef.Dispose() }
+            } catch {}
+            $sync["_isoMountPowerShell"] = $null
+            $sync["_isoMountAsyncResult"] = $null
+            $sync["Win11ISOMountVerifyRunning"] = $false
+            if ($sync["WPFWin11ISOMountButton"]) { $sync["WPFWin11ISOMountButton"].IsEnabled = $true }
+        } else {
+            $tsBusy = (Get-Date).ToString("HH:mm:ss")
+            Add-Win11ISOStatusLogLineUIThread -Line "[$tsBusy] Mount/verify is already running; please wait."
+            return
+        }
+    }
+
+    $tsClick = (Get-Date).ToString("HH:mm:ss")
+    Add-Win11ISOStatusLogLineUIThread -Line "[$tsClick] Mount & verify — starting (watch this log for progress)..."
+
+    $mountBtn = $sync["WPFWin11ISOMountButton"]
+    if ($mountBtn) { $mountBtn.IsEnabled = $false }
+    $sync["Win11ISOMountVerifyRunning"] = $true
 
     try {
-        Mount-DiskImage -ImagePath $isoPath -ErrorAction Stop | Out-Null
+        Write-Win11ISOLog "Starting mount and verify in the background (UI stays responsive)..."
+        Set-WinUtilProgressBar -Label "Mounting ISO..." -Percent 10
+    } catch {
+        $sync["Win11ISOMountVerifyRunning"] = $false
+        if ($mountBtn) { $mountBtn.IsEnabled = $true }
+        [System.Windows.MessageBox]::Show(
+            "Could not update the ISO status log (UI).`n`n$($_.Exception.Message)",
+            "ISO Creator", "OK", "Warning")
+        return
+    }
 
-        do {
-            Start-Sleep -Milliseconds 500
-        } until ((Get-DiskImage -ImagePath $isoPath | Get-Volume).DriveLetter)
+    $getLogDef  = "function Get-Win11ISOLogFilePath {`n" + ${function:Get-Win11ISOLogFilePath}.ToString() + "`n}"
+    $logCoreDef = "function Write-Win11ISOLogCore {`n" + ${function:Write-Win11ISOLogCore}.ToString() + "`n}"
 
-        $driveLetter = (Get-DiskImage -ImagePath $isoPath | Get-Volume).DriveLetter + ":"
-        Write-Win11ISOLog "Mounted at drive $driveLetter"
+    $runspace = [Management.Automation.Runspaces.RunspaceFactory]::CreateRunspace()
+    $runspace.ApartmentState = "STA"
+    $runspace.ThreadOptions  = "ReuseThread"
+    $runspace.Open()
+    $runspace.SessionStateProxy.SetVariable("sync",       $sync)
+    $runspace.SessionStateProxy.SetVariable("isoPath",    $isoPath)
+    $runspace.SessionStateProxy.SetVariable("getLogDef",  $getLogDef)
+    $runspace.SessionStateProxy.SetVariable("logCoreDef", $logCoreDef)
 
-        Set-WinUtilProgressBar -Label "Verifying ISO contents..." -Percent 30
-
-        $wimPath = Join-Path $driveLetter "sources\install.wim"
-        $esdPath = Join-Path $driveLetter "sources\install.esd"
-
-        if (-not (Test-Path $wimPath) -and -not (Test-Path $esdPath)) {
-            Dismount-DiskImage -ImagePath $isoPath | Out-Null
-            Write-Win11ISOLog "ERROR: install.wim/install.esd not found - not a valid Windows ISO."
-            [System.Windows.MessageBox]::Show(
-                "This does not appear to be a valid Windows ISO.`n`ninstall.wim / install.esd was not found.",
-                "Invalid ISO", "OK", "Error")
-            Set-WinUtilProgressBar -Label "" -Percent 0
-            return
+    $ps = [Management.Automation.PowerShell]::Create()
+    $ps.Runspace = $runspace
+    [void]$ps.AddScript({
+        . ([scriptblock]::Create($getLogDef))
+        . ([scriptblock]::Create($logCoreDef))
+        function Write-Win11ISOLog {
+            param([string]$Message)
+            $ts = (Get-Date).ToString("HH:mm:ss")
+            Write-Win11ISOLogCore -Line "[$ts] $Message"
         }
 
-        $activeWim = if (Test-Path $wimPath) { $wimPath } else { $esdPath }
-
-        Set-WinUtilProgressBar -Label "Reading image metadata..." -Percent 55
-        $imageInfo = Get-WindowsImage -ImagePath $activeWim | Select-Object ImageIndex, ImageName
-
-        $clientImages = $imageInfo | Where-Object {
-            ($_.ImageName -match '\bWindows 10\b' -or $_.ImageName -match '\bWindows 11\b') -and
-            $_.ImageName -notmatch 'Windows Server'
-        }
-        if (-not $clientImages) {
-            Dismount-DiskImage -ImagePath $isoPath | Out-Null
-            Write-Win11ISOLog "ERROR: No Windows 10 or Windows 11 client edition found in the image."
-            [System.Windows.MessageBox]::Show(
-                "No Windows 10 or Windows 11 client edition was found in this ISO.`n`nUse an official Windows 10 or Windows 11 ISO from Microsoft (not Windows Server).",
-                "Unsupported ISO", "OK", "Error")
-            Set-WinUtilProgressBar -Label "" -Percent 0
-            return
-        }
-
-        $sync["Win11ISOImageInfo"] = $imageInfo
-
-        $sync["WPFWin11ISOMountDriveLetter"].Text = "Mounted at: $driveLetter   |   Image file: $(Split-Path $activeWim -Leaf)"
-        $sync["WPFWin11ISOEditionComboBox"].Dispatcher.Invoke([action]{
-            $sync["WPFWin11ISOEditionComboBox"].Items.Clear()
-            foreach ($img in $imageInfo) {
-                [void]$sync["WPFWin11ISOEditionComboBox"].Items.Add("$($img.ImageIndex): $($img.ImageName)")
-            }
-            if ($sync["WPFWin11ISOEditionComboBox"].Items.Count -gt 0) {
-                $proIndex = -1
-                for ($i = 0; $i -lt $sync["WPFWin11ISOEditionComboBox"].Items.Count; $i++) {
-                    if ($sync["WPFWin11ISOEditionComboBox"].Items[$i] -match "Windows 1[01] Pro(?![\w ])") {
-                        $proIndex = $i; break
+        function MountVerify-SetProgress {
+            param([string]$Label, [int]$Percent)
+            $win = $sync["Form"]
+            if (-not $win) { return }
+            # Stash on $sync so [System.Action] does not rely on broken PS delegate closure capture
+            $sync["_isoUiProgLabel"] = $Label
+            $sync["_isoUiProgPct"]   = $Percent
+            $win.Dispatcher.Invoke([System.Action]{
+                $lbl = [string]$sync["_isoUiProgLabel"]
+                $pct = [int]$sync["_isoUiProgPct"]
+                if ($sync.progressBarTextBlock) {
+                    $sync.progressBarTextBlock.Text    = $lbl
+                    $sync.progressBarTextBlock.ToolTip = $lbl
+                }
+                if ($sync.ProgressBar) {
+                    if ($pct -le 0) {
+                        $sync.ProgressBar.Value = 0
+                    } else {
+                        $sync.ProgressBar.Value = [Math]::Max($pct, 5)
                     }
                 }
-                $sync["WPFWin11ISOEditionComboBox"].SelectedIndex = if ($proIndex -ge 0) { $proIndex } else { 0 }
+            })
+        }
+
+        try {
+            Write-Win11ISOLog "Mounting ISO: $isoPath"
+            MountVerify-SetProgress "Mounting ISO..." 10
+
+            Mount-DiskImage -ImagePath $isoPath -ErrorAction Stop | Out-Null
+
+            $deadline = (Get-Date).AddMinutes(5)
+            do {
+                Start-Sleep -Milliseconds 500
+                $vol = Get-DiskImage -ImagePath $isoPath -ErrorAction Stop | Get-Volume -ErrorAction SilentlyContinue
+                if ($vol -and $vol.DriveLetter) { break }
+                if ((Get-Date) -gt $deadline) {
+                    throw "Timed out waiting for mounted ISO to receive a drive letter."
+                }
+            } while ($true)
+
+            $driveLetter = (Get-DiskImage -ImagePath $isoPath | Get-Volume).DriveLetter + ":"
+            Write-Win11ISOLog "Mounted at drive $driveLetter"
+
+            MountVerify-SetProgress "Verifying ISO contents..." 30
+
+            $wimPath = Join-Path $driveLetter "sources\install.wim"
+            $esdPath = Join-Path $driveLetter "sources\install.esd"
+
+            if (-not (Test-Path $wimPath) -and -not (Test-Path $esdPath)) {
+                Dismount-DiskImage -ImagePath $isoPath | Out-Null
+                Write-Win11ISOLog "ERROR: install.wim/install.esd not found - not a valid Windows ISO."
+                $sync["Form"].Dispatcher.Invoke([System.Action]{
+                    [System.Windows.MessageBox]::Show(
+                        "This does not appear to be a valid Windows ISO.`n`ninstall.wim / install.esd was not found.",
+                        "Invalid ISO", "OK", "Error")
+                })
+                return
             }
-        })
-        $sync["WPFWin11ISOVerifyResultPanel"].Visibility = "Visible"
 
-        $sync["Win11ISODriveLetter"] = $driveLetter
-        $sync["Win11ISOWimPath"]     = $activeWim
-        $sync["Win11ISOImagePath"]   = $isoPath
-        $sync["WPFWin11ISOModifySection"].Visibility = "Visible"
+            $activeWim = if (Test-Path $wimPath) { $wimPath } else { $esdPath }
 
-        Set-WinUtilProgressBar -Label "ISO verified" -Percent 100
-        Write-Win11ISOLog "ISO verified OK. Editions found: $($imageInfo.Count)"
+            MountVerify-SetProgress "Reading image metadata..." 55
+            $imageInfo = Get-WindowsImage -ImagePath $activeWim | Select-Object ImageIndex, ImageName
+
+            $clientImages = $imageInfo | Where-Object {
+                ($_.ImageName -match '\bWindows 10\b' -or $_.ImageName -match '\bWindows 11\b') -and
+                $_.ImageName -notmatch 'Windows Server'
+            }
+            if (-not $clientImages) {
+                Dismount-DiskImage -ImagePath $isoPath | Out-Null
+                Write-Win11ISOLog "ERROR: No Windows 10 or Windows 11 client edition found in the image."
+                $sync["Form"].Dispatcher.Invoke([System.Action]{
+                    [System.Windows.MessageBox]::Show(
+                        "No Windows 10 or Windows 11 client edition was found in this ISO.`n`nUse an official Windows 10 or Windows 11 ISO from Microsoft (not Windows Server).",
+                        "Unsupported ISO", "OK", "Error")
+                })
+                return
+            }
+
+            $uiDriveLetter = $driveLetter
+            $uiActiveWim   = $activeWim
+            $uiImageInfo   = $imageInfo
+            $uiIsoPath     = $isoPath
+
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
+                $sync["Win11ISOImageInfo"] = $uiImageInfo
+                $sync["WPFWin11ISOMountDriveLetter"].Text = "Mounted at: $uiDriveLetter   |   Image file: $(Split-Path $uiActiveWim -Leaf)"
+                $cb = $sync["WPFWin11ISOEditionComboBox"]
+                $cb.Items.Clear()
+                foreach ($img in $uiImageInfo) {
+                    [void]$cb.Items.Add("$($img.ImageIndex): $($img.ImageName)")
+                }
+                if ($cb.Items.Count -gt 0) {
+                    $proIndex = -1
+                    for ($i = 0; $i -lt $cb.Items.Count; $i++) {
+                        if ($cb.Items[$i] -match "Windows 1[01] Pro(?![\w ])") {
+                            $proIndex = $i; break
+                        }
+                    }
+                    $cb.SelectedIndex = if ($proIndex -ge 0) { $proIndex } else { 0 }
+                }
+                $sync["WPFWin11ISOVerifyResultPanel"].Visibility = "Visible"
+                $sync["Win11ISODriveLetter"] = $uiDriveLetter
+                $sync["Win11ISOWimPath"]     = $uiActiveWim
+                $sync["Win11ISOImagePath"]   = $uiIsoPath
+                $sync["WPFWin11ISOModifySection"].Visibility = "Visible"
+            })
+
+            MountVerify-SetProgress "ISO verified" 100
+            Write-Win11ISOLog "ISO verified OK. Editions found: $($imageInfo.Count)"
+        } catch {
+            Write-Win11ISOLog "ERROR during mount/verify: $($_.Exception.Message)"
+            Write-Win11ISOLog "ERROR details: $($_ | Out-String)"
+            try {
+                Dismount-DiskImage -ImagePath $isoPath -ErrorAction SilentlyContinue | Out-Null
+            } catch {}
+            $sync["__isoLastErrorMessage"] = "$($_.Exception.Message)"
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
+                $m = [string]$sync["__isoLastErrorMessage"]
+                [System.Windows.MessageBox]::Show(
+                    "An error occurred while mounting or verifying the ISO:`n`n$m",
+                    "Error", "OK", "Error")
+            })
+        } finally {
+            Start-Sleep -Milliseconds 800
+            MountVerify-SetProgress "" 0
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
+                $sync["WPFWin11ISOMountButton"].IsEnabled = $true
+                $sync["Win11ISOMountVerifyRunning"] = $false
+            })
+        }
+    })
+
+    try {
+        # Keep strong references so the pipeline is not GC'd mid-flight.
+        $sync["_isoMountPowerShell"] = $ps
+        $sync["_isoMountAsyncResult"] = $ps.BeginInvoke()
     } catch {
-        Write-Win11ISOLog "ERROR during mount/verify: $_"
+        $sync["_isoMountPowerShell"] = $null
+        $sync["_isoMountAsyncResult"] = $null
+        try { $ps.Dispose() } catch {}
+        $sync["Win11ISOMountVerifyRunning"] = $false
+        $mountBtn.IsEnabled = $true
+        Write-Win11ISOLog "ERROR: Could not start mount/verify job: $($_.Exception.Message)"
         [System.Windows.MessageBox]::Show(
-            "An error occurred while mounting or verifying the ISO:`n`n$_",
-            "Error", "OK", "Error")
-    } finally {
-        Start-Sleep -Milliseconds 800
-        Set-WinUtilProgressBar -Label "" -Percent 0
+            "Could not start mount/verify in the background:`n`n$($_.Exception.Message)",
+            "ISO Creator", "OK", "Error")
     }
 }
 
@@ -327,42 +795,62 @@ function Invoke-WinUtilISOModify {
     $runspace.SessionStateProxy.SetVariable("autounattendContent", $autounattendContent)
     $runspace.SessionStateProxy.SetVariable("injectDrivers",       $injectDrivers)
 
-    $isoScriptFuncDef   = "function Invoke-WinUtilISOScript {`n" + ${function:Invoke-WinUtilISOScript}.ToString() + "`n}"
-    $win11ISOLogFuncDef = "function Write-Win11ISOLog {`n"       + ${function:Write-Win11ISOLog}.ToString()       + "`n}"
-    $runspace.SessionStateProxy.SetVariable("isoScriptFuncDef",   $isoScriptFuncDef)
-    $runspace.SessionStateProxy.SetVariable("win11ISOLogFuncDef", $win11ISOLogFuncDef)
+    $isoScriptFuncDef = "function Invoke-WinUtilISOScript {`n" + ${function:Invoke-WinUtilISOScript}.ToString() + "`n}"
+    $getLogDef        = "function Get-Win11ISOLogFilePath {`n" + ${function:Get-Win11ISOLogFilePath}.ToString() + "`n}"
+    $logCoreDef       = "function Write-Win11ISOLogCore {`n" + ${function:Write-Win11ISOLogCore}.ToString() + "`n}"
+    $runspace.SessionStateProxy.SetVariable("isoScriptFuncDef", $isoScriptFuncDef)
+    $runspace.SessionStateProxy.SetVariable("getLogDef",        $getLogDef)
+    $runspace.SessionStateProxy.SetVariable("logCoreDef",       $logCoreDef)
 
     $script = [Management.Automation.PowerShell]::Create()
     $script.Runspace = $runspace
     $script.AddScript({
         . ([scriptblock]::Create($isoScriptFuncDef))
-        . ([scriptblock]::Create($win11ISOLogFuncDef))
+        . ([scriptblock]::Create($getLogDef))
+        . ([scriptblock]::Create($logCoreDef))
+        function Write-Win11ISOLog {
+            param([string]$Message)
+            $ts = (Get-Date).ToString("HH:mm:ss")
+            Write-Win11ISOLogCore -Line "[$ts] $Message"
+        }
 
         function Log($msg) {
             $ts = (Get-Date).ToString("HH:mm:ss")
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
-                $sync["WPFWin11ISOStatusLog"].Text += "`n[$ts] $msg"
-                $sync["WPFWin11ISOStatusLog"].CaretIndex = $sync["WPFWin11ISOStatusLog"].Text.Length
-                $sync["WPFWin11ISOStatusLog"].ScrollToEnd()
-            })
-            Add-Content -Path (Join-Path $workDir "ASYS_Win11ISO.log") -Value "[$ts] $msg" -ErrorAction SilentlyContinue
+            $line = "[$ts] $msg"
+            Write-Win11ISOLogCore -Line $line
+            Add-Content -Path (Join-Path $workDir "ASYS_Win11ISO.log") -Value $line -ErrorAction SilentlyContinue
         }
 
         function SetProgress($label, $pct) {
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
-                $sync.progressBarTextBlock.Text    = $label
-                $sync.progressBarTextBlock.ToolTip = $label
-                $sync.ProgressBar.Value            = [Math]::Max($pct, 5)
+            $win = $sync["Form"]
+            if (-not $win) { return }
+            $sync["_isoUiProgLabel"] = $label
+            $sync["_isoUiProgPct"]   = $pct
+            $win.Dispatcher.Invoke([System.Action]{
+                $lbl = [string]$sync["_isoUiProgLabel"]
+                $pc  = [int]$sync["_isoUiProgPct"]
+                if ($sync.progressBarTextBlock) {
+                    $sync.progressBarTextBlock.Text    = $lbl
+                    $sync.progressBarTextBlock.ToolTip = $lbl
+                }
+                if ($sync.ProgressBar) {
+                    if ($pc -le 0) {
+                        $sync.ProgressBar.Value = 0
+                    } else {
+                        $sync.ProgressBar.Value = [Math]::Max($pc, 5)
+                    }
+                }
             })
         }
 
         try {
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
                 $sync["WPFWin11ISOSelectSection"].Visibility = "Collapsed"
                 $sync["WPFWin11ISOMountSection"].Visibility  = "Collapsed"
                 $sync["WPFWin11ISOModifySection"].Visibility = "Collapsed"
             })
 
+            Log "Global log file: $(Get-Win11ISOLogFilePath)"
             Log "Creating working directory: $workDir"
             $isoContents = Join-Path $workDir "iso_contents"
             $mountDir    = Join-Path $workDir "wim_mount"
@@ -375,14 +863,28 @@ function Invoke-WinUtilISOModify {
             SetProgress "Mounting install.wim..." 25
 
             $localWim = Join-Path $isoContents "sources\install.wim"
-            if (-not (Test-Path $localWim)) { $localWim = Join-Path $isoContents "sources\install.esd" }
+            if (-not (Test-Path $localWim)) {
+                $localEsd = Join-Path $isoContents "sources\install.esd"
+                if (-not (Test-Path $localEsd)) {
+                    throw "Neither install.wim nor install.esd was found in copied ISO contents."
+                }
+
+                # install.esd cannot be modified directly; export selected edition to writable install.wim first.
+                SetProgress "Converting install.esd to install.wim..." 20
+                Log "install.esd detected. Exporting selected edition (Index $selectedWimIndex) to install.wim..."
+                Export-WindowsImage -SourceImagePath $localEsd -SourceIndex $selectedWimIndex -DestinationImagePath $localWim -ErrorAction Stop | Out-Null
+                Log "install.esd converted to install.wim successfully."
+                $selectedWimIndex = 1
+                Log "Using index 1 in converted install.wim for servicing."
+            }
+
             Set-ItemProperty -Path $localWim -Name IsReadOnly -Value $false
 
             Log "Mounting install.wim (Index ${selectedWimIndex}: $selectedEditionName) at $mountDir..."
             Mount-WindowsImage -ImagePath $localWim -Index $selectedWimIndex -Path $mountDir -ErrorAction Stop | Out-Null
             SetProgress "Modifying install.wim..." 45
 
-            Log "Applying A-SYS_clark (Advance Systems 4042) modifications to install.wim..."
+            Log "Applying clark (Advance Systems 4042) modifications to install.wim..."
             Invoke-WinUtilISOScript -ScratchDir $mountDir -ISOContentsDir $isoContents -AutoUnattendXml $autounattendContent -InjectCurrentSystemDrivers $injectDrivers -Log { param($m) Log $m }
 
             SetProgress "Cleaning up component store (WinSxS)..." 56
@@ -415,11 +917,12 @@ function Invoke-WinUtilISOModify {
             SetProgress "Modification complete" 100
             Log "install.wim modification complete. Choose an output option in Step 4."
 
-            $sync["WPFWin11ISOOutputSection"].Dispatcher.Invoke([action]{
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
                 $sync["WPFWin11ISOOutputSection"].Visibility = "Visible"
             })
         } catch {
-            Log "ERROR during modification: $_"
+            Log "ERROR during modification: $($_.Exception.Message)"
+            Log "ERROR details: $($_ | Out-String)"
 
             try {
                 if (Test-Path $mountDir) {
@@ -446,15 +949,17 @@ function Invoke-WinUtilISOModify {
                 }
             } catch { Log "Warning: could not remove temp directory during cleanup: $_" }
 
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
+            $sync["__isoLastErrorMessage"] = "$($_.Exception.Message)"
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
+                $m = [string]$sync["__isoLastErrorMessage"]
                 [System.Windows.MessageBox]::Show(
-                    "An error occurred during install.wim modification:`n`n$_",
+                    "An error occurred during install.wim modification:`n`n$m",
                     "Modification Error", "OK", "Error")
             })
         } finally {
             Start-Sleep -Milliseconds 800
             $sync["Win11ISOModifying"] = $false
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
                 $sync.progressBarTextBlock.Text    = ""
                 $sync.progressBarTextBlock.ToolTip = ""
                 $sync.ProgressBar.Value            = 0
@@ -501,7 +1006,7 @@ function Invoke-WinUtilISOCheckExistingWork {
     Write-Win11ISOLog "Click 'Clean & Reset' if you want to start over with a new ISO."
 
     [System.Windows.MessageBox]::Show(
-        "A previous A-SYS_clark ISO working directory was found:`n`n$($existingWorkDir.FullName)`n`n(Last modified: $modified)`n`nStep 4 (output options) has been restored so you can save the already-modified image.`n`nClick 'Clean & Reset' in Step 4 if you want to start over.",
+        "A previous clark ISO working directory was found:`n`n$($existingWorkDir.FullName)`n`n(Last modified: $modified)`n`nStep 4 (output options) has been restored so you can save the already-modified image.`n`nClick 'Clean & Reset' in Step 4 if you want to start over.",
         "Existing Work Found", "OK", "Info")
 }
 
@@ -517,32 +1022,52 @@ function Invoke-WinUtilISOCleanAndReset {
 
     $sync["WPFWin11ISOCleanResetButton"].IsEnabled = $false
 
+    $getLogDefClean  = "function Get-Win11ISOLogFilePath {`n" + ${function:Get-Win11ISOLogFilePath}.ToString() + "`n}"
+    $logCoreDefClean = "function Write-Win11ISOLogCore {`n" + ${function:Write-Win11ISOLogCore}.ToString() + "`n}"
+
     $runspace = [Management.Automation.Runspaces.RunspaceFactory]::CreateRunspace()
     $runspace.ApartmentState = "STA"
     $runspace.ThreadOptions  = "ReuseThread"
     $runspace.Open()
-    $runspace.SessionStateProxy.SetVariable("sync",    $sync)
-    $runspace.SessionStateProxy.SetVariable("workDir", $workDir)
+    $runspace.SessionStateProxy.SetVariable("sync",         $sync)
+    $runspace.SessionStateProxy.SetVariable("workDir",      $workDir)
+    $runspace.SessionStateProxy.SetVariable("getLogDef",    $getLogDefClean)
+    $runspace.SessionStateProxy.SetVariable("logCoreDef",   $logCoreDefClean)
 
     $script = [Management.Automation.PowerShell]::Create()
     $script.Runspace = $runspace
     $script.AddScript({
+        . ([scriptblock]::Create($getLogDef))
+        . ([scriptblock]::Create($logCoreDef))
 
         function Log($msg) {
             $ts = (Get-Date).ToString("HH:mm:ss")
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
-                $sync["WPFWin11ISOStatusLog"].Text += "`n[$ts] $msg"
-                $sync["WPFWin11ISOStatusLog"].CaretIndex = $sync["WPFWin11ISOStatusLog"].Text.Length
-                $sync["WPFWin11ISOStatusLog"].ScrollToEnd()
-            })
-            Add-Content -Path (Join-Path $workDir "ASYS_Win11ISO.log") -Value "[$ts] $msg" -ErrorAction SilentlyContinue
+            $line = "[$ts] $msg"
+            Write-Win11ISOLogCore -Line $line
+            if ($workDir) {
+                Add-Content -Path (Join-Path $workDir "ASYS_Win11ISO.log") -Value $line -ErrorAction SilentlyContinue
+            }
         }
 
         function SetProgress($label, $pct) {
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
-                $sync.progressBarTextBlock.Text    = $label
-                $sync.progressBarTextBlock.ToolTip = $label
-                $sync.ProgressBar.Value            = [Math]::Max($pct, 5)
+            $win = $sync["Form"]
+            if (-not $win) { return }
+            $sync["_isoUiProgLabel"] = $label
+            $sync["_isoUiProgPct"]   = $pct
+            $win.Dispatcher.Invoke([System.Action]{
+                $lbl = [string]$sync["_isoUiProgLabel"]
+                $pc  = [int]$sync["_isoUiProgPct"]
+                if ($sync.progressBarTextBlock) {
+                    $sync.progressBarTextBlock.Text    = $lbl
+                    $sync.progressBarTextBlock.ToolTip = $lbl
+                }
+                if ($sync.ProgressBar) {
+                    if ($pc -le 0) {
+                        $sync.ProgressBar.Value = 0
+                    } else {
+                        $sync.ProgressBar.Value = [Math]::Max($pc, 5)
+                    }
+                }
             })
         }
 
@@ -566,8 +1091,7 @@ function Invoke-WinUtilISOCleanAndReset {
                     }
                 } catch {
                     Log "Warning: could not dismount WIM cleanly. Attempting DISM /Cleanup-Wim fallback: $_"
-                    try { & dism /English /Cleanup-Wim 2>&1 | ForEach-Object { Log $_ } }
-                    catch { Log "Warning: DISM /Cleanup-Wim also failed: $_" }
+                    try { & dism /English /Cleanup-Wim 2>&1 | ForEach-Object { Log $_ } } catch { Log "Warning: DISM /Cleanup-Wim also failed: $_" }
                 }
             }
 
@@ -610,7 +1134,7 @@ function Invoke-WinUtilISOCleanAndReset {
             SetProgress "Resetting UI..." 95
             Log "Resetting interface..."
 
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
                 $sync["Win11ISOWorkDir"]     = $null
                 $sync["Win11ISOContentsDir"] = $null
                 $sync["Win11ISOImagePath"]   = $null
@@ -639,7 +1163,7 @@ function Invoke-WinUtilISOCleanAndReset {
             })
         } catch {
             Log "ERROR during Clean & Reset: $_"
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
                 $sync.progressBarTextBlock.Text    = ""
                 $sync.progressBarTextBlock.ToolTip = ""
                 $sync.ProgressBar.Value            = 0
@@ -728,19 +1252,41 @@ function Invoke-WinUtilISOExport {
     $runspace.SessionStateProxy.SetVariable("outputISO",   $outputISO)
     $runspace.SessionStateProxy.SetVariable("oscdimg",     $oscdimg)
 
-    $win11ISOLogFuncDef = "function Write-Win11ISOLog {`n" + ${function:Write-Win11ISOLog}.ToString() + "`n}"
-    $runspace.SessionStateProxy.SetVariable("win11ISOLogFuncDef", $win11ISOLogFuncDef)
+    $getLogDefEx  = "function Get-Win11ISOLogFilePath {`n" + ${function:Get-Win11ISOLogFilePath}.ToString() + "`n}"
+    $logCoreDefEx = "function Write-Win11ISOLogCore {`n" + ${function:Write-Win11ISOLogCore}.ToString() + "`n}"
+    $runspace.SessionStateProxy.SetVariable("getLogDef",  $getLogDefEx)
+    $runspace.SessionStateProxy.SetVariable("logCoreDef", $logCoreDefEx)
 
     $script = [Management.Automation.PowerShell]::Create()
     $script.Runspace = $runspace
     $script.AddScript({
-        . ([scriptblock]::Create($win11ISOLogFuncDef))
+        . ([scriptblock]::Create($getLogDef))
+        . ([scriptblock]::Create($logCoreDef))
+        function Write-Win11ISOLog {
+            param([string]$Message)
+            $ts = (Get-Date).ToString("HH:mm:ss")
+            Write-Win11ISOLogCore -Line "[$ts] $Message"
+        }
 
         function SetProgress($label, $pct) {
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
-                $sync.progressBarTextBlock.Text    = $label
-                $sync.progressBarTextBlock.ToolTip = $label
-                $sync.ProgressBar.Value            = [Math]::Max($pct, 5)
+            $win = $sync["Form"]
+            if (-not $win) { return }
+            $sync["_isoUiProgLabel"] = $label
+            $sync["_isoUiProgPct"]   = $pct
+            $win.Dispatcher.Invoke([System.Action]{
+                $lbl = [string]$sync["_isoUiProgLabel"]
+                $pc  = [int]$sync["_isoUiProgPct"]
+                if ($sync.progressBarTextBlock) {
+                    $sync.progressBarTextBlock.Text    = $lbl
+                    $sync.progressBarTextBlock.ToolTip = $lbl
+                }
+                if ($sync.ProgressBar) {
+                    if ($pc -le 0) {
+                        $sync.ProgressBar.Value = 0
+                    } else {
+                        $sync.ProgressBar.Value = [Math]::Max($pc, 5)
+                    }
+                }
             })
         }
 
@@ -782,25 +1328,28 @@ function Invoke-WinUtilISOExport {
             if ($proc.ExitCode -eq 0) {
                 SetProgress "ISO exported" 100
                 Write-Win11ISOLog "ISO exported successfully: $outputISO"
-                $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
+                $sync["Form"].Dispatcher.Invoke([System.Action]{
                     [System.Windows.MessageBox]::Show("ISO exported successfully!`n`n$outputISO", "Export Complete", "OK", "Info")
                 })
             } else {
                 Write-Win11ISOLog "oscdimg exited with code $($proc.ExitCode)."
-                $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
+                $sync["Form"].Dispatcher.Invoke([System.Action]{
                     [System.Windows.MessageBox]::Show(
                         "oscdimg exited with code $($proc.ExitCode).`nCheck the status log for details.",
                         "Export Error", "OK", "Error")
                 })
             }
         } catch {
-            Write-Win11ISOLog "ERROR during ISO export: $_"
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
-                [System.Windows.MessageBox]::Show("ISO export failed:`n`n$_", "Error", "OK", "Error")
+            Write-Win11ISOLog "ERROR during ISO export: $($_.Exception.Message)"
+            Write-Win11ISOLog "ERROR details: $($_ | Out-String)"
+            $sync["__isoLastErrorMessage"] = "$($_.Exception.Message)"
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
+                $m = [string]$sync["__isoLastErrorMessage"]
+                [System.Windows.MessageBox]::Show("ISO export failed:`n`n$m", "Error", "OK", "Error")
             })
         } finally {
             Start-Sleep -Milliseconds 800
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
                 $sync.progressBarTextBlock.Text    = ""
                 $sync.progressBarTextBlock.ToolTip = ""
                 $sync.ProgressBar.Value            = 0

@@ -24,8 +24,8 @@ $InitialSessionState.Variables.Add($debugVar)
 $InitialSessionState.Variables.Add($uiVar)
 $InitialSessionState.Variables.Add($offlineVar)
 
-# Get every private function and add them to the session state
-$functions = Get-ChildItem function:\ | Where-Object { $_.Name -imatch 'winutil|WPF' }
+# Get every private function and add them to the session state (Win11ISO* = ISO tab log + download helpers used inside runspaces)
+$functions = Get-ChildItem function:\ | Where-Object { $_.Name -imatch 'winutil|WPF|Win11ISO' }
 foreach ($function in $functions) {
     $functionDefinition = Get-Content function:\$($function.name)
     $functionEntry = New-Object System.Management.Automation.Runspaces.SessionStateFunctionEntry -ArgumentList $($function.name), $functionDefinition
@@ -86,8 +86,7 @@ if ($PARAM_NOUI) {
         Invoke-WPFImpex -type "import" -Config $PARAM_CONFIG
         if ($PARAM_RUN) {
             Invoke-WinUtilAutoRun
-        }
-        else {
+        } else {
             Write-Host "Did you forget to add '--Run'?";
         }
         $sync.runspace.Dispose()
@@ -95,8 +94,7 @@ if ($PARAM_NOUI) {
         [System.GC]::Collect()
         Stop-Transcript
         exit 1
-    }
-    else {
+    } else {
         Write-Host "Cannot automatically run without a config file provided."
         $sync.runspace.Dispose()
         $sync.runspace.Close()
@@ -178,6 +176,8 @@ Invoke-WPFUIElements -configVariable $sync.configs.tweaks -targetGridName "tweak
 
 Invoke-WPFUIElements -configVariable $sync.configs.feature -targetGridName "featurespanel" -columncount 2
 
+Invoke-WPFUIElements -configVariable $sync.configs.profiles -targetGridName "profilespanel" -columncount 1
+
 # Future implementation: Add Windows Version to updates panel
 #Invoke-WPFUIElements -configVariable $sync.configs.updates -targetGridName "updatespanel" -columncount 1
 
@@ -212,10 +212,13 @@ $sync.keys | ForEach-Object {
         }
 
         if($($sync["$psitem"].GetType() | Select-Object -ExpandProperty Name) -eq "Button") {
-            $sync["$psitem"].Add_Click({
-                [System.Object]$Sender = $args[0]
-                Invoke-WPFButton $Sender.name
-            })
+            # ISO Creator tab: dedicated Add_Click handlers are registered later; skip generic Invoke-WPFButton.
+            if ($psitem -notmatch '^WPFWin.*ISO') {
+                $sync["$psitem"].Add_Click({
+                    [System.Object]$Sender = $args[0]
+                    Invoke-WPFButton $Sender.name
+                })
+            }
         }
 
         if ($($sync["$psitem"].GetType() | Select-Object -ExpandProperty Name) -eq "TextBlock") {
@@ -303,6 +306,7 @@ $commonKeyEvents = {
             "T" { Invoke-WPFButton "WPFTab2BT"; $keyEventArgs.Handled = $true } # Navigate to Tweaks tab
             "C" { Invoke-WPFButton "WPFTab3BT"; $keyEventArgs.Handled = $true } # Navigate to Config tab
             "U" { Invoke-WPFButton "WPFTab4BT"; $keyEventArgs.Handled = $true } # Navigate to Updates tab
+            "P" { Invoke-WPFButton "WPFTab6BT"; $keyEventArgs.Handled = $true } # Navigate to Profiles tab
             "W" { Invoke-WPFButton "WPFTab5BT"; $keyEventArgs.Handled = $true } # Navigate to Win11ISO tab
         }
     }
@@ -326,8 +330,7 @@ $sync["Form"].Add_MouseDoubleClick({
         $_.OriginalSource.Name -eq "GridBesideNavDockPanel") {
             if ($sync["Form"].WindowState -eq [Windows.WindowState]::Normal) {
                 $sync["Form"].WindowState = [Windows.WindowState]::Maximized
-            }
-            else{
+            } else {
                 $sync["Form"].WindowState = [Windows.WindowState]::Normal
             }
     }
@@ -345,7 +348,7 @@ $sync["Form"].Add_StateChanged({
 })
 
 $sync["Form"].Add_Deactivated({
-    Write-Debug "A-SYS_clark lost focus"
+    Write-Debug "clark lost focus"
     Invoke-WPFPopup -Action "Hide" -Popups @("Settings", "Theme", "FontScaling")
 })
 
@@ -398,8 +401,7 @@ $sync["Form"].Add_ContentRendered({
 
         # Optionally switch to a different tab if install tab was going to be default
         Invoke-WPFTab "WPFTab2BT"  # Switch to Tweaks tab instead
-    }
-    else {
+    } else {
         # Online - ensure install tab is enabled
         $sync.WPFTab1BT.IsEnabled = $true
         $sync.WPFTab1BT.Opacity = 1.0
@@ -466,7 +468,7 @@ $sync["Form"].Add_Loaded({
 
 $NavLogoPanel = $sync["Form"].FindName("NavLogoPanel")
 $navBrand = New-Object Windows.Controls.TextBlock
-$navBrand.Text = "as clark"
+$navBrand.Text = "clark"
 $navBrand.FontStyle = [Windows.FontStyles]::Italic
 $navBrand.VerticalAlignment = [Windows.VerticalAlignment]::Center
 $navBrand.SetResourceReference([Windows.Controls.Control]::FontSizeProperty, "HeaderFontSize")

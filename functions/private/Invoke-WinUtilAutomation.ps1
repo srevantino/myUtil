@@ -65,6 +65,84 @@ function Save-WinUtilProfile {
     return $profilePath
 }
 
+function Save-WinUtilProfilePartial {
+    <#
+        .SYNOPSIS
+            Saves only chosen selection lists (and optionally merges with an existing profile JSON).
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string]$Name,
+        [bool]$IncludeApps = $false,
+        [bool]$IncludeTweaks = $false,
+        [bool]$IncludeToggles = $false,
+        [bool]$IncludeFeatures = $false,
+        [switch]$MergeExisting
+    )
+
+    if (-not ($IncludeApps -or $IncludeTweaks -or $IncludeToggles -or $IncludeFeatures)) {
+        throw "Select at least one category to include in the profile."
+    }
+
+    $profilePath = Get-WinUtilProfilePath -Name $Name
+    $newItems = [System.Collections.Generic.List[string]]::new()
+
+    if ($IncludeApps) {
+        foreach ($x in @($sync.selectedApps)) {
+            $sx = [string]$x
+            if (-not [string]::IsNullOrWhiteSpace($sx)) { [void]$newItems.Add($sx) }
+        }
+    }
+    if ($IncludeTweaks) {
+        foreach ($x in @($sync.selectedTweaks)) {
+            $sx = [string]$x
+            if (-not [string]::IsNullOrWhiteSpace($sx)) { [void]$newItems.Add($sx) }
+        }
+    }
+    if ($IncludeToggles) {
+        foreach ($x in @($sync.selectedToggles)) {
+            $sx = [string]$x
+            if (-not [string]::IsNullOrWhiteSpace($sx)) { [void]$newItems.Add($sx) }
+        }
+    }
+    if ($IncludeFeatures) {
+        foreach ($x in @($sync.selectedFeatures)) {
+            $sx = [string]$x
+            if (-not [string]::IsNullOrWhiteSpace($sx)) { [void]$newItems.Add($sx) }
+        }
+    }
+
+    if ($newItems.Count -eq 0) {
+        throw "No selections in the chosen categories. Select items on Install / Tweaks / Config tabs first."
+    }
+
+    $combined = [System.Collections.Generic.List[string]]::new()
+    if ($MergeExisting -and (Test-Path -LiteralPath $profilePath)) {
+        try {
+            $existing = Get-Content -LiteralPath $profilePath -Raw | ConvertFrom-Json
+            foreach ($x in @($existing)) {
+                $sx = [string]$x
+                if (-not [string]::IsNullOrWhiteSpace($sx) -and -not $combined.Contains($sx)) {
+                    [void]$combined.Add($sx)
+                }
+            }
+        } catch {
+            throw "Could not read existing profile for merge: $($_.Exception.Message)"
+        }
+    }
+
+    foreach ($x in $newItems) {
+        if (-not $combined.Contains($x)) {
+            [void]$combined.Add($x)
+        }
+    }
+
+    $combined | ConvertTo-Json | Out-File -LiteralPath $profilePath -Encoding ascii -Force
+    $sync.preferences.activeprofile = $Name
+    Set-Preferences -save
+    return $profilePath
+}
+
 function Import-WinUtilProfile {
     param(
         [Parameter(Mandatory)]
@@ -290,20 +368,57 @@ function Unregister-WinUtilAutoReapplyTask {
 }
 
 function Get-WinUtilActivationStatus {
-    $windowsProducts = Get-CimInstance SoftwareLicensingProduct -ErrorAction SilentlyContinue | Where-Object {
-        $_.Name -like "Windows*" -and $_.PartialProductKey
-    }
-    $officeProducts = Get-CimInstance SoftwareLicensingProduct -ErrorAction SilentlyContinue | Where-Object {
-        $_.Name -like "*Office*" -and $_.PartialProductKey
+    # Same ApplicationID values as MAS (Check_Activation_Status.cmd). Filtering by Name misses
+    # e.g. "Microsoft 365 Apps ..." and enumerating all SoftwareLicensingProduct rows is slow.
+    $winAppId = "55c92734-d682-4d71-983e-d6ec3f16059f"
+    $officeApp15 = "0ff1ce15-a989-479d-af46-f275c6370663"
+    $officeApp14 = "59a52881-a989-479d-af46-f275c6370663"
+
+    $windowsProducts = @(
+        Get-CimInstance -ClassName SoftwareLicensingProduct -Filter "ApplicationID='$winAppId'" -ErrorAction SilentlyContinue
+    )
+
+    $officeProducts = [System.Collections.Generic.List[object]]::new()
+    foreach ($row in @(
+            Get-CimInstance -ClassName SoftwareLicensingProduct -Filter "ApplicationID='$officeApp15'" -ErrorAction SilentlyContinue
+            Get-CimInstance -ClassName SoftwareLicensingProduct -Filter "ApplicationID='$officeApp14'" -ErrorAction SilentlyContinue
+        )) {
+        if ($null -ne $row) {
+            $officeProducts.Add($row)
+        }
     }
 
-    $windowsLicensed = ($windowsProducts | Where-Object { $_.LicenseStatus -eq 1 }).Count -gt 0
-    $officeLicensed = ($officeProducts | Where-Object { $_.LicenseStatus -eq 1 }).Count -gt 0
+    # Volume Office (older) may only register under OSPP; keep a narrow query.
+    try {
+        foreach ($r in @(Get-CimInstance -ClassName OfficeSoftwareProtectionProduct -ErrorAction SilentlyContinue)) {
+            $aid = [string]$r.ApplicationID
+            if ($aid -eq $officeApp15 -or $aid -eq $officeApp14) {
+                $officeProducts.Add($r)
+            }
+        }
+    } catch {
+    }
+
+    # LicenseStatus 1 = licensed. Do not require PartialProductKey — it is often blank in WMI for
+    # Office/365 even when Settings shows a valid subscription or key.
+    $windowsLicensed = @($windowsProducts | Where-Object { $_.LicenseStatus -eq 1 }).Count -gt 0
+    $officeLicensed = @($officeProducts | Where-Object { $_.LicenseStatus -eq 1 }).Count -gt 0
+    $officeDetected = $officeProducts.Count -gt 0
+
+    $windowsLabel = if ($windowsLicensed) { "Activated" } else { "Not Activated" }
+    $officeLabel = if (-not $officeDetected) {
+        "Not detected"
+    } elseif ($officeLicensed) {
+        "Activated"
+    } else {
+        "Not Activated"
+    }
 
     [PSCustomObject]@{
         CheckedAt = (Get-Date).ToString("s")
-        Windows = if ($windowsLicensed) { "Activated" } else { "Not Activated" }
-        Office = if ($officeLicensed) { "Activated" } else { "Not Activated" }
+        Windows = $windowsLabel
+        Office = $officeLabel
+        OfficeDetected = $officeDetected
         WindowsProducts = @($windowsProducts | Select-Object -First 3 -ExpandProperty Name)
         OfficeProducts = @($officeProducts | Select-Object -First 3 -ExpandProperty Name)
     }

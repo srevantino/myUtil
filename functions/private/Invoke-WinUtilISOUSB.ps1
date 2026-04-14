@@ -67,28 +67,45 @@ function Invoke-WinUtilISOWriteUSB {
     $runspace.ApartmentState = "STA"
     $runspace.ThreadOptions  = "ReuseThread"
     $runspace.Open()
+    $getLogDefUsb  = "function Get-Win11ISOLogFilePath {`n" + ${function:Get-Win11ISOLogFilePath}.ToString() + "`n}"
+    $logCoreDefUsb = "function Write-Win11ISOLogCore {`n" + ${function:Write-Win11ISOLogCore}.ToString() + "`n}"
+
     $runspace.SessionStateProxy.SetVariable("sync",        $sync)
     $runspace.SessionStateProxy.SetVariable("diskNum",     $diskNum)
     $runspace.SessionStateProxy.SetVariable("contentsDir", $contentsDir)
+    $runspace.SessionStateProxy.SetVariable("getLogDef",   $getLogDefUsb)
+    $runspace.SessionStateProxy.SetVariable("logCoreDef",  $logCoreDefUsb)
 
     $script = [Management.Automation.PowerShell]::Create()
     $script.Runspace = $runspace
     $script.AddScript({
+        . ([scriptblock]::Create($getLogDef))
+        . ([scriptblock]::Create($logCoreDef))
 
         function Log($msg) {
             $ts = (Get-Date).ToString("HH:mm:ss")
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
-                $sync["WPFWin11ISOStatusLog"].Text += "`n[$ts] $msg"
-                $sync["WPFWin11ISOStatusLog"].CaretIndex = $sync["WPFWin11ISOStatusLog"].Text.Length
-                $sync["WPFWin11ISOStatusLog"].ScrollToEnd()
-            })
+            Write-Win11ISOLogCore -Line "[$ts] $msg"
         }
 
         function SetProgress($label, $pct) {
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
-                $sync.progressBarTextBlock.Text    = $label
-                $sync.progressBarTextBlock.ToolTip = $label
-                $sync.ProgressBar.Value            = [Math]::Max($pct, 5)
+            $win = $sync["Form"]
+            if (-not $win) { return }
+            $sync["_isoUiProgLabel"] = $label
+            $sync["_isoUiProgPct"]   = $pct
+            $win.Dispatcher.Invoke([System.Action]{
+                $lbl = [string]$sync["_isoUiProgLabel"]
+                $pc  = [int]$sync["_isoUiProgPct"]
+                if ($sync.progressBarTextBlock) {
+                    $sync.progressBarTextBlock.Text    = $lbl
+                    $sync.progressBarTextBlock.ToolTip = $lbl
+                }
+                if ($sync.ProgressBar) {
+                    if ($pc -le 0) {
+                        $sync.ProgressBar.Value = 0
+                    } else {
+                        $sync.ProgressBar.Value = [Math]::Max($pc, 5)
+                    }
+                }
             })
         }
 
@@ -243,19 +260,21 @@ function Invoke-WinUtilISOWriteUSB {
             SetProgress "USB write complete" 100
             Log "USB drive is ready for use."
 
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
                 [System.Windows.MessageBox]::Show(
                     "USB drive created successfully!`n`nYou can now boot from this drive to install Windows.",
                     "USB Ready", "OK", "Info")
             })
         } catch {
             Log "ERROR during USB write: $_"
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
-                [System.Windows.MessageBox]::Show("USB write failed:`n`n$_", "USB Write Error", "OK", "Error")
+            $sync["__isoLastErrorMessage"] = "$($_.Exception.Message)"
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
+                $m = [string]$sync["__isoLastErrorMessage"]
+                [System.Windows.MessageBox]::Show("USB write failed:`n`n$m", "USB Write Error", "OK", "Error")
             })
         } finally {
             Start-Sleep -Milliseconds 800
-            $sync["WPFWin11ISOStatusLog"].Dispatcher.Invoke([action]{
+            $sync["Form"].Dispatcher.Invoke([System.Action]{
                 $sync.progressBarTextBlock.Text    = ""
                 $sync.progressBarTextBlock.ToolTip = ""
                 $sync.ProgressBar.Value            = 0

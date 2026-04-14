@@ -1,6 +1,6 @@
 <#
 .NOTES
-    Product        : A-SYS_clark
+    Product        : clark
     Organization   : Advance Systems 4042 (developed & managed)
     Version        : #{replaceme}
 #>
@@ -12,6 +12,7 @@ param (
     [switch]$Offline
 )
 
+$PARAM_CONFIG = $null
 if ($Config) {
     $PARAM_CONFIG = $Config
 }
@@ -34,7 +35,7 @@ if ($Offline) {
 
 
 if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Output "A-SYS_clark needs to be run as Administrator. Attempting to relaunch."
+    Write-Output "clark needs to be run as Administrator. Attempting to relaunch."
     $argList = @()
 
     $PSBoundParameters.GetEnumerator() | ForEach-Object {
@@ -74,7 +75,17 @@ Add-Type -AssemblyName System.Windows.Forms
 
 # Variable to sync between runspaces
 $sync = [Hashtable]::Synchronized(@{})
-$sync.PSScriptRoot = $PSScriptRoot
+# Repo root: compiled script lives in repo root (.\config exists); dev start.ps1 lives in scripts\ (use parent).
+if (Test-Path -LiteralPath (Join-Path $PSScriptRoot "config")) {
+    $sync.PSScriptRoot = $PSScriptRoot
+} else {
+    $parent = Split-Path -Parent $PSScriptRoot
+    if (Test-Path -LiteralPath (Join-Path $parent "config")) {
+        $sync.PSScriptRoot = $parent
+    } else {
+        throw "Cannot locate config\ folder (checked '$PSScriptRoot' and '$parent')."
+    }
+}
 $sync.version = "#{replaceme}"
 $sync.configs = @{}
 $sync.Buttons = [System.Collections.Generic.List[PSObject]]::new()
@@ -90,7 +101,7 @@ $sync.selectedAppsPopup
 
 $dateTime = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 
-# App data and logs (A-SYS_clark / Advance Systems 4042)
+# App data and logs (clark / Advance Systems 4042)
 $asysdir = "$env:LocalAppData\asys"
 New-Item $asysdir -ItemType Directory -Force | Out-Null
 $sync.asysdir = $asysdir
@@ -108,5 +119,53 @@ New-Item $logdir -ItemType Directory -Force | Out-Null
 Start-Transcript -Path "$logdir\asys_$dateTime.log" -Append -NoClobber | Out-Null
 
 # Set PowerShell window title
-$Host.UI.RawUI.WindowTitle = "A-SYS_clark (Admin) - Advance Systems 4042"
+$Host.UI.RawUI.WindowTitle = "clark (Admin)"
 clear-host
+
+# Dev only: Compile.ps1 concatenates functions, configs, XAML, and main.ps1 after this file — do not load from disk then.
+$devMainPath = Join-Path $PSScriptRoot "main.ps1"
+if (Test-Path -LiteralPath $devMainPath) {
+    $repoRoot = $sync.PSScriptRoot
+    $configDir = Join-Path $repoRoot "config"
+    if (-not (Test-Path -LiteralPath $configDir)) {
+        throw "Config directory not found: $configDir"
+    }
+
+    Get-ChildItem -LiteralPath $configDir -File -Filter "*.json" | ForEach-Object {
+        $json = Get-Content -LiteralPath $_.FullName -Raw
+        $jsonAsObject = $json | ConvertFrom-Json
+        if ($_.Name -eq "applications.json") {
+            foreach ($appEntryName in @($jsonAsObject.PSObject.Properties.Name)) {
+                $appEntryContent = $jsonAsObject.$appEntryName
+                [void]$jsonAsObject.PSObject.Properties.Remove($appEntryName)
+                $jsonAsObject | Add-Member -MemberType NoteProperty -Name "WPFInstall$appEntryName" -Value $appEntryContent
+            }
+        }
+        $json = @"
+$($jsonAsObject | ConvertTo-Json -Depth 3)
+"@
+        $sync.configs[$_.BaseName] = $json | ConvertFrom-Json
+    }
+
+    $xamlPath = Join-Path $repoRoot "xaml\inputXML.xaml"
+    if (-not (Test-Path -LiteralPath $xamlPath)) {
+        throw "XAML not found: $xamlPath"
+    }
+    $inputXML = Get-Content -LiteralPath $xamlPath -Raw
+
+    $autopath = Join-Path $repoRoot "tools\autounattend.xml"
+    if (Test-Path -LiteralPath $autopath) {
+        $autounattendRaw = Get-Content -LiteralPath $autopath -Raw
+        $autounattendRaw = [regex]::Replace($autounattendRaw, "<!--.*?-->", "", [System.Text.RegularExpressions.RegexOptions]::Singleline)
+        $WinUtilAutounattendXml = ($autounattendRaw -split "`r?`n" |
+            Where-Object { $_.Trim() -ne "" } |
+            ForEach-Object { $_.TrimEnd() }) -join "`r`n"
+    } else {
+        $WinUtilAutounattendXml = ""
+    }
+
+    $functionsRoot = Join-Path $repoRoot "functions"
+    Get-ChildItem -LiteralPath $functionsRoot -Recurse -File -Filter "*.ps1" | ForEach-Object { . $_.FullName }
+
+    . $devMainPath
+}

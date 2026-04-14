@@ -90,6 +90,20 @@ function Initialize-InstallCategoryAppList {
         }
     }
 
+    function Add-InstallSectionHeader {
+        param([string]$Title)
+
+        $sectionHeader = New-Object Windows.Controls.Label
+        $sectionHeader.Content = $Title
+        $sectionHeader.Tag = "InstallSectionHeader"
+        $sectionHeader.SetResourceReference([Windows.Controls.Control]::FontSizeProperty, "HeaderFontSize")
+        $sectionHeader.SetResourceReference([Windows.Controls.Control]::FontFamilyProperty, "HeaderFontFamily")
+        $sectionHeader.SetResourceReference([Windows.Controls.Control]::ForegroundProperty, "LabelboxForegroundColor")
+        $sectionHeader.HorizontalAlignment = [Windows.HorizontalAlignment]::Stretch
+        $sectionHeader.Margin = New-Object Windows.Thickness(0, 8, 0, 2)
+        $null = $TargetElement.Items.Add($sectionHeader)
+    }
+
     # Categories listed here appear under the "Others" section.
     $installUiOtherCategories = @('Media')
 
@@ -113,19 +127,13 @@ function Initialize-InstallCategoryAppList {
         }
     }
 
-    $groupedCategories = @{}
-
     if ($essentialsByCategory.Count -gt 0) {
-        $groupedCategories["Technical & Productivity"] = @(
-            $essentialsByCategory.Values | ForEach-Object { $_ } | Sort-Object
-        )
+        Add-InstallSectionHeader -Title "Technical"
+        Add-InstallCategoryBlocks -AppsByCategory $essentialsByCategory
     }
 
     if ($othersByCategory.Count -gt 0) {
-        $groupedCategories["Others"] = @(
-            $othersByCategory.Values | ForEach-Object { $_ } | Sort-Object
-        )
+        Add-InstallSectionHeader -Title "Others"
+        Add-InstallCategoryBlocks -AppsByCategory $othersByCategory
     }
-
-    Add-InstallCategoryBlocks -AppsByCategory $groupedCategories
 }

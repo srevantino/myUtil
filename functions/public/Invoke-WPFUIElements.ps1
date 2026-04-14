@@ -67,15 +67,19 @@ function Invoke-WPFUIElements {
         $entryInfo = $configHashtable[$entry]
 
         # Create an object for the application
+        $cat = if ($null -ne $entryInfo.Category) { $entryInfo.Category } elseif ($null -ne $entryInfo.category) { $entryInfo.category } else { "" }
+        $typ = if ($null -ne $entryInfo.Type) { $entryInfo.Type } elseif ($null -ne $entryInfo.type) { $entryInfo.type } else { "" }
+        $desc = if ($null -ne $entryInfo.Description) { $entryInfo.Description } elseif ($null -ne $entryInfo.description) { $entryInfo.description } else { "" }
+
         $entryObject = [PSCustomObject]@{
             Name        = $entry
-            Category    = $entryInfo.Category
+            Category    = $cat
             Content     = $entryInfo.Content
-            Panel       = if ($entryInfo.Panel) { $entryInfo.Panel } else { "0" }
-            Order       = if ($entryInfo.Order) { [int]$entryInfo.Order } else { [int]::MaxValue }
+            Panel       = if ($entryInfo.Panel) { $entryInfo.Panel } elseif ($entryInfo.panel) { $entryInfo.panel } else { "0" }
+            Order       = if ($null -ne $entryInfo.Order) { [int]$entryInfo.Order } elseif ($null -ne $entryInfo.order) { [int]$entryInfo.order } else { [int]::MaxValue }
             Link        = $entryInfo.link
-            Description = $entryInfo.description
-            Type        = $entryInfo.type
+            Description = $desc
+            Type        = $typ
             ComboItems  = $entryInfo.ComboItems
             Checked     = $entryInfo.Checked
             ButtonWidth = $entryInfo.ButtonWidth
@@ -320,8 +324,7 @@ function Invoke-WPFUIElements {
 
                             # Add the group container to the ItemsControl
                             $itemsControl.Items.Add($groupStackPanel) | Out-Null
-                        }
-                        else {
+                        } else {
                             # Retrieve the existing group container
                             $groupStackPanel = $radioButtonGroups[$entryInfo.GroupName]
                         }

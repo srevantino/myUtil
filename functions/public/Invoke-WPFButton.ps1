@@ -42,6 +42,18 @@ function Invoke-WPFButton {
         }
     }
 
+    # Profiles tab (and similar): buttons defined in profiles.json with function name
+    if ($sync.configs.profiles -and ($null -ne $sync.configs.profiles.$Button)) {
+        $profBtn = $sync.configs.profiles.$Button
+        if ($profBtn.function) {
+            $fn = [string]$profBtn.function
+            if (Get-Command $fn -ErrorAction SilentlyContinue) {
+                & $fn
+                return
+            }
+        }
+    }
+
     # Fallback to hard-coded switch for buttons not in feature.json
     Switch -Wildcard ($Button) {
         "WPFTab?BT" {Invoke-WPFTab $Button}
@@ -76,7 +88,8 @@ function Invoke-WPFButton {
         }
         "WPFCloseButton" {$sync.Form.Close(); Write-Host "Bye bye!"}
         "WPFselectedAppsButton" {$sync.selectedAppsPopup.IsOpen = -not $sync.selectedAppsPopup.IsOpen}
-        "WPFActivationScripts" {Invoke-WPFActivationScriptsMenu}
+        "WPFActivationScripts" { Invoke-WPFActivationScriptsMenu }
+        "WPFCheckActivationStatus" { Invoke-WPFActivationStatus }
         "WPFToggleFOSSHighlight" {
             if ($sync.WPFToggleFOSSHighlight.IsChecked) {
                  $sync.Form.Resources["FOSSColor"] = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color]::FromRgb(76, 175, 80)) # #4CAF50

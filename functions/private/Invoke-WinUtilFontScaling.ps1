@@ -33,7 +33,6 @@ function Invoke-WinUtilFontScaling {
         "ConfigTabButtonFontSize",
         "IconFontSize",
         "SettingsIconFontSize",
-        "CloseIconFontSize",
         "AppEntryFontSize",
         "SearchBarTextBoxFontSize",
         "SearchBarClearButtonFontSize",
@@ -70,8 +69,7 @@ function Invoke-WinUtilFontScaling {
                 $sync.Form.Resources[$resourceName] = $newValue
                 Write-Debug "Scaled $resourceName from original $originalValue to $newValue (factor: $ScaleFactor)"
             }
-        }
-        catch {
+        } catch {
             Write-Warning "Failed to scale resource $resourceName : $_"
         }
     }

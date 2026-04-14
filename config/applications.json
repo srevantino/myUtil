@@ -1320,6 +1320,54 @@
         "winget": "BartoszCichecki.LenovoLegionToolkit",
         "foss": true
     },
+    "LenovoVantage": {
+        "category": "Utilities",
+        "choco": "na",
+        "content": "Lenovo Vantage",
+        "description": "Official Lenovo utility for driver updates, hardware diagnostics, and device settings management.",
+        "link": "https://support.lenovo.com/solutions/ht505081",
+        "winget": "9WZDNCRFJ4MV"
+    },
+    "MSICenter": {
+        "category": "Utilities",
+        "choco": "na",
+        "content": "MSI Center",
+        "description": "Official MSI system utility for updates, hardware monitoring, performance tuning, and device features.",
+        "link": "https://www.msi.com/Landing/MSI-Center",
+        "winget": "na"
+    },
+    "ASUSArmouryCrate": {
+        "category": "Utilities",
+        "choco": "na",
+        "content": "ASUS Armoury Crate",
+        "description": "ASUS/ROG control center for device updates, RGB management, fan profiles, and performance modes.",
+        "link": "https://rog.asus.com/armoury-crate/",
+        "winget": "Asus.ArmouryCrate"
+    },
+    "DellCommandUpdate": {
+        "category": "Utilities",
+        "choco": "na",
+        "content": "Dell Command | Update",
+        "description": "Official Dell tool to update BIOS, firmware, drivers, and OEM software on Dell systems.",
+        "link": "https://www.dell.com/support/home/drivers/driversdetails?driverid=0xnvx",
+        "winget": "Dell.CommandUpdate"
+    },
+    "ThrottleStop": {
+        "category": "Utilities",
+        "choco": "na",
+        "content": "ThrottleStop",
+        "description": "Advanced CPU tuning and throttling diagnostics utility for laptops and mobile processors.",
+        "link": "https://www.techpowerup.com/download/techpowerup-throttlestop/",
+        "winget": "TechPowerUp.ThrottleStop"
+    },
+    "ValiDrive": {
+        "category": "Utilities",
+        "choco": "na",
+        "content": "ValiDrive",
+        "description": "USB storage validation tool by GRC for detecting counterfeit or misreported flash drive capacity.",
+        "link": "https://www.grc.com/validrive.htm",
+        "winget": "GibsonResearchCorporation.ValiDrive"
+    },
     "ZenBrowser": {
         "category": "Browser",
         "choco": "na",

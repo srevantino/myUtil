@@ -136,14 +136,17 @@ function Invoke-Preprocessing {
 
     for ($i = 0; $i -lt $numOfFiles; $i++) {
         $fullFileName = $files[$i]
-        $fileContent = Get-Content -Path $fullFileName -Raw -ErrorAction SilentlyContinue
-        if ($null -eq $fileContent) {
-            $fileContent = ""
+        $fileLines = @(Get-Content -Path $fullFileName -ErrorAction SilentlyContinue)
+        if ($null -eq $fileLines) {
+            $fileLines = @()
         }
+        $fileContent = ($fileLines | ForEach-Object {
+            if ($null -eq $_) { "" } else { $_.ToString().TrimEnd() }
+        }) -join "`r`n"
 
         # TODO:
         #   make more formatting rules, and document them in WinUtil Official Documentation
-        $fileContent.TrimEnd() `
+        $fileContent `
             -replace ('\t', '    ') `
             -replace ('\)\s*\{', ') {') `
             -replace ('(?<keyword>if|for|foreach)\s*(?<condition>\([.*?]\))\s*\{', '${keyword} ${condition} {') `
@@ -154,7 +157,6 @@ function Invoke-Preprocessing {
             -replace ('\}\s*Catch', '} catch') `
             -replace ('\}\s*Catch\s*(?<exceptions>(\[.*?\]\s*(\,)?\s*)+)\s*\{', '} catch ${exceptions} {') `
             -replace ('\}\s*Catch\s*(?<exceptions>\[.*?\])\s*\{', '} catch ${exceptions} {') `
-            -replace ('(?<parameter_type>\[[^$0-9]+\])\s*(?<str_after_type>\$.*?)', '${parameter_type}${str_after_type}') `
         | Set-Content "$fullFileName"
         $newHashes[$fullFileName] = Get-FileHash -Path $fullFileName -Algorithm $hashingAlgorithm | Select-Object -ExpandProperty Hash
 

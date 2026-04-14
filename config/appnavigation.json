@@ -74,11 +74,18 @@
         "Description": "Show the selected applications"
     },
     "WPFActivationScripts": {
-        "Content": "Activation Scripts (Local MAS Menu)",
-        "Category": "____Actions",
+        "Content": "MAS - Activation menu (local)",
+        "Category": "__Activation (local MAS)",
         "Type": "Button",
-        "Order": "6",
+        "Order": "1",
         "Description": "Opens the local Microsoft Activation Scripts (MAS) menu from Microsoft-Activation-Scripts-master"
+    },
+    "WPFCheckActivationStatus": {
+        "Content": "MAS - Check activation status",
+        "Category": "__Activation (local MAS)",
+        "Type": "Button",
+        "Order": "2",
+        "Description": "Runs local MAS Check_Activation_Status for Windows and Office"
     },
     "WPFToggleFOSSHighlight": {
         "Content": "Highlight FOSS",

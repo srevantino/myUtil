@@ -12,7 +12,7 @@
         Height="Auto"
         MinWidth="800"
         MinHeight="600"
-        Title="as clark">
+        Title="clark">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="0" CornerRadius="10"/>
     </WindowChrome.WindowChrome>
@@ -110,11 +110,6 @@
                                     Width="12"
                                     Height="12"
                                     CornerRadius="2"/>
-                            <Path x:Name="CheckMark"
-                                  Stroke="{DynamicResource ToggleButtonOnColor}"
-                                  StrokeThickness="2"
-                                  Data="M 2 8 L 6 12 L 14 4"
-                                  Visibility="Collapsed"/>
                         </Grid>
                         <ContentPresenter Content="{TemplateBinding Content}"
                                         VerticalAlignment="Center"
@@ -122,7 +117,8 @@
                     </StackPanel>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="CheckBoxBorder" Property="Background" Value="{DynamicResource ToggleButtonOnColor}"/>
+                            <Setter TargetName="CheckBoxBorder" Property="BorderBrush" Value="{DynamicResource ToggleButtonOnColor}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -997,6 +993,14 @@
                         </TextBlock>
                     </ToggleButton.Content>
                 </ToggleButton>
+                <ToggleButton Margin="0,0,5,0" Height="{DynamicResource TabButtonHeight}" Width="{DynamicResource TabButtonWidth}"
+                    Background="{DynamicResource ButtonConfigBackgroundColor}" Foreground="{DynamicResource ButtonConfigForegroundColor}" FontWeight="Bold" Name="WPFTab6BT">
+                    <ToggleButton.Content>
+                        <TextBlock FontSize="{DynamicResource TabButtonFontSize}" Background="Transparent" Foreground="{DynamicResource ButtonConfigForegroundColor}">
+                            <Underline>P</Underline>rofiles
+                        </TextBlock>
+                    </ToggleButton.Content>
+                </ToggleButton>
                 <ToggleButton Margin="0,0,5,0" Height="{DynamicResource TabButtonHeight}" Width="Auto" MinWidth="{DynamicResource TabButtonWidth}"
                     Background="{DynamicResource ButtonWin11ISOBackgroundColor}" Foreground="{DynamicResource ButtonWin11ISOForegroundColor}" FontWeight="Bold" Name="WPFTab5BT">
                     <ToggleButton.Content>
@@ -1056,7 +1060,7 @@
                     Margin="0,0,2,0"
                     FontFamily="Segoe MDL2 Assets"
                     Content="N/A"
-                    ToolTip="Change the as clark UI theme (Advance Systems 4042)"
+                    ToolTip="Change the clark UI theme (Advance Systems 4042)"
                 />
                     <Popup Name="ThemePopup"
                     IsOpen="False"
@@ -1210,15 +1214,18 @@
                         FontFamily="Segoe MDL2 Assets"
                         Content="&#xE922;"
                         ToolTip="Maximize"/>
-                    <Button
-                    Content="&#xD7;" BorderThickness="0"
-                BorderBrush="Transparent"
-                Background="{DynamicResource MainBackgroundColor}"
-                Width="{DynamicResource IconButtonSize}" Height="{DynamicResource IconButtonSize}"
-                HorizontalAlignment="Right" VerticalAlignment="Top"
-                Margin="0,0,0,0"
-                FontFamily="{DynamicResource FontFamily}"
-                Foreground="{DynamicResource MainForegroundColor}" FontSize="{DynamicResource CloseIconFontSize}" Name="WPFCloseButton" />
+                    <Button Name="WPFCloseButton"
+                        Style="{StaticResource HoverButtonStyle}"
+                        BorderBrush="Transparent"
+                        Background="{DynamicResource MainBackgroundColor}"
+                        Foreground="{DynamicResource MainForegroundColor}"
+                        FontSize="{DynamicResource SettingsIconFontSize}"
+                        Width="{DynamicResource IconButtonSize}" Height="{DynamicResource IconButtonSize}"
+                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Margin="0,0,0,0"
+                        FontFamily="Segoe MDL2 Assets"
+                        Content="&#xE8BB;"
+                        ToolTip="Close"/>
                 </StackPanel>
             </Grid>
         </Grid>
@@ -1400,9 +1407,15 @@
                                     <TextBlock Margin="10"
                                              TextWrapping="Wrap"
                                              Foreground="{DynamicResource MainForegroundColor}">
-                                        Placeholder action card for your custom Update Destroyer logic.
+                                        <Run FontWeight="Bold" Foreground="OrangeRed">Use with caution.</Run>
+                                        <LineBreak/>
+                                         - Runs your custom batch logic to aggressively block update components
+                                        <LineBreak/>
+                                         - Intended for advanced troubleshooting or isolated/offline systems
+                                        <LineBreak/>
+                                         - Can break normal Windows Update behavior until reverted
                                         <LineBreak/><LineBreak/>
-                                        <Run FontStyle="Italic" FontSize="11">Paste your code in Invoke-WPFUpdateDestroyer.ps1.</Run>
+                                        <Run FontStyle="Italic" FontSize="11">Runs: tools\UpdateDestroyer.bat</Run>
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -1418,9 +1431,15 @@
                                     <TextBlock Margin="10"
                                              TextWrapping="Wrap"
                                              Foreground="{DynamicResource MainForegroundColor}">
-                                        Placeholder action card for reverting your Update Destroyer changes.
+                                        <Run FontWeight="Bold">Restore update components.</Run>
+                                        <LineBreak/>
+                                         - Runs your custom undo batch logic to restore services, tasks, and policies
+                                        <LineBreak/>
+                                         - Use this after Update Destroyer when you need updates working again
+                                        <LineBreak/>
+                                         - Reboot is recommended after running undo
                                         <LineBreak/><LineBreak/>
-                                        <Run FontStyle="Italic" FontSize="11">Paste your code in Invoke-WPFUpdateDestroyerUndo.ps1.</Run>
+                                        <Run FontStyle="Italic" FontSize="11">Runs: tools\UpdateDestroyerUndo.bat</Run>
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -1429,6 +1448,12 @@
                         <!-- Future Implementation: Add Windows Version to updates panel -->
                         <Grid Name="updatespanel" Grid.Row="1" Background="Transparent">
                         </Grid>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="Profiles" Visibility="Collapsed" Name="WPFTab6">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="{DynamicResource TabContentMargin}">
+                    <Grid Name="profilespanel" Grid.Row="1" Background="Transparent">
                     </Grid>
                 </ScrollViewer>
             </TabItem>
@@ -1542,7 +1567,7 @@
                                         <TextBlock FontSize="{DynamicResource FontSize}"
                                                    Foreground="{DynamicResource MainForegroundColor}"
                                                    TextWrapping="Wrap" Margin="0,0,0,8">
-                                            Choose Windows version and release, then as clark will fetch an official Microsoft ISO link and download it directly.
+                                            Choose Windows version and release, then clark downloads the ISO. If you set a mirror URL in config\isomirrors.json (e.g. Internet Archive), that is tried first; if the download fails or the slot is empty, Fido is used to resolve Microsoft’s link. Optionally place Fido.ps1 in the repo tools folder so the helper does not need to be fetched from GitHub.
                                         </TextBlock>
                                         <Grid Margin="0,0,0,8">
                                             <Grid.ColumnDefinitions>
@@ -1566,6 +1591,18 @@
                                                 HorizontalAlignment="Left"
                                                 Width="Auto" Padding="12,0"
                                                 Height="{DynamicResource ButtonHeight}"/>
+                                        <ProgressBar Name="WPFWinISODownloadProgressBar"
+                                                     Minimum="0"
+                                                     Maximum="100"
+                                                     Value="0"
+                                                     Height="18"
+                                                     Margin="0,10,0,0"
+                                                     Visibility="Collapsed"/>
+                                        <TextBlock Name="WPFWinISODownloadProgressText"
+                                                   Text=""
+                                                   Margin="0,6,0,0"
+                                                   Foreground="{DynamicResource MainForegroundColor}"
+                                                   Visibility="Collapsed"/>
                                     </StackPanel>
                                 </Border>
                             </Grid>
@@ -1771,6 +1808,7 @@
                                  TextWrapping="Wrap"
                                  VerticalScrollBarVisibility="Visible"
                                  VerticalAlignment="Stretch"
+                                 MinHeight="140"
                                  Padding="6"
                                  Background="{DynamicResource MainBackgroundColor}"
                                  Foreground="{DynamicResource MainForegroundColor}"

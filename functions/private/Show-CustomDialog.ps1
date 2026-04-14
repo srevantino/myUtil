@@ -186,7 +186,7 @@ function Show-CustomDialog {
 
     # Header title
     $winutilTextBlock = New-Object Windows.Controls.TextBlock
-    $winutilTextBlock.Text = "A-SYS_clark"
+    $winutilTextBlock.Text = "clark"
     $winutilTextBlock.FontSize = $HeaderFontSize
     $winutilTextBlock.FontStyle = if ($ItalicBrandTitle) { [Windows.FontStyles]::Italic } else { [Windows.FontStyles]::Normal }
     $winutilTextBlock.Foreground = $LogoColor

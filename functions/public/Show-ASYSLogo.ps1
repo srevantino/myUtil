@@ -16,7 +16,7 @@ function Show-ASYSLogo {
 /_/  |_|            /____/  /_//____/
 
 
-====A-SYS_clark=====
+====clark=====
 =====Advance Systems 4042=====
 "@
 

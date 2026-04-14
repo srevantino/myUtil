@@ -15,20 +15,18 @@ function Invoke-WPFTab {
         [string]$ClickedTab
     )
 
-    $tabNav = Get-WinUtilVariables | Where-Object {$psitem -like "WPFTabNav"}
-    $tabNumber = [int]($ClickedTab -replace "WPFTab","" -replace "BT","") - 1
-
-    $filter = Get-WinUtilVariables -Type ToggleButton | Where-Object {$psitem -like "WPFTab?BT"}
-    ($sync.GetEnumerator()).where{$psitem.Key -in $filter} | ForEach-Object {
-        if ($ClickedTab -ne $PSItem.name) {
-            $sync[$PSItem.Name].IsChecked = $false
-        } else {
-            $sync["$ClickedTab"].IsChecked = $true
-            $tabNumber = [int]($ClickedTab-replace "WPFTab","" -replace "BT","") - 1
-            $sync.$tabNav.Items[$tabNumber].IsSelected = $true
-        }
+    $tabItemName = $ClickedTab -replace 'BT$'
+    $tabButtons = Get-WinUtilVariables -Type ToggleButton | Where-Object { $_ -match '^WPFTab\d+BT$' }
+    foreach ($buttonName in $tabButtons) {
+        $sync[$buttonName].IsChecked = ($buttonName -eq $ClickedTab)
     }
-    $sync.currentTab = $sync.$tabNav.Items[$tabNumber].Header
+
+    if ($sync[$tabItemName]) {
+        $sync[$tabItemName].IsSelected = $true
+        $sync.currentTab = [string]$sync[$tabItemName].Header
+    } else {
+        return
+    }
 
     # Always reset the filter for the current tab
     if ($sync.currentTab -eq "Install") {
@@ -40,7 +38,7 @@ function Invoke-WPFTab {
     }
 
     # Show search bar in Install and Tweaks tabs
-    if ($tabNumber -eq 0 -or $tabNumber -eq 1) {
+    if ($sync.currentTab -eq "Install" -or $sync.currentTab -eq "Tweaks") {
         $sync.SearchBar.Visibility = "Visible"
         $searchIcon = ($sync.Form.FindName("SearchBar").Parent.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] -and $_.Text -eq [char]0xE721 })[0]
         if ($searchIcon) {

@@ -8,18 +8,18 @@ function Invoke-WPFAutoReapplyEnable {
 
     try {
         Register-WinUtilAutoReapplyTask -ProfileName $profileName
-        [System.Windows.MessageBox]::Show("Auto reapply enabled. Scheduled tasks were created for startup and logon using profile '$profileName'.", "A-SYS_clark", "OK", "Information")
+        [System.Windows.MessageBox]::Show("Auto reapply enabled. Scheduled tasks were created for startup and logon using profile '$profileName'.", "clark", "OK", "Information")
     } catch {
-        [System.Windows.MessageBox]::Show("Failed to enable auto reapply: $($_.Exception.Message)", "A-SYS_clark", "OK", "Error")
+        [System.Windows.MessageBox]::Show("Failed to enable auto reapply: $($_.Exception.Message)", "clark", "OK", "Error")
     }
 }
 
 function Invoke-WPFAutoReapplyDisable {
     try {
         Unregister-WinUtilAutoReapplyTask
-        [System.Windows.MessageBox]::Show("Auto reapply scheduled tasks have been removed.", "A-SYS_clark", "OK", "Information")
+        [System.Windows.MessageBox]::Show("Auto reapply scheduled tasks have been removed.", "clark", "OK", "Information")
     } catch {
-        [System.Windows.MessageBox]::Show("Failed to disable auto reapply: $($_.Exception.Message)", "A-SYS_clark", "OK", "Error")
+        [System.Windows.MessageBox]::Show("Failed to disable auto reapply: $($_.Exception.Message)", "clark", "OK", "Error")
     }
 }
 
@@ -33,16 +33,16 @@ function Invoke-WPFProfileSave {
 
     try {
         Save-WinUtilProfile -Name $profileName | Out-Null
-        [System.Windows.MessageBox]::Show("Profile '$profileName' saved.", "A-SYS_clark", "OK", "Information")
+        [System.Windows.MessageBox]::Show("Profile '$profileName' saved.", "clark", "OK", "Information")
     } catch {
-        [System.Windows.MessageBox]::Show("Failed to save profile: $($_.Exception.Message)", "A-SYS_clark", "OK", "Error")
+        [System.Windows.MessageBox]::Show("Failed to save profile: $($_.Exception.Message)", "clark", "OK", "Error")
     }
 }
 
 function Invoke-WPFProfileLoad {
     $profiles = @(Get-WinUtilProfiles)
     if ($profiles.Count -eq 0) {
-        [System.Windows.MessageBox]::Show("No saved profiles were found.", "A-SYS_clark", "OK", "Warning")
+        [System.Windows.MessageBox]::Show("No saved profiles were found.", "clark", "OK", "Warning")
         return
     }
 
@@ -55,16 +55,16 @@ function Invoke-WPFProfileLoad {
 
     try {
         Import-WinUtilProfile -Name $profileName -ApplyToUI
-        [System.Windows.MessageBox]::Show("Profile '$profileName' loaded.", "A-SYS_clark", "OK", "Information")
+        [System.Windows.MessageBox]::Show("Profile '$profileName' loaded.", "clark", "OK", "Information")
     } catch {
-        [System.Windows.MessageBox]::Show("Failed to load profile: $($_.Exception.Message)", "A-SYS_clark", "OK", "Error")
+        [System.Windows.MessageBox]::Show("Failed to load profile: $($_.Exception.Message)", "clark", "OK", "Error")
     }
 }
 
 function Invoke-WPFProfileDelete {
     $profiles = @(Get-WinUtilProfiles)
     if ($profiles.Count -eq 0) {
-        [System.Windows.MessageBox]::Show("No saved profiles were found.", "A-SYS_clark", "OK", "Warning")
+        [System.Windows.MessageBox]::Show("No saved profiles were found.", "clark", "OK", "Warning")
         return
     }
 
@@ -76,9 +76,9 @@ function Invoke-WPFProfileDelete {
 
     try {
         Remove-WinUtilProfile -Name $profileName
-        [System.Windows.MessageBox]::Show("Profile '$profileName' deleted.", "A-SYS_clark", "OK", "Information")
+        [System.Windows.MessageBox]::Show("Profile '$profileName' deleted.", "clark", "OK", "Information")
     } catch {
-        [System.Windows.MessageBox]::Show("Failed to delete profile: $($_.Exception.Message)", "A-SYS_clark", "OK", "Error")
+        [System.Windows.MessageBox]::Show("Failed to delete profile: $($_.Exception.Message)", "clark", "OK", "Error")
     }
 }
 
@@ -86,20 +86,32 @@ function Invoke-WPFRollbackLastTweak {
     try {
         $restored = Invoke-WinUtilRollbackLatest
         if ($restored) {
-            [System.Windows.MessageBox]::Show("Last tweak snapshot was restored from rollback journal.", "A-SYS_clark", "OK", "Information")
+            [System.Windows.MessageBox]::Show("Last tweak snapshot was restored from rollback journal.", "clark", "OK", "Information")
         } else {
-            [System.Windows.MessageBox]::Show("No rollback snapshot could be restored.", "A-SYS_clark", "OK", "Warning")
+            [System.Windows.MessageBox]::Show("No rollback snapshot could be restored.", "clark", "OK", "Warning")
         }
     } catch {
-        [System.Windows.MessageBox]::Show("Rollback failed: $($_.Exception.Message)", "A-SYS_clark", "OK", "Error")
+        [System.Windows.MessageBox]::Show("Rollback failed: $($_.Exception.Message)", "clark", "OK", "Error")
     }
 }
 
 function Get-WinUtilActivationScriptsRoot {
-    $candidateRoots = @(
-        (Join-Path $sync.PSScriptRoot "Microsoft-Activation-Scripts-master"),
-        (Join-Path (Get-Location).Path "Microsoft-Activation-Scripts-master")
-    )
+    $basePaths = @()
+    if (-not [string]::IsNullOrWhiteSpace($sync.PSScriptRoot)) {
+        $basePaths += $sync.PSScriptRoot
+    }
+    if (-not [string]::IsNullOrWhiteSpace($PSScriptRoot)) {
+        $basePaths += $PSScriptRoot
+    }
+    $cwdPath = (Get-Location).Path
+    if (-not [string]::IsNullOrWhiteSpace($cwdPath)) {
+        $basePaths += $cwdPath
+    }
+
+    $candidateRoots = @()
+    foreach ($basePath in ($basePaths | Select-Object -Unique)) {
+        $candidateRoots += (Join-Path $basePath "Microsoft-Activation-Scripts-master")
+    }
 
     foreach ($candidate in $candidateRoots) {
         if (Test-Path $candidate) {
@@ -114,7 +126,7 @@ function Invoke-WPFActivationScriptsMenu {
     try {
         $masRoot = Get-WinUtilActivationScriptsRoot
         if (-not $masRoot) {
-            throw "Microsoft-Activation-Scripts-master folder was not found near A-SYS_clark."
+            throw "Microsoft-Activation-Scripts-master folder was not found near clark."
         }
 
         $masAioPath = Join-Path $masRoot "MAS\All-In-One-Version-KL\MAS_AIO.cmd"
@@ -124,24 +136,159 @@ function Invoke-WPFActivationScriptsMenu {
 
         Start-Process -FilePath $masAioPath
     } catch {
-        [System.Windows.MessageBox]::Show("Unable to open MAS menu: $($_.Exception.Message)", "A-SYS_clark", "OK", "Error")
+        [System.Windows.MessageBox]::Show("Unable to open MAS menu: $($_.Exception.Message)", "clark", "OK", "Error")
     }
 }
 
 function Invoke-WPFActivationStatus {
     try {
-        $masRoot = Get-WinUtilActivationScriptsRoot
-        if (-not $masRoot) {
-            throw "Microsoft-Activation-Scripts-master folder was not found near A-SYS_clark."
+        # Summary is read from the license service via WMI only. Running MAS Check_Activation_Status.cmd
+        # first blocked the UI for a long time and did not affect this dialog.
+        $st = Get-WinUtilActivationStatus
+        $lines = @(
+            "Summary (license service on this PC):",
+            "",
+            "Windows: $($st.Windows)",
+            "Office: $($st.Office)",
+            ""
+        )
+
+        $needActivate = @()
+        if ($st.Windows -eq "Not Activated") {
+            $needActivate += "Windows"
+        }
+        if ($st.OfficeDetected -and ($st.Office -eq "Not Activated")) {
+            $needActivate += "Office"
         }
 
-        $statusScriptPath = Join-Path $masRoot "MAS\Separate-Files-Version\Check_Activation_Status.cmd"
-        if (-not (Test-Path $statusScriptPath)) {
-            throw "MAS activation status script was not found: $statusScriptPath"
+        if ($needActivate.Count -gt 0) {
+            $lines += "May need activation: $($needActivate -join ', ')."
+            $lines += "If you have a valid license, use the MAS activation menu."
+        } else {
+            $lines += "Nothing flagged as not activated (Windows activated; Office OK or not installed)."
         }
 
-        Start-Process -FilePath $statusScriptPath
+        [System.Windows.MessageBox]::Show(($lines -join [Environment]::NewLine), "Activation check", "OK", "Information") | Out-Null
+
+        if ($needActivate.Count -gt 0) {
+            if (Get-WinUtilActivationScriptsRoot) {
+                $openMas = [System.Windows.MessageBox]::Show(
+                    "Open the MAS activation menu now?",
+                    "Activation",
+                    "YesNo",
+                    "Question"
+                )
+                if ($openMas -eq [System.Windows.MessageBoxResult]::Yes) {
+                    Invoke-WPFActivationScriptsMenu
+                }
+            }
+        }
     } catch {
-        [System.Windows.MessageBox]::Show("Activation check failed: $($_.Exception.Message)", "A-SYS_clark", "OK", "Error")
+        [System.Windows.MessageBox]::Show("Activation check failed: $($_.Exception.Message)", "clark", "OK", "Error")
+    }
+}
+
+function Invoke-WPFProfileCreateWithOptions {
+    Add-Type -AssemblyName System.Windows.Forms
+
+    $defaultName = if ($sync.preferences.activeprofile) { $sync.preferences.activeprofile } else { "MyProfile" }
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = "Create profile - choose what to save"
+    $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+    $form.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
+    $form.ClientSize = New-Object System.Drawing.Size(440, 300)
+    $form.MaximizeBox = $false
+    $form.MinimizeBox = $false
+
+    $lblName = New-Object System.Windows.Forms.Label
+    $lblName.Text = "Profile name:"
+    $lblName.Location = New-Object System.Drawing.Point(12, 14)
+    $lblName.AutoSize = $true
+    [void]$form.Controls.Add($lblName)
+
+    $txtName = New-Object System.Windows.Forms.TextBox
+    $txtName.Text = $defaultName
+    $txtName.Location = New-Object System.Drawing.Point(12, 34)
+    $txtName.Width = 410
+    [void]$form.Controls.Add($txtName)
+
+    $y = 68
+    $cbApps = New-Object System.Windows.Forms.CheckBox
+    $cbApps.Text = "Include selected Applications (Install tab)"
+    $cbApps.Checked = $true
+    $cbApps.Location = New-Object System.Drawing.Point(12, $y)
+    $cbApps.Width = 410
+    [void]$form.Controls.Add($cbApps)
+    $y += 28
+
+    $cbTweaks = New-Object System.Windows.Forms.CheckBox
+    $cbTweaks.Text = "Include selected Tweaks"
+    $cbTweaks.Checked = $true
+    $cbTweaks.Location = New-Object System.Drawing.Point(12, $y)
+    $cbTweaks.Width = 410
+    [void]$form.Controls.Add($cbTweaks)
+    $y += 28
+
+    $cbToggles = New-Object System.Windows.Forms.CheckBox
+    $cbToggles.Text = "Include selected Config toggles"
+    $cbToggles.Checked = $true
+    $cbToggles.Location = New-Object System.Drawing.Point(12, $y)
+    $cbToggles.Width = 410
+    [void]$form.Controls.Add($cbToggles)
+    $y += 28
+
+    $cbFeatures = New-Object System.Windows.Forms.CheckBox
+    $cbFeatures.Text = "Include selected Config features"
+    $cbFeatures.Checked = $true
+    $cbFeatures.Location = New-Object System.Drawing.Point(12, $y)
+    $cbFeatures.Width = 410
+    [void]$form.Controls.Add($cbFeatures)
+    $y += 32
+
+    $cbMerge = New-Object System.Windows.Forms.CheckBox
+    $cbMerge.Text = "If this profile already exists, merge (add new entries; keep existing)"
+    $cbMerge.Checked = $false
+    $cbMerge.Location = New-Object System.Drawing.Point(12, $y)
+    $cbMerge.Width = 410
+    [void]$form.Controls.Add($cbMerge)
+
+    $btnOk = New-Object System.Windows.Forms.Button
+    $btnOk.Text = "Save"
+    $btnOk.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $btnOk.Location = New-Object System.Drawing.Point(268, 258)
+    $btnOk.Width = 75
+    [void]$form.Controls.Add($btnOk)
+
+    $btnCancel = New-Object System.Windows.Forms.Button
+    $btnCancel.Text = "Cancel"
+    $btnCancel.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+    $btnCancel.Location = New-Object System.Drawing.Point(347, 258)
+    $btnCancel.Width = 75
+    [void]$form.Controls.Add($btnCancel)
+
+    $form.AcceptButton = $btnOk
+    $form.CancelButton = $btnCancel
+
+    if ($form.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) {
+        return
+    }
+
+    $profileName = $txtName.Text.Trim()
+    if ([string]::IsNullOrWhiteSpace($profileName)) {
+        [System.Windows.MessageBox]::Show("Profile name cannot be empty.", "clark", "OK", "Warning")
+        return
+    }
+
+    try {
+        Save-WinUtilProfilePartial -Name $profileName `
+            -IncludeApps $cbApps.Checked `
+            -IncludeTweaks $cbTweaks.Checked `
+            -IncludeToggles $cbToggles.Checked `
+            -IncludeFeatures $cbFeatures.Checked `
+            -MergeExisting:($cbMerge.Checked)
+        [System.Windows.MessageBox]::Show("Profile '$profileName' saved.", "clark", "OK", "Information")
+    } catch {
+        [System.Windows.MessageBox]::Show("Failed to save profile: $($_.Exception.Message)", "clark", "OK", "Error")
     }
 }
