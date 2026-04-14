@@ -75,15 +75,25 @@ Add-Type -AssemblyName System.Windows.Forms
 
 # Variable to sync between runspaces
 $sync = [Hashtable]::Synchronized(@{})
+
+# Resolve script root for file and in-memory executions (e.g. irm | iex).
+$resolvedScriptRoot = $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($resolvedScriptRoot) -and $PSCommandPath) {
+    $resolvedScriptRoot = Split-Path -Parent $PSCommandPath
+}
+if ([string]::IsNullOrWhiteSpace($resolvedScriptRoot)) {
+    $resolvedScriptRoot = (Get-Location).Path
+}
+
 # Repo root: compiled script lives in repo root (.\config exists); dev start.ps1 lives in scripts\ (use parent).
-if (Test-Path -LiteralPath (Join-Path $PSScriptRoot "config")) {
-    $sync.PSScriptRoot = $PSScriptRoot
+if (Test-Path -LiteralPath (Join-Path $resolvedScriptRoot "config")) {
+    $sync.PSScriptRoot = $resolvedScriptRoot
 } else {
-    $parent = Split-Path -Parent $PSScriptRoot
-    if (Test-Path -LiteralPath (Join-Path $parent "config")) {
+    $parent = Split-Path -Parent $resolvedScriptRoot
+    if ($parent -and (Test-Path -LiteralPath (Join-Path $parent "config"))) {
         $sync.PSScriptRoot = $parent
     } else {
-        throw "Cannot locate config\ folder (checked '$PSScriptRoot' and '$parent')."
+        throw "Cannot locate config\ folder (checked '$resolvedScriptRoot' and '$parent')."
     }
 }
 $sync.version = "#{replaceme}"
@@ -123,7 +133,7 @@ $Host.UI.RawUI.WindowTitle = "clark (Admin)"
 clear-host
 
 # Dev only: Compile.ps1 concatenates functions, configs, XAML, and main.ps1 after this file — do not load from disk then.
-$devMainPath = Join-Path $PSScriptRoot "main.ps1"
+$devMainPath = Join-Path $resolvedScriptRoot "main.ps1"
 if (Test-Path -LiteralPath $devMainPath) {
     $repoRoot = $sync.PSScriptRoot
     $configDir = Join-Path $repoRoot "config"
