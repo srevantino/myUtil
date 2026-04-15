@@ -2,7 +2,7 @@
 .NOTES
     Product        : clark
     Organization   : Advance Systems 4042 (developed & managed)
-    Version        : 26.04.15
+    Version        : 26.04.16
 #>
 
 param (
@@ -98,7 +98,7 @@ if (Test-Path -LiteralPath (Join-Path $resolvedScriptRoot "config")) {
 
 # In deployed/irm mode, config is bundled in-script, so missing disk config should not block startup.
 $sync.PSScriptRoot = if ($repoRoot) { $repoRoot } else { $resolvedScriptRoot }
-$sync.version = "26.04.15"
+$sync.version = "26.04.16"
 $sync.configs = @{}
 $sync.Buttons = [System.Collections.Generic.List[PSObject]]::new()
 $sync.preferences = @{}
@@ -8573,7 +8573,7 @@ function Show-ASYSLogo {
 $sync.configs.applications = @'
 {
     "WPFInstall7zip":  {
-                           "category":  "Utilities",
+                           "category":  "Files \u0026 Storage",
                            "choco":  "7zip",
                            "content":  "7-Zip",
                            "description":  "7-Zip is a free and open-source file archiver utility. It supports several compression formats and provides a high compression ratio, making it a popular choice for file compression.",
@@ -8598,21 +8598,13 @@ $sync.configs.applications = @'
                                  "winget":  "Famatech.AdvancedIPScanner"
                              },
     "WPFInstallalacritty":  {
-                                "category":  "Utilities",
+                                "category":  "System Tools",
                                 "choco":  "alacritty",
                                 "content":  "Alacritty Terminal",
                                 "description":  "Alacritty is a fast, cross-platform, and GPU-accelerated terminal emulator. It is designed for performance and aims to be the fastest terminal emulator available.",
                                 "link":  "https://alacritty.org/",
                                 "winget":  "Alacritty.Alacritty",
                                 "foss":  true
-                            },
-    "WPFInstallanaconda3":  {
-                                "category":  "Developer",
-                                "choco":  "anaconda3",
-                                "content":  "Anaconda",
-                                "description":  "Anaconda is a distribution of the Python and R programming languages for scientific computing.",
-                                "link":  "https://www.anaconda.com/products/distribution",
-                                "winget":  "Anaconda.Anaconda3"
                             },
     "WPFInstallangryipscanner":  {
                                      "category":  "Developer",
@@ -8624,7 +8616,7 @@ $sync.configs.applications = @'
                                      "foss":  true
                                  },
     "WPFInstallanydesk":  {
-                              "category":  "Utilities",
+                              "category":  "Connectivity",
                               "choco":  "anydesk",
                               "content":  "AnyDesk",
                               "description":  "AnyDesk is a remote desktop software that enables users to access and control computers remotely. It is known for its fast connection and low latency.",
@@ -8648,7 +8640,7 @@ $sync.configs.applications = @'
                              "winget":  "Microsoft.Sysinternals.RDCMan"
                          },
     "WPFInstallautohotkey":  {
-                                 "category":  "Utilities",
+                                 "category":  "System Tools",
                                  "choco":  "autohotkey",
                                  "content":  "AutoHotkey",
                                  "description":  "AutoHotkey is a scripting language for Windows that allows users to create custom automation scripts and macros. It is often used for automating repetitive tasks and customizing keyboard shortcuts.",
@@ -8656,16 +8648,8 @@ $sync.configs.applications = @'
                                  "winget":  "AutoHotkey.AutoHotkey",
                                  "foss":  true
                              },
-    "WPFInstallbeeper":  {
-                             "category":  "Productivity",
-                             "choco":  "na",
-                             "content":  "Beeper",
-                             "description":  "All your chats in one app.",
-                             "link":  "https://www.beeper.com/",
-                             "winget":  "Beeper.Beeper"
-                         },
     "WPFInstallbitwarden":  {
-                                "category":  "Utilities",
+                                "category":  "Security",
                                 "choco":  "bitwarden",
                                 "content":  "Bitwarden",
                                 "description":  "Bitwarden is an open-source password management solution. It allows users to store and manage their passwords in a secure and encrypted vault, accessible across multiple devices.",
@@ -8673,15 +8657,6 @@ $sync.configs.applications = @'
                                 "winget":  "Bitwarden.Bitwarden",
                                 "foss":  true
                             },
-    "WPFInstallblender":  {
-                              "category":  "Media",
-                              "choco":  "blender",
-                              "content":  "Blender (3D Graphics)",
-                              "description":  "Blender is a powerful open-source 3D creation suite, offering modeling, sculpting, animation, and rendering tools.",
-                              "link":  "https://www.blender.org/",
-                              "winget":  "BlenderFoundation.Blender",
-                              "foss":  true
-                          },
     "WPFInstallbrave":  {
                             "category":  "Browser",
                             "choco":  "brave",
@@ -8692,7 +8667,7 @@ $sync.configs.applications = @'
                             "foss":  true
                         },
     "WPFInstallAdvancedRenamer":  {
-                                      "category":  "Utilities",
+                                      "category":  "Files \u0026 Storage",
                                       "choco":  "advanced-renamer",
                                       "content":  "Advanced Renamer",
                                       "description":  "Advanced Renamer is a program for renaming multiple files and folders at once. By configuring renaming methods the names can be manipulated in various ways.",
@@ -8700,7 +8675,7 @@ $sync.configs.applications = @'
                                       "winget":  "HulubuluSoftware.AdvancedRenamer"
                                   },
     "WPFInstallcryptomator":  {
-                                  "category":  "Utilities",
+                                  "category":  "Security",
                                   "choco":  "cryptomator",
                                   "content":  "Cryptomator",
                                   "description":  "Cryptomator for Windows, macOS, and Linux: Secure client-side encryption for your cloud storage, ensuring privacy and control over your data.",
@@ -8709,7 +8684,7 @@ $sync.configs.applications = @'
                                   "foss":  true
                               },
     "WPFInstallcitrixworkspaceapp":  {
-                                         "category":  "Utilities",
+                                         "category":  "Connectivity",
                                          "choco":  "citrix-workspace",
                                          "content":  "Citrix Workspace app",
                                          "description":  "A secure, unified client application that provides instant access to virtual desktops, SaaS, web, and Windows apps from any device (Windows, macOS, Linux, iOS, Android) or browser.",
@@ -8717,7 +8692,7 @@ $sync.configs.applications = @'
                                          "winget":  "Citrix.Workspace"
                                      },
     "WPFInstallcarnac":  {
-                             "category":  "Utilities",
+                             "category":  "System Tools",
                              "choco":  "carnac",
                              "content":  "Carnac",
                              "description":  "Carnac is a keystroke visualizer for Windows. It displays keystrokes in an overlay, making it useful for presentations, tutorials, and live demonstrations.",
@@ -8733,17 +8708,8 @@ $sync.configs.applications = @'
                              "link":  "https://www.google.com/chrome/",
                              "winget":  "Google.Chrome"
                          },
-    "WPFInstallchromium":  {
-                               "category":  "Browser",
-                               "choco":  "chromium",
-                               "content":  "Chromium",
-                               "description":  "Chromium is the open-source project that serves as the foundation for various web browsers, including Chrome.",
-                               "link":  "https://github.com/Hibbiki/chromium-win64",
-                               "winget":  "Hibbiki.Chromium",
-                               "foss":  true
-                           },
     "WPFInstallcpuz":  {
-                           "category":  "Utilities",
+                           "category":  "Hardware \u0026 Devices",
                            "choco":  "cpu-z",
                            "content":  "CPU-Z",
                            "description":  "CPU-Z is a system monitoring and diagnostic tool for Windows. It provides detailed information about the computer\u0027s hardware components, including the CPU, memory, and motherboard.",
@@ -8751,7 +8717,7 @@ $sync.configs.applications = @'
                            "winget":  "CPUID.CPU-Z"
                        },
     "WPFInstallcrystaldiskinfo":  {
-                                      "category":  "Utilities",
+                                      "category":  "Files \u0026 Storage",
                                       "choco":  "crystaldiskinfo",
                                       "content":  "Crystal Disk Info",
                                       "description":  "Crystal Disk Info is a disk health monitoring tool that provides information about the status and performance of hard drives. It helps users anticipate potential issues and monitor drive health.",
@@ -8760,7 +8726,7 @@ $sync.configs.applications = @'
                                       "foss":  true
                                   },
     "WPFInstallcrystaldiskmark":  {
-                                      "category":  "Utilities",
+                                      "category":  "Files \u0026 Storage",
                                       "choco":  "crystaldiskmark",
                                       "content":  "Crystal Disk Mark",
                                       "description":  "Crystal Disk Mark is a disk benchmarking tool that measures the read and write speeds of storage devices. It helps users assess the performance of their hard drives and SSDs.",
@@ -8769,24 +8735,15 @@ $sync.configs.applications = @'
                                       "foss":  true
                                   },
     "WPFInstalldiskgenius":  {
-                                 "category":  "Utilities",
+                                 "category":  "Files \u0026 Storage",
                                  "choco":  "na",
                                  "content":  "DiskGenius",
                                  "description":  "Disk partition manager, backup, and data recovery for Windows. Supports partition operations, disk cloning, and file recovery.",
                                  "link":  "https://www.diskgenius.com/",
                                  "winget":  "Eassos.DiskGenius"
                              },
-    "WPFInstallcursor":  {
-                             "category":  "Developer",
-                             "choco":  "cursoride",
-                             "content":  "Cursor",
-                             "description":  "AI-powered code editor (VS Code-based) with agentic coding features and integrated AI assistance for development workflows.",
-                             "link":  "https://cursor.com/",
-                             "winget":  "Anysphere.Cursor",
-                             "foss":  false
-                         },
     "WPFInstallddu":  {
-                          "category":  "Utilities",
+                          "category":  "System Tools",
                           "choco":  "ddu",
                           "content":  "Display Driver Uninstaller",
                           "description":  "Display Driver Uninstaller (DDU) is a tool for completely uninstalling graphics drivers from NVIDIA, AMD, and Intel. It is useful for troubleshooting graphics driver-related issues.",
@@ -8794,7 +8751,7 @@ $sync.configs.applications = @'
                           "winget":  "Wagnardsoft.DisplayDriverUninstaller"
                       },
     "WPFInstalldeluge":  {
-                             "category":  "Utilities",
+                             "category":  "Connectivity",
                              "choco":  "deluge",
                              "content":  "Deluge",
                              "description":  "Deluge is a free and open-source BitTorrent client. It features a user-friendly interface, support for plugins, and the ability to manage torrents remotely.",
@@ -8803,7 +8760,7 @@ $sync.configs.applications = @'
                              "foss":  true
                          },
     "WPFInstalldevtoys":  {
-                              "category":  "Utilities",
+                              "category":  "System Tools",
                               "choco":  "devtoys",
                               "content":  "DevToys",
                               "description":  "DevToys is a collection of development-related utilities and tools for Windows. It includes tools for file management, code formatting, and productivity enhancements for developers.",
@@ -8860,7 +8817,7 @@ $sync.configs.applications = @'
                                "winget":  "Microsoft.DotNet.DesktopRuntime.10"
                            },
     "WPFInstallecm":  {
-                          "category":  "Utilities",
+                          "category":  "System Tools",
                           "choco":  "ecm",
                           "content":  "Easy Context Menu",
                           "description":  "Easy Context Menu (ECM) lets you add a variety of useful commands and tweaks to the Desktop, My Computer, Drives, File and Folder right-click context menus. This enables you to access the most used Windows components quickly and easily. Simply check the box next to the items you wish to add. Once added, just right click and the select the component shortcut to launch it. Easy Context Menu is both portable and freeware.",
@@ -8883,25 +8840,8 @@ $sync.configs.applications = @'
                                     "link":  "https://www.easyuefi.com/",
                                     "winget":  "EFIBootEditor.EFIBootEditor"
                                 },
-    "WPFInstallemulationstation":  {
-                                       "category":  "Media",
-                                       "choco":  "emulationstation",
-                                       "content":  "Emulation Station",
-                                       "description":  "Emulation Station is a graphical and themeable emulator front-end that allows you to access all your favorite games in one place.",
-                                       "link":  "https://emulationstation.org/",
-                                       "winget":  "Emulationstation.Emulationstation",
-                                       "foss":  true
-                                   },
-    "WPFInstallepicgames":  {
-                                "category":  "Media",
-                                "choco":  "epicgameslauncher",
-                                "content":  "Epic Games Launcher",
-                                "description":  "Epic Games Launcher is the client for accessing and playing games from the Epic Games Store.",
-                                "link":  "https://www.epicgames.com/store/en-US/",
-                                "winget":  "EpicGames.EpicGamesLauncher"
-                            },
     "WPFInstallesearch":  {
-                              "category":  "Utilities",
+                              "category":  "Files \u0026 Storage",
                               "choco":  "everything",
                               "content":  "Everything Search",
                               "description":  "Everything Search is a fast and efficient file search utility for Windows.",
@@ -8909,7 +8849,7 @@ $sync.configs.applications = @'
                               "winget":  "voidtools.Everything"
                           },
     "WPFInstallffmpeg":  {
-                             "category":  "Utilities",
+                             "category":  "System Tools",
                              "choco":  "na",
                              "content":  "FFmpeg Batch AV Converter",
                              "description":  "FFmpeg Batch AV Converter is a universal audio and video encoder, that allows to use the full potential of ffmpeg command line with a few mouse clicks in a convenient GUI with drag and drop, progress information.",
@@ -8918,7 +8858,7 @@ $sync.configs.applications = @'
                              "foss":  true
                          },
     "WPFInstallfastfetch":  {
-                                "category":  "Utilities",
+                                "category":  "Hardware \u0026 Devices",
                                 "choco":  "na",
                                 "content":  "Fastfetch",
                                 "description":  "Fastfetch is a neofetch-like tool for fetching system information and displaying them in a pretty way.",
@@ -8927,7 +8867,7 @@ $sync.configs.applications = @'
                                 "foss":  true
                             },
     "WPFInstallfileconverter":  {
-                                    "category":  "Utilities",
+                                    "category":  "System Tools",
                                     "choco":  "file-converter",
                                     "content":  "File-Converter",
                                     "description":  "File Converter is a very simple tool which allows you to convert and compress one or several file(s) using the context menu in Windows Explorer.",
@@ -8953,16 +8893,8 @@ $sync.configs.applications = @'
                              "winget":  "Ablaze.Floorp",
                              "foss":  true
                          },
-    "WPFInstallgog":  {
-                          "category":  "Media",
-                          "choco":  "goggalaxy",
-                          "content":  "GOG Galaxy",
-                          "description":  "GOG Galaxy is a gaming client that offers DRM-free games, additional content, and more.",
-                          "link":  "https://www.gog.com/galaxy",
-                          "winget":  "GOG.Galaxy"
-                      },
     "WPFInstallgoogledrive":  {
-                                  "category":  "Utilities",
+                                  "category":  "Files \u0026 Storage",
                                   "choco":  "googledrive",
                                   "content":  "Google Drive",
                                   "description":  "File syncing across devices all tied to your Google account.",
@@ -8970,7 +8902,7 @@ $sync.configs.applications = @'
                                   "winget":  "Google.GoogleDrive"
                               },
     "WPFInstallgpuz":  {
-                           "category":  "Utilities",
+                           "category":  "Hardware \u0026 Devices",
                            "choco":  "gpu-z",
                            "content":  "GPU-Z",
                            "description":  "GPU-Z provides detailed information about your graphics card and GPU.",
@@ -8978,7 +8910,7 @@ $sync.configs.applications = @'
                            "winget":  "TechPowerUp.GPU-Z"
                        },
     "WPFInstallhwinfo":  {
-                             "category":  "Utilities",
+                             "category":  "Hardware \u0026 Devices",
                              "choco":  "hwinfo",
                              "content":  "HWiNFO",
                              "description":  "HWiNFO provides comprehensive hardware information and diagnostics for Windows.",
@@ -8986,7 +8918,7 @@ $sync.configs.applications = @'
                              "winget":  "REALiX.HWiNFO"
                          },
     "WPFInstallhwmonitor":  {
-                                "category":  "Utilities",
+                                "category":  "Hardware \u0026 Devices",
                                 "choco":  "hwmonitor",
                                 "content":  "HWMonitor",
                                 "description":  "HWMonitor is a hardware monitoring program that reads PC systems main health sensors.",
@@ -9002,84 +8934,14 @@ $sync.configs.applications = @'
                             "winget":  "WerWolv.ImHex",
                             "foss":  true
                         },
-    "WPFInstallimgburn":  {
-                              "category":  "Media",
-                              "choco":  "imgburn",
-                              "content":  "ImgBurn",
-                              "description":  "ImgBurn is a lightweight CD, DVD, HD-DVD, and Blu-ray burning application with advanced features for creating and burning disc images.",
-                              "link":  "https://www.imgburn.com/",
-                              "winget":  "LIGHTNINGUK.ImgBurn"
-                          },
-    "WPFInstallitch":  {
-                           "category":  "Media",
-                           "choco":  "itch",
-                           "content":  "Itch.io",
-                           "description":  "Itch.io is a digital distribution platform for indie games and creative projects.",
-                           "link":  "https://itch.io/",
-                           "winget":  "ItchIo.Itch",
-                           "foss":  true
-                       },
-    "WPFInstallhydralauncher":  {
-                                    "category":  "Media",
-                                    "choco":  "na",
-                                    "content":  "Hydra Launcher",
-                                    "description":  "Game launcher with library management and download support for DRM-free and third-party sources. Open source.",
-                                    "link":  "https://hydralauncher.gg/",
-                                    "winget":  "HydraLauncher.Hydra",
-                                    "foss":  true
-                                },
-    "WPFInstallitunes":  {
-                             "category":  "Media",
-                             "choco":  "itunes",
-                             "content":  "iTunes",
-                             "description":  "iTunes is a media player, media library, and online radio broadcaster application developed by Apple Inc.",
-                             "link":  "https://www.apple.com/itunes/",
-                             "winget":  "Apple.iTunes"
-                         },
-    "WPFInstalljava8":  {
-                            "category":  "Developer",
-                            "choco":  "corretto8jdk",
-                            "content":  "Amazon Corretto 8 (LTS)",
-                            "description":  "Amazon Corretto is a no-cost, multiplatform, production-ready distribution of the Open Java Development Kit (OpenJDK).",
-                            "link":  "https://aws.amazon.com/corretto",
-                            "winget":  "Amazon.Corretto.8.JDK",
-                            "foss":  true
-                        },
-    "WPFInstalljava25":  {
-                             "category":  "Developer",
-                             "choco":  "corretto25jdk",
-                             "content":  "Amazon Corretto 25 (LTS)",
-                             "description":  "Amazon Corretto is a no-cost, multiplatform, production-ready distribution of the Open Java Development Kit (OpenJDK).",
-                             "link":  "https://aws.amazon.com/corretto",
-                             "winget":  "Amazon.Corretto.25.JDK",
-                             "foss":  true
-                         },
     "WPFInstalljdownloader":  {
-                                  "category":  "Utilities",
+                                  "category":  "Connectivity",
                                   "choco":  "jdownloader",
                                   "content":  "JDownloader",
                                   "description":  "JDownloader is a feature-rich download manager with support for various file hosting services.",
                                   "link":  "https://jdownloader.org/",
                                   "winget":  "AppWork.JDownloader"
                               },
-    "WPFInstalljellyfinmediaplayer":  {
-                                          "category":  "Media",
-                                          "choco":  "jellyfin-media-player",
-                                          "content":  "Jellyfin Media Player",
-                                          "description":  "Jellyfin Media Player is a client application for the Jellyfin media server, providing access to your media library.",
-                                          "link":  "https://github.com/jellyfin/jellyfin-media-player",
-                                          "winget":  "Jellyfin.JellyfinMediaPlayer",
-                                          "foss":  true
-                                      },
-    "WPFInstalljellyfinserver":  {
-                                     "category":  "Media",
-                                     "choco":  "jellyfin",
-                                     "content":  "Jellyfin Server",
-                                     "description":  "Jellyfin Server is an open-source media server software, allowing you to organize and stream your media library.",
-                                     "link":  "https://jellyfin.org/",
-                                     "winget":  "Jellyfin.Server",
-                                     "foss":  true
-                                 },
     "WPFInstalljetbrains":  {
                                 "category":  "Developer",
                                 "choco":  "jetbrainstoolbox",
@@ -9088,15 +8950,6 @@ $sync.configs.applications = @'
                                 "link":  "https://www.jetbrains.com/toolbox/",
                                 "winget":  "JetBrains.Toolbox"
                             },
-    "WPFInstallkodi":  {
-                           "category":  "Media",
-                           "choco":  "kodi",
-                           "content":  "Kodi Media Center",
-                           "description":  "Kodi is an open-source media center application that allows you to play and view most videos, music, podcasts, and other digital media files.",
-                           "link":  "https://kodi.tv/",
-                           "winget":  "XBMCFoundation.Kodi",
-                           "foss":  true
-                       },
     "WPFInstalllibreoffice":  {
                                   "category":  "Productivity",
                                   "choco":  "libreoffice-fresh",
@@ -9116,7 +8969,7 @@ $sync.configs.applications = @'
                                 "foss":  true
                             },
     "WPFInstalllogitechghub":  {
-                                   "category":  "Utilities",
+                                   "category":  "Hardware \u0026 Devices",
                                    "choco":  "lghub",
                                    "content":  "Logitech G Hub",
                                    "description":  "Official software for managing Logitech gaming peripherals (mice, keyboards, headsets, lighting profiles, etc.).",
@@ -9124,7 +8977,7 @@ $sync.configs.applications = @'
                                    "winget":  "Logitech.GHUB"
                                },
     "WPFInstallmalwarebytes":  {
-                                   "category":  "Utilities",
+                                   "category":  "Security",
                                    "choco":  "malwarebytes",
                                    "content":  "Malwarebytes",
                                    "description":  "Malwarebytes is an anti-malware software that provides real-time protection against threats.",
@@ -9132,7 +8985,7 @@ $sync.configs.applications = @'
                                    "winget":  "Malwarebytes.Malwarebytes"
                                },
     "WPFInstallmacriumreflect":  {
-                                     "category":  "Utilities",
+                                     "category":  "Files \u0026 Storage",
                                      "choco":  "reflect-free",
                                      "content":  "Macrium Reflect Free",
                                      "description":  "Disk imaging and cloning for backup and recovery. Free edition; Chocolatey package automates setup where silent install is limited.",
@@ -9140,7 +8993,7 @@ $sync.configs.applications = @'
                                      "winget":  "na"
                                  },
     "WPFInstallMotrix":  {
-                             "category":  "Utilities",
+                             "category":  "Connectivity",
                              "choco":  "motrix",
                              "content":  "Motrix Download Manager",
                              "description":  "A full-featured download manager.",
@@ -9149,7 +9002,7 @@ $sync.configs.applications = @'
                              "foss":  true
                          },
     "WPFInstallmsiafterburner":  {
-                                     "category":  "Utilities",
+                                     "category":  "Hardware \u0026 Devices",
                                      "choco":  "msiafterburner",
                                      "content":  "MSI Afterburner",
                                      "description":  "MSI Afterburner is a graphics card overclocking utility with advanced features.",
@@ -9165,7 +9018,7 @@ $sync.configs.applications = @'
                                       "winget":  "Microsoft.Office"
                                   },
     "WPFInstallCompactGUI":  {
-                                 "category":  "Utilities",
+                                 "category":  "System Tools",
                                  "choco":  "compactgui",
                                  "content":  "Compact GUI",
                                  "description":  "Transparently compress active games and programs using Windows 10/11 APIs",
@@ -9174,7 +9027,7 @@ $sync.configs.applications = @'
                                  "foss":  true
                              },
     "WPFInstallExifCleaner":  {
-                                  "category":  "Utilities",
+                                  "category":  "Files \u0026 Storage",
                                   "choco":  "na",
                                   "content":  "ExifCleaner",
                                   "description":  "Desktop app to clean metadata from images, videos, PDFs, and other files.",
@@ -9201,7 +9054,7 @@ $sync.configs.applications = @'
                             "foss":  true
                         },
     "WPFInstallneofetchwin":  {
-                                  "category":  "Utilities",
+                                  "category":  "Hardware \u0026 Devices",
                                   "choco":  "na",
                                   "content":  "Neofetch",
                                   "description":  "Neofetch is a command-line utility for displaying system information in a visually appealing way.",
@@ -9218,7 +9071,7 @@ $sync.configs.applications = @'
                              "winget":  "Neovim.Neovim"
                          },
     "WPFInstallnextclouddesktop":  {
-                                       "category":  "Utilities",
+                                       "category":  "Files \u0026 Storage",
                                        "choco":  "nextcloud-client",
                                        "content":  "Nextcloud Desktop",
                                        "description":  "Nextcloud Desktop is the official desktop client for the Nextcloud file synchronization and sharing platform.",
@@ -9253,15 +9106,6 @@ $sync.configs.applications = @'
                                   "winget":  "Notepad++.Notepad++",
                                   "foss":  true
                               },
-    "WPFInstallobs":  {
-                          "category":  "Media",
-                          "choco":  "obs-studio",
-                          "content":  "OBS Studio",
-                          "description":  "OBS Studio is a free and open-source software for video recording and live streaming. It supports real-time video/audio capturing and mixing, making it popular among content creators.",
-                          "link":  "https://obsproject.com/",
-                          "winget":  "OBSProject.OBSStudio",
-                          "foss":  true
-                      },
     "WPFInstallobsidian":  {
                                "category":  "Productivity",
                                "choco":  "obsidian",
@@ -9270,17 +9114,8 @@ $sync.configs.applications = @'
                                "link":  "https://obsidian.md/",
                                "winget":  "Obsidian.Obsidian"
                            },
-    "WPFInstallonlyoffice":  {
-                                 "category":  "Productivity",
-                                 "choco":  "onlyoffice",
-                                 "content":  "ONLYOffice Desktop",
-                                 "description":  "ONLYOffice Desktop is a comprehensive office suite for document editing and collaboration.",
-                                 "link":  "https://www.onlyoffice.com/desktop.aspx",
-                                 "winget":  "ONLYOFFICE.DesktopEditors",
-                                 "foss":  true
-                             },
     "WPFInstallopenrgb":  {
-                              "category":  "Utilities",
+                              "category":  "Hardware \u0026 Devices",
                               "choco":  "openrgb",
                               "content":  "OpenRGB",
                               "description":  "OpenRGB is an open-source RGB lighting control software designed to manage and control RGB lighting for various components and peripherals.",
@@ -9289,7 +9124,7 @@ $sync.configs.applications = @'
                               "foss":  true
                           },
     "WPFInstallOVirtualBox":  {
-                                  "category":  "Utilities",
+                                  "category":  "System Tools",
                                   "choco":  "virtualbox",
                                   "content":  "Oracle VirtualBox",
                                   "description":  "Oracle VirtualBox is a powerful and free open-source virtualization tool for x86 and AMD64/Intel64 architectures.",
@@ -9297,24 +9132,6 @@ $sync.configs.applications = @'
                                   "winget":  "Oracle.VirtualBox",
                                   "foss":  true
                               },
-    "WPFInstallownclouddesktop":  {
-                                      "category":  "Utilities",
-                                      "choco":  "owncloud-client",
-                                      "content":  "ownCloud Desktop",
-                                      "description":  "ownCloud Desktop is the official desktop client for the ownCloud file synchronization and sharing platform.",
-                                      "link":  "https://owncloud.com/desktop-app/",
-                                      "winget":  "ownCloud.ownCloudDesktop",
-                                      "foss":  true
-                                  },
-    "WPFInstallpolicyplus":  {
-                                 "category":  "Media",
-                                 "choco":  "na",
-                                 "content":  "Policy Plus",
-                                 "description":  "Local Group Policy Editor plus more, for all Windows editions.",
-                                 "link":  "https://github.com/Fleex255/PolicyPlus",
-                                 "winget":  "Fleex255.PolicyPlus",
-                                 "foss":  true
-                             },
     "WPFInstallprocessexplorer":  {
                                       "category":  "Developer",
                                       "choco":  "na",
@@ -9323,40 +9140,6 @@ $sync.configs.applications = @'
                                       "link":  "https://learn.microsoft.com/sysinternals/downloads/process-explorer",
                                       "winget":  "Microsoft.Sysinternals.ProcessExplorer"
                                   },
-    "WPFInstallpdfsam":  {
-                             "category":  "Productivity",
-                             "choco":  "pdfsam",
-                             "content":  "PDFsam Basic",
-                             "description":  "PDFsam Basic is a free and open-source tool for splitting, merging, and rotating PDF files.",
-                             "link":  "https://pdfsam.org/",
-                             "winget":  "PDFsam.PDFsam",
-                             "foss":  true
-                         },
-    "WPFInstallplaynite":  {
-                               "category":  "Media",
-                               "choco":  "playnite",
-                               "content":  "Playnite",
-                               "description":  "Playnite is an open-source video game library manager with one simple goal: To provide a unified interface for all of your games.",
-                               "link":  "https://playnite.link/",
-                               "winget":  "Playnite.Playnite",
-                               "foss":  true
-                           },
-    "WPFInstallplex":  {
-                           "category":  "Media",
-                           "choco":  "plexmediaserver",
-                           "content":  "Plex Media Server",
-                           "description":  "Plex Media Server is a media server software that allows you to organize and stream your media library. It supports various media formats and offers a wide range of features.",
-                           "link":  "https://www.plex.tv/your-media/",
-                           "winget":  "Plex.PlexMediaServer"
-                       },
-    "WPFInstallplexdesktop":  {
-                                  "category":  "Media",
-                                  "choco":  "plex",
-                                  "content":  "Plex Desktop",
-                                  "description":  "Plex Desktop for Windows is the front end for Plex Media Server.",
-                                  "link":  "https://www.plex.tv",
-                                  "winget":  "Plex.Plex"
-                              },
     "WPFInstallPortmaster":  {
                                  "category":  "Developer",
                                  "choco":  "portmaster",
@@ -9400,15 +9183,6 @@ $sync.configs.applications = @'
                                 "winget":  "Microsoft.PowerToys",
                                 "foss":  true
                             },
-    "WPFInstallprismlauncher":  {
-                                    "category":  "Media",
-                                    "choco":  "prismlauncher",
-                                    "content":  "Prism Launcher",
-                                    "description":  "Prism Launcher is an open-source Minecraft launcher with the ability to manage multiple instances, accounts and mods.",
-                                    "link":  "https://prismlauncher.org/",
-                                    "winget":  "PrismLauncher.PrismLauncher",
-                                    "foss":  true
-                                },
     "WPFInstallprocessmonitor":  {
                                      "category":  "Developer",
                                      "choco":  "procexp",
@@ -9418,7 +9192,7 @@ $sync.configs.applications = @'
                                      "winget":  "Microsoft.Sysinternals.ProcessMonitor"
                                  },
     "WPFInstallprucaslicer":  {
-                                  "category":  "Utilities",
+                                  "category":  "Hardware \u0026 Devices",
                                   "choco":  "prusaslicer",
                                   "content":  "PrusaSlicer",
                                   "description":  "PrusaSlicer is a powerful and easy-to-use slicing software for 3D printing with Prusa 3D printers.",
@@ -9426,14 +9200,6 @@ $sync.configs.applications = @'
                                   "winget":  "Prusa3d.PrusaSlicer",
                                   "foss":  true
                               },
-    "WPFInstallpsremoteplay":  {
-                                   "category":  "Media",
-                                   "choco":  "ps-remote-play",
-                                   "content":  "PS Remote Play",
-                                   "description":  "PS Remote Play is a free application that allows you to stream games from your PlayStation console to a PC or mobile device.",
-                                   "link":  "https://remoteplay.dl.playstation.net/remoteplay/lang/gb/",
-                                   "winget":  "PlayStation.PSRemotePlay"
-                               },
     "WPFInstallputty":  {
                             "category":  "Developer",
                             "choco":  "putty",
@@ -9453,7 +9219,7 @@ $sync.configs.applications = @'
                               "foss":  true
                           },
     "WPFInstallqbittorrent":  {
-                                  "category":  "Utilities",
+                                  "category":  "Connectivity",
                                   "choco":  "qbittorrent",
                                   "content":  "qBittorrent",
                                   "description":  "qBittorrent is a free and open-source BitTorrent client that aims to provide a feature-rich and lightweight alternative to other torrent clients.",
@@ -9462,7 +9228,7 @@ $sync.configs.applications = @'
                                   "foss":  true
                               },
     "WPFInstallquicklook":  {
-                                "category":  "Utilities",
+                                "category":  "Files \u0026 Storage",
                                 "choco":  "quicklook",
                                 "content":  "Quicklook",
                                 "description":  "Bring macOS ?Quick Look? feature to Windows.",
@@ -9471,7 +9237,7 @@ $sync.configs.applications = @'
                                 "foss":  true
                             },
     "WPFInstallrainmeter":  {
-                                "category":  "Utilities",
+                                "category":  "System Tools",
                                 "choco":  "na",
                                 "content":  "Rainmeter",
                                 "description":  "Rainmeter is a desktop customization tool that allows you to create and share customizable skins for your desktop.",
@@ -9480,7 +9246,7 @@ $sync.configs.applications = @'
                                 "foss":  true
                             },
     "WPFInstallrevo":  {
-                           "category":  "Utilities",
+                           "category":  "System Tools",
                            "choco":  "revo-uninstaller",
                            "content":  "Revo Uninstaller",
                            "description":  "Revo Uninstaller is an advanced uninstaller tool that helps you remove unwanted software and clean up your system.",
@@ -9488,7 +9254,7 @@ $sync.configs.applications = @'
                            "winget":  "RevoUninstaller.RevoUninstaller"
                        },
     "WPFInstallrufus":  {
-                            "category":  "Utilities",
+                            "category":  "Files \u0026 Storage",
                             "choco":  "rufus",
                             "content":  "Rufus Imager",
                             "description":  "Rufus is a utility that helps format and create bootable USB drives, such as USB keys or pen drives.",
@@ -9522,14 +9288,6 @@ $sync.configs.applications = @'
                               "link":  "https://REPLACE_WITH_YOUR_SIDEBAR_URL",
                               "winget":  "na"
                           },
-    "WPFInstallsideloadly":  {
-                                 "category":  "Mobile \u0026 iOS tools",
-                                 "choco":  "na",
-                                 "content":  "Sideloadly",
-                                 "description":  "Sideload apps to iOS devices without the App Store (IPA install, Apple ID sign-in). Use responsibly and in line with Apple?s terms.",
-                                 "link":  "https://sideloadly.io/",
-                                 "winget":  "iOSGods.Sideloadly"
-                             },
     "WPFInstallslack":  {
                             "category":  "Productivity",
                             "choco":  "slack",
@@ -9539,7 +9297,7 @@ $sync.configs.applications = @'
                             "winget":  "SlackTechnologies.Slack"
                         },
     "WPFInstallspacedrive":  {
-                                 "category":  "Utilities",
+                                 "category":  "Files \u0026 Storage",
                                  "choco":  "na",
                                  "content":  "Spacedrive File Manager",
                                  "description":  "Spacedrive is a file manager that offers cloud storage integration and file synchronization across devices.",
@@ -9547,22 +9305,6 @@ $sync.configs.applications = @'
                                  "winget":  "spacedrive.Spacedrive",
                                  "foss":  true
                              },
-    "WPFInstallspotify":  {
-                              "category":  "Media",
-                              "choco":  "spotify",
-                              "content":  "Spotify",
-                              "description":  "Spotify streams music and podcasts with playlists, discovery, and offline listening on premium plans.",
-                              "link":  "https://www.spotify.com/download/windows/",
-                              "winget":  "Spotify.Spotify"
-                          },
-    "WPFInstallsteam":  {
-                            "category":  "Media",
-                            "choco":  "steam-client",
-                            "content":  "Steam",
-                            "description":  "Steam is a digital distribution platform for purchasing and playing video games, offering multiplayer gaming, video streaming, and more.",
-                            "link":  "https://store.steampowered.com/about/",
-                            "winget":  "Valve.Steam"
-                        },
     "WPFInstallsumatra":  {
                               "category":  "Productivity",
                               "choco":  "sumatrapdf",
@@ -9573,7 +9315,7 @@ $sync.configs.applications = @'
                               "foss":  true
                           },
     "WPFInstalltailscale":  {
-                                "category":  "Utilities",
+                                "category":  "Connectivity",
                                 "choco":  "tailscale",
                                 "content":  "Tailscale",
                                 "description":  "Tailscale is a secure and easy-to-use VPN solution for connecting your devices and networks.",
@@ -9598,7 +9340,7 @@ $sync.configs.applications = @'
                             "winget":  "Microsoft.Teams"
                         },
     "WPFInstallteamviewer":  {
-                                 "category":  "Utilities",
+                                 "category":  "Connectivity",
                                  "choco":  "teamviewer9",
                                  "content":  "TeamViewer",
                                  "description":  "TeamViewer is a popular remote access and support software that allows you to connect to and control remote devices.",
@@ -9606,7 +9348,7 @@ $sync.configs.applications = @'
                                  "winget":  "TeamViewer.TeamViewer"
                              },
     "WPFInstallteamspeak3":  {
-                                 "category":  "Utilities",
+                                 "category":  "Connectivity",
                                  "choco":  "teamspeak",
                                  "content":  "TeamSpeak 3",
                                  "description":  "TEAMSPEAK. YOUR TEAM. YOUR RULES. Use crystal clear sound to communicate with your team mates cross-platform with military-grade security, lag-free performance \u0026 unparalleled reliability and uptime.",
@@ -9640,40 +9382,14 @@ $sync.configs.applications = @'
                                   "winget":  "Mozilla.Thunderbird",
                                   "foss":  true
                               },
-    "WPFInstalltor":  {
-                          "category":  "Browser",
-                          "choco":  "tor-browser",
-                          "content":  "Tor Browser",
-                          "description":  "Tor Browser is designed for anonymous web browsing, utilizing the Tor network to protect user privacy and security.",
-                          "link":  "https://www.torproject.org/",
-                          "winget":  "TorProject.TorBrowser",
-                          "foss":  true
-                      },
     "WPFInstalltreesize":  {
-                               "category":  "Utilities",
+                               "category":  "Files \u0026 Storage",
                                "choco":  "treesizefree",
                                "content":  "TreeSize Free",
                                "description":  "TreeSize Free is a disk space manager that helps you analyze and visualize the space usage on your drives.",
                                "link":  "https://www.jam-software.com/treesize_free/",
                                "winget":  "JAMSoftware.TreeSize.Free"
                            },
-    "WPFInstallubisoft":  {
-                              "category":  "Media",
-                              "choco":  "ubisoft-connect",
-                              "content":  "Ubisoft Connect",
-                              "description":  "Ubisoft Connect is Ubisoft\u0027s digital distribution and online gaming service, providing access to Ubisoft\u0027s games and services.",
-                              "link":  "https://ubisoftconnect.com/",
-                              "winget":  "Ubisoft.Connect"
-                          },
-    "WPFInstallungoogled":  {
-                                "category":  "Browser",
-                                "choco":  "ungoogled-chromium",
-                                "content":  "Ungoogled",
-                                "description":  "Ungoogled Chromium is a version of Chromium without Google\u0027s integration for enhanced privacy and control.",
-                                "link":  "https://github.com/Eloston/ungoogled-chromium",
-                                "winget":  "eloston.ungoogled-chromium",
-                                "foss":  true
-                            },
     "WPFInstallunity":  {
                             "category":  "Developer",
                             "choco":  "unityhub",
@@ -9707,40 +9423,6 @@ $sync.configs.applications = @'
                                        "link":  "https://visualstudio.microsoft.com/",
                                        "winget":  "Microsoft.VisualStudio.2026.Community"
                                    },
-    "WPFInstallvortex":  {
-                             "category":  "Media",
-                             "choco":  "na",
-                             "content":  "Vortex Mod Manager",
-                             "description":  "Nexus Mods mod manager for games: install, enable, and sort mods with conflict detection and plugin support.",
-                             "link":  "https://www.nexusmods.com/about/vortex/",
-                             "winget":  "NexusMods.Vortex",
-                             "foss":  true
-                         },
-    "WPFInstallvlc":  {
-                          "category":  "Media",
-                          "choco":  "vlc",
-                          "content":  "VLC (Video Player)",
-                          "description":  "VLC Media Player is a free and open-source multimedia player that supports a wide range of audio and video formats. It is known for its versatility and cross-platform compatibility.",
-                          "link":  "https://www.videolan.org/vlc/",
-                          "winget":  "VideoLAN.VLC",
-                          "foss":  true
-                      },
-    "WPFInstallvoicemeeter":  {
-                                  "category":  "Media",
-                                  "choco":  "voicemeeter",
-                                  "content":  "Voicemeeter (Audio)",
-                                  "description":  "Voicemeeter is a virtual audio mixer that allows you to manage and enhance audio streams on your computer. It is commonly used for audio recording and streaming purposes.",
-                                  "link":  "https://voicemeeter.com/",
-                                  "winget":  "VB-Audio.Voicemeeter"
-                              },
-    "WPFInstallVoicemeeterPotato":  {
-                                        "category":  "Media",
-                                        "choco":  "voicemeeter-potato",
-                                        "content":  "Voicemeeter Potato",
-                                        "description":  "Voicemeeter Potato is the ultimate version of the Voicemeeter Audio Mixer Application endowed with Virtual Audio Device to mix and manage any audio sources from or to any audio devices or applications.",
-                                        "link":  "https://voicemeeter.com/",
-                                        "winget":  "VB-Audio.Voicemeeter.Potato"
-                                    },
     "WPFInstallvscode":  {
                              "category":  "Developer",
                              "choco":  "vscode",
@@ -9750,17 +9432,8 @@ $sync.configs.applications = @'
                              "winget":  "Microsoft.VisualStudioCode",
                              "foss":  true
                          },
-    "WPFInstallwaterfox":  {
-                               "category":  "Browser",
-                               "choco":  "waterfox",
-                               "content":  "Waterfox",
-                               "description":  "Waterfox is a fast, privacy-focused web browser based on Firefox, designed to preserve user choice and privacy.",
-                               "link":  "https://www.waterfox.net/",
-                               "winget":  "Waterfox.Waterfox",
-                               "foss":  true
-                           },
     "WPFInstallwingetui":  {
-                               "category":  "Utilities",
+                               "category":  "System Tools",
                                "choco":  "wingetui",
                                "content":  "UniGetUI",
                                "description":  "UniGetUI is a GUI for WinGet, Chocolatey, and other Windows CLI package managers.",
@@ -9769,7 +9442,7 @@ $sync.configs.applications = @'
                                "foss":  true
                            },
     "WPFInstallwinrar":  {
-                             "category":  "Utilities",
+                             "category":  "Files \u0026 Storage",
                              "choco":  "winrar",
                              "content":  "WinRAR",
                              "description":  "WinRAR is a powerful archive manager that allows you to create, manage, and extract compressed files.",
@@ -9804,7 +9477,7 @@ $sync.configs.applications = @'
                                 "foss":  true
                             },
     "WPFInstallwisetoys":  {
-                               "category":  "Utilities",
+                               "category":  "System Tools",
                                "choco":  "na",
                                "content":  "WiseToys",
                                "description":  "WiseToys is a set of utilities and tools designed to enhance and optimize your Windows experience.",
@@ -9812,7 +9485,7 @@ $sync.configs.applications = @'
                                "winget":  "WiseCleaner.WiseToys"
                            },
     "WPFInstallwittytool":  {
-                                "category":  "Utilities",
+                                "category":  "System Tools",
                                 "choco":  "na",
                                 "content":  "WittyTool",
                                 "description":  "Free disk clone, partition, and data recovery tools from WittyTool. Install from the website; not available via WinGet or Chocolatey in this list.",
@@ -9820,7 +9493,7 @@ $sync.configs.applications = @'
                                 "winget":  "na"
                             },
     "WPFInstallwizfile":  {
-                              "category":  "Utilities",
+                              "category":  "Files \u0026 Storage",
                               "choco":  "na",
                               "content":  "WizFile",
                               "description":  "Find files by name on your hard drives almost instantly.",
@@ -9828,7 +9501,7 @@ $sync.configs.applications = @'
                               "winget":  "AntibodySoftware.WizFile"
                           },
     "WPFInstallwiztree":  {
-                              "category":  "Utilities",
+                              "category":  "Files \u0026 Storage",
                               "choco":  "wiztree",
                               "content":  "WizTree",
                               "description":  "WizTree is a fast disk space analyzer that helps you quickly find the files and folders consuming the most space on your hard drive.",
@@ -9836,7 +9509,7 @@ $sync.configs.applications = @'
                               "winget":  "AntibodySoftware.WizTree"
                           },
     "WPFInstallxdm":  {
-                          "category":  "Utilities",
+                          "category":  "Connectivity",
                           "choco":  "xdm",
                           "content":  "Xtreme Download Manager",
                           "description":  "Xtreme Download Manager is an advanced download manager with support for various protocols and browsers. *Browser integration deprecated by google store. No official release.*",
@@ -9845,7 +9518,7 @@ $sync.configs.applications = @'
                           "foss":  true
                       },
     "WPFInstallwindowsfirewallcontrol":  {
-                                             "category":  "Utilities",
+                                             "category":  "Security",
                                              "choco":  "windowsfirewallcontrol",
                                              "content":  "Windows Firewall Control",
                                              "description":  "Windows Firewall Control is a powerful tool which extends the functionality of Windows Firewall and provides new extra features which makes Windows Firewall better.",
@@ -9853,7 +9526,7 @@ $sync.configs.applications = @'
                                              "winget":  "BiniSoft.WindowsFirewallControl"
                                          },
     "WPFInstallfancontrol":  {
-                                 "category":  "Utilities",
+                                 "category":  "System Tools",
                                  "choco":  "na",
                                  "content":  "FanControl",
                                  "description":  "Fan Control is a free and open-source software that allows the user to control his CPU, GPU and case fans using temperatures.",
@@ -9862,7 +9535,7 @@ $sync.configs.applications = @'
                                  "foss":  true
                              },
     "WPFInstallWindhawk":  {
-                               "category":  "Utilities",
+                               "category":  "System Tools",
                                "choco":  "windhawk",
                                "content":  "Windhawk",
                                "description":  "The customization marketplace for Windows programs.",
@@ -9870,7 +9543,7 @@ $sync.configs.applications = @'
                                "winget":  "RamenSoftware.Windhawk"
                            },
     "WPFInstallJoyToKey":  {
-                               "category":  "Utilities",
+                               "category":  "Hardware \u0026 Devices",
                                "choco":  "joytokey",
                                "content":  "JoyToKey",
                                "description":  "Enables PC game controllers to emulate the keyboard and mouse input.",
@@ -9878,23 +9551,15 @@ $sync.configs.applications = @'
                                "winget":  "JTKsoftware.JoyToKey"
                            },
     "WPFInstalldropox":  {
-                             "category":  "Utilities",
+                             "category":  "Files \u0026 Storage",
                              "choco":  "na",
                              "content":  "Dropbox",
                              "description":  "The Dropbox desktop app! Save hard drive space, share and edit files and send for signature ? all without the distraction of countless browser tabs.",
                              "link":  "https://www.dropbox.com/en_GB/desktop",
                              "winget":  "Dropbox.Dropbox"
                          },
-    "WPFInstallOverwolf":  {
-                               "category":  "Media",
-                               "choco":  "overwolf",
-                               "content":  "Overwolf",
-                               "description":  "Popular platform for game overlays and companion apps (mod managers, trackers, etc.), widely used by gamers.",
-                               "link":  "https://www.overwolf.com/app/overwolf-curseforge",
-                               "winget":  "Overwolf.CurseForge"
-                           },
     "WPFInstallLenovoLegionToolkit":  {
-                                          "category":  "Utilities",
+                                          "category":  "OEM Tools",
                                           "choco":  "na",
                                           "content":  "Lenovo Legion Toolkit",
                                           "description":  "Lenovo Legion Toolkit (LLT) is a open-source utility created for Lenovo Legion laptops, that allows changing a couple of features that are only available in Lenovo Vantage or Legion Zone. It runs no background services, uses less memory, uses virtually no CPU, and contains no telemetry. Just like Lenovo Vantage, this application is Windows only.",
@@ -9903,7 +9568,7 @@ $sync.configs.applications = @'
                                           "foss":  true
                                       },
     "WPFInstallLenovoVantage":  {
-                                    "category":  "Utilities",
+                                    "category":  "OEM Tools",
                                     "choco":  "na",
                                     "content":  "Lenovo Vantage",
                                     "description":  "Official Lenovo utility for driver updates, hardware diagnostics, and device settings management.",
@@ -9911,7 +9576,7 @@ $sync.configs.applications = @'
                                     "winget":  "9WZDNCRFJ4MV"
                                 },
     "WPFInstallMSICenter":  {
-                                "category":  "Utilities",
+                                "category":  "OEM Tools",
                                 "choco":  "na",
                                 "content":  "MSI Center",
                                 "description":  "Official MSI system utility for updates, hardware monitoring, performance tuning, and device features.",
@@ -9919,7 +9584,7 @@ $sync.configs.applications = @'
                                 "winget":  "na"
                             },
     "WPFInstallASUSArmouryCrate":  {
-                                       "category":  "Utilities",
+                                       "category":  "OEM Tools",
                                        "choco":  "na",
                                        "content":  "ASUS Armoury Crate",
                                        "description":  "ASUS/ROG control center for device updates, RGB management, fan profiles, and performance modes.",
@@ -9927,7 +9592,7 @@ $sync.configs.applications = @'
                                        "winget":  "Asus.ArmouryCrate"
                                    },
     "WPFInstallDellCommandUpdate":  {
-                                        "category":  "Utilities",
+                                        "category":  "OEM Tools",
                                         "choco":  "na",
                                         "content":  "Dell Command | Update",
                                         "description":  "Official Dell tool to update BIOS, firmware, drivers, and OEM software on Dell systems.",
@@ -9935,7 +9600,7 @@ $sync.configs.applications = @'
                                         "winget":  "Dell.CommandUpdate"
                                     },
     "WPFInstallThrottleStop":  {
-                                   "category":  "Utilities",
+                                   "category":  "System Tools",
                                    "choco":  "na",
                                    "content":  "ThrottleStop",
                                    "description":  "Advanced CPU tuning and throttling diagnostics utility for laptops and mobile processors.",
@@ -9943,22 +9608,13 @@ $sync.configs.applications = @'
                                    "winget":  "TechPowerUp.ThrottleStop"
                                },
     "WPFInstallValiDrive":  {
-                                "category":  "Utilities",
+                                "category":  "Files \u0026 Storage",
                                 "choco":  "na",
                                 "content":  "ValiDrive",
                                 "description":  "USB storage validation tool by GRC for detecting counterfeit or misreported flash drive capacity.",
                                 "link":  "https://www.grc.com/validrive.htm",
                                 "winget":  "GibsonResearchCorporation.ValiDrive"
-                            },
-    "WPFInstallZenBrowser":  {
-                                 "category":  "Browser",
-                                 "choco":  "na",
-                                 "content":  "Zen Browser",
-                                 "description":  "The modern, privacy-focused, performance-driven browser built on Firefox.",
-                                 "link":  "https://zen-browser.app/",
-                                 "winget":  "Zen-Team.Zen-Browser",
-                                 "foss":  true
-                             }
+                            }
 }
 '@ | ConvertFrom-Json
 $sync.configs.appnavigation = @'
