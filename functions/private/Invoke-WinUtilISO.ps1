@@ -154,20 +154,6 @@ function Invoke-WinUtilISODirectDownloadPauseToggle {
     $sync["WinISODownloadPauseRequested"] = $newPausedState
     $sync["WinISODownloadIsPaused"] = $newPausedState
 
-    $bitsJobId = [string]$sync["WinISODownloadBitsJobId"]
-    if (-not [string]::IsNullOrWhiteSpace($bitsJobId)) {
-        try {
-            $bitsJob = Get-BitsTransfer -Id $bitsJobId -ErrorAction SilentlyContinue
-            if ($bitsJob) {
-                if ($newPausedState -and $bitsJob.JobState -ne "Suspended") {
-                    Suspend-BitsTransfer -BitsJob $bitsJob -ErrorAction SilentlyContinue
-                } elseif (-not $newPausedState -and $bitsJob.JobState -eq "Suspended") {
-                    Resume-BitsTransfer -BitsJob $bitsJob -ErrorAction SilentlyContinue
-                }
-            }
-        } catch {}
-    }
-
     if ($newPausedState) {
         Write-Win11ISOLog "ISO download paused."
         Set-WinUtilISODownloadProgress -Percent ([int]$sync["WinISODownloadLastPercent"]) -Text "Download paused. Click Resume to continue."
@@ -376,10 +362,26 @@ function Invoke-WinUtilISOBitsOrHttpDownload {
 
                 $bitsJob = Get-BitsTransfer -Id $bitsJobId -ErrorAction SilentlyContinue
                 if ($bitsJob -and $bitsJob.JobState -eq "Suspended") {
+                    # Resume can take a short moment to transition back to Transferring.
                     Resume-BitsTransfer -BitsJob $bitsJob -ErrorAction SilentlyContinue
+                    $resumeDeadline = (Get-Date).AddSeconds(10)
+                    do {
+                        Start-Sleep -Milliseconds 250
+                        Test-WinUtilISODownloadStopRequested
+                        $bitsJob = Get-BitsTransfer -Id $bitsJobId -ErrorAction SilentlyContinue
+                    } while ($bitsJob -and $bitsJob.JobState -eq "Suspended" -and (Get-Date) -lt $resumeDeadline)
                 }
                 $sync["WinISODownloadIsPaused"] = $false
                 Set-WinUtilISODownloadControlState -IsRunning $true -IsPaused $false
+            }
+
+            if ($bitsJob.JobState -eq "Suspended" -and -not $sync["WinISODownloadPauseRequested"]) {
+                Resume-BitsTransfer -BitsJob $bitsJob -ErrorAction SilentlyContinue
+                Start-Sleep -Milliseconds 250
+                $bitsJob = Get-BitsTransfer -Id $bitsJobId -ErrorAction SilentlyContinue
+                if ($bitsJob -and $bitsJob.JobState -eq "Suspended") {
+                    throw "Download resume did not complete (BITS remained suspended)."
+                }
             }
 
             $bytesTotal = [double]$bitsJob.BytesTotal
