@@ -10,7 +10,7 @@
   },
   "WPFDnsManager": {
     "Content": "DNS manager (per adapter)",
-    "Description": "Presets (Cloudflare, Google, Quad9, …), custom IPv4/IPv6, DHCP reset; apply to selected or all adapters.",
+    "Description": "Presets (Cloudflare, Google, Quad9, ...), custom IPv4/IPv6, DHCP reset; apply to selected or all adapters.",
     "Category": "Network",
     "panel": "1",
     "Type": "Button",
@@ -39,7 +39,7 @@
     "Content": "Disk health & tools",
     "Description": "SMART/health summary, chkdsk scan, diskpart list script; destructive actions require confirmation.",
     "Category": "Storage",
-    "panel": "1",
+    "panel": "2",
     "Type": "Button",
     "ButtonWidth": "360",
     "function": "Invoke-WPFDiskToolsWizard"
@@ -48,7 +48,7 @@
     "Content": "Installed programs & deep clean",
     "Description": "List programs from registry uninstall keys, uninstall selection, optional restore point, leftover scan (preview).",
     "Category": "Applications",
-    "panel": "1",
+    "panel": "2",
     "Type": "Button",
     "ButtonWidth": "360",
     "function": "Invoke-WPFAppRemovalTool"

@@ -179,7 +179,7 @@ Invoke-WPFUIElements -configVariable $sync.configs.feature -targetGridName "feat
 Invoke-WPFUIElements -configVariable $sync.configs.profiles -targetGridName "profilespanel" -columncount 1
 
 if ($sync.configs.tools) {
-    Invoke-WPFUIElements -configVariable $sync.configs.tools -targetGridName "toolspanel" -columncount 1
+    Invoke-WPFUIElements -configVariable $sync.configs.tools -targetGridName "toolspanel" -columncount 2
 }
 
 # Future implementation: Add Windows Version to updates panel

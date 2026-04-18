@@ -2,6 +2,29 @@ function Invoke-WPFStartupManager {
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -AssemblyName System.Drawing
 
+    function Get-ExecutablePathFromStartupCommand {
+        param([string]$CommandLine)
+        if ([string]::IsNullOrWhiteSpace($CommandLine)) { return $null }
+        $t = $CommandLine.Trim()
+        if ($t -match '^"([^"]+\.(?:exe|EXE))"') { return $matches[1] }
+        $idx = $t.ToLowerInvariant().IndexOf('.exe')
+        if ($idx -ge 0) {
+            return $t.Substring(0, $idx + 4).Trim().Trim('"')
+        }
+        if ($t -match '^(\S+\.(?:exe|EXE))\b') { return $matches[1] }
+        return $null
+    }
+
+    function Test-StartupExePath {
+        param([string]$Path)
+        if ([string]::IsNullOrWhiteSpace($Path)) { return $false }
+        try {
+            return (Test-Path -LiteralPath $Path)
+        } catch {
+            return $false
+        }
+    }
+
     function Get-StartupEntries {
         $list = [System.Collections.Generic.List[object]]::new()
 
@@ -22,15 +45,10 @@ function Invoke-WPFStartupManager {
                 $cmd = [string]$n.Value
                 if ([string]::IsNullOrWhiteSpace($cmd)) { continue }
                 $pub = ""
-                $exePath = $cmd
-                if ($cmd -match '^"([^"]+)"') {
-                    $exePath = $matches[1]
-                } elseif ($cmd -match '^(\S+\.exe)') {
-                    $exePath = $matches[1]
-                }
-                if (Test-Path -LiteralPath $exePath.Trim('"')) {
+                $exePath = Get-ExecutablePathFromStartupCommand -CommandLine $cmd
+                if ($exePath -and (Test-StartupExePath -Path $exePath)) {
                     try {
-                        $ver = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exePath.Trim('"'))
+                        $ver = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exePath)
                         $pub = $ver.CompanyName
                     } catch { }
                 }
@@ -123,7 +141,7 @@ function Invoke-WPFStartupManager {
     }
 
     $form = New-Object System.Windows.Forms.Form
-    $form.Text = "Clark — Startup manager"
+    $form.Text = "Clark - Startup manager"
     $form.Size = New-Object System.Drawing.Size(900, 520)
     $form.StartPosition = "CenterScreen"
 
@@ -133,11 +151,19 @@ function Invoke-WPFStartupManager {
     $dg.AutoGenerateColumns = $false
     $dg.SelectionMode = "FullRowSelect"
     $dg.MultiSelect = $false
-    [void]$dg.Columns.Add((New-Object System.Windows.Forms.DataGridViewTextBoxColumn @{ Name = 'Kind'; HeaderText = 'Kind'; Width = 90 }))
-    [void]$dg.Columns.Add((New-Object System.Windows.Forms.DataGridViewTextBoxColumn @{ Name = 'Location'; HeaderText = 'Location'; Width = 120 }))
-    [void]$dg.Columns.Add((New-Object System.Windows.Forms.DataGridViewTextBoxColumn @{ Name = 'Name'; HeaderText = 'Name'; Width = 140 }))
-    [void]$dg.Columns.Add((New-Object System.Windows.Forms.DataGridViewTextBoxColumn @{ Name = 'Command'; HeaderText = 'Executable / command'; Width = 360 }))
-    [void]$dg.Columns.Add((New-Object System.Windows.Forms.DataGridViewTextBoxColumn @{ Name = 'Publisher'; HeaderText = 'Publisher'; Width = 120 }))
+    foreach ($colDef in @(
+            @{ Name = 'Kind'; HeaderText = 'Kind'; Width = 90 }
+            @{ Name = 'Location'; HeaderText = 'Location'; Width = 120 }
+            @{ Name = 'Name'; HeaderText = 'Name'; Width = 140 }
+            @{ Name = 'Command'; HeaderText = 'Executable / command'; Width = 360 }
+            @{ Name = 'Publisher'; HeaderText = 'Publisher'; Width = 120 }
+        )) {
+        $c = New-Object System.Windows.Forms.DataGridViewTextBoxColumn
+        $c.Name = $colDef.Name
+        $c.HeaderText = $colDef.HeaderText
+        $c.Width = $colDef.Width
+        [void]$dg.Columns.Add($c)
+    }
     $dg.Tag = [System.Collections.Generic.List[object]]::new()
 
     function Refresh-Grid {
@@ -153,10 +179,15 @@ function Invoke-WPFStartupManager {
 
     $flow = New-Object System.Windows.Forms.FlowLayoutPanel
     $flow.Dock = "Bottom"
-    $flow.Height = 40
+    $flow.WrapContents = $true
+    $flow.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+    $flow.AutoSize = $true
+    $flow.AutoSizeMode = [System.Windows.Forms.AutoSizeMode]::GrowAndShrink
+    $flow.Padding = New-Object System.Windows.Forms.Padding(6, 4, 6, 6)
 
     $btnDis = New-Object System.Windows.Forms.Button
     $btnDis.Text = "Disable selected"
+    $btnDis.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
     $btnDis.Add_Click({
         if ($dg.SelectedRows.Count -eq 0) { return }
         $idx = $dg.SelectedRows[0].Index
@@ -180,6 +211,7 @@ function Invoke-WPFStartupManager {
 
     $btnEn = New-Object System.Windows.Forms.Button
     $btnEn.Text = "Enable (restore)"
+    $btnEn.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
     $btnEn.Add_Click({
         if ($dg.SelectedRows.Count -eq 0) { return }
         $idx = $dg.SelectedRows[0].Index
@@ -200,13 +232,17 @@ function Invoke-WPFStartupManager {
 
     $btnRef = New-Object System.Windows.Forms.Button
     $btnRef.Text = "Refresh"
+    $btnRef.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
     $btnRef.Add_Click({ Refresh-Grid })
     [void]$flow.Controls.Add($btnRef)
 
     $btnClose = New-Object System.Windows.Forms.Button
     $btnClose.Text = "Close"
+    $btnClose.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
     $btnClose.Add_Click({ $form.Close() })
     [void]$flow.Controls.Add($btnClose)
+
+    Set-WinFormsButtonFullText -Button @($btnDis, $btnEn, $btnRef, $btnClose)
 
     [void]$form.Controls.Add($flow)
     [void]$form.Controls.Add($dg)

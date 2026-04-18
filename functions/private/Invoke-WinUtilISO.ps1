@@ -759,7 +759,7 @@ function Invoke-WinUtilISOMountAndVerify {
     }
 
     $tsClick = (Get-Date).ToString("HH:mm:ss")
-    Add-Win11ISOStatusLogLineUIThread -Line "[$tsClick] Mount & verify — starting (watch this log for progress)..."
+    Add-Win11ISOStatusLogLineUIThread -Line "[$tsClick] Mount & verify - starting (watch this log for progress)..."
 
     $mountBtn = $sync["WPFWin11ISOMountButton"]
     if ($mountBtn) { $mountBtn.IsEnabled = $false }

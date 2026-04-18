@@ -36,7 +36,7 @@
     "function": "Invoke-WPFProfileDelete"
   },
   "WPFProfileExportFile": {
-    "Content": "Export profile to JSON file…",
+    "Content": "Export profile to JSON file...",
     "Description": "Save current app/tweak/toggle/feature selections to a versioned JSON file for backup or sharing.",
     "Category": "Profiles",
     "panel": "1",
@@ -45,7 +45,7 @@
     "function": "Invoke-WPFProfileExportFile"
   },
   "WPFProfileImportFile": {
-    "Content": "Import profile from JSON file…",
+    "Content": "Import profile from JSON file...",
     "Description": "Load selections from a Clark profile JSON file (schema v1 or legacy flat array).",
     "Category": "Profiles",
     "panel": "1",
@@ -81,7 +81,7 @@
     "function": "Invoke-WPFRollbackLastTweak"
   },
   "WPFRegistryBackupManager": {
-    "Content": "Pre-tweak registry backups…",
+    "Content": "Pre-tweak registry backups...",
     "Description": "Lists automatic HKLM/HKCU exports before tweaks; open folder or restore selected .reg files (reg import).",
     "Category": "Recovery",
     "panel": "1",

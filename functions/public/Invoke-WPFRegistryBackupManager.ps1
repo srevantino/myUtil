@@ -7,7 +7,7 @@ function Invoke-WPFRegistryBackupManager {
     Add-Type -AssemblyName System.Drawing
 
     $form = New-Object System.Windows.Forms.Form
-    $form.Text = "Clark — Registry backups (pre-tweak)"
+    $form.Text = "Clark - Registry backups (pre-tweak)"
     $form.Size = New-Object System.Drawing.Size(720, 420)
     $form.StartPosition = "CenterScreen"
 
@@ -27,31 +27,35 @@ function Invoke-WPFRegistryBackupManager {
         [void]$list.Items.Add($f.FullName)
     }
 
+    $btnRow = New-Object System.Windows.Forms.FlowLayoutPanel
+    $btnRow.Location = New-Object System.Drawing.Point(12, 302)
+    $btnRow.Width = 696
+    $btnRow.AutoSize = $true
+    $btnRow.WrapContents = $true
+    $btnRow.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+
     $btnFolder = New-Object System.Windows.Forms.Button
     $btnFolder.Text = "Open backups folder"
-    $btnFolder.Location = New-Object System.Drawing.Point(12, 305)
-    $btnFolder.Size = New-Object System.Drawing.Size(160, 28)
+    $btnFolder.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 6)
     $btnFolder.Add_Click({
         Start-Process explorer.exe (Get-WinUtilClarkBackupsDirectory)
     })
-    [void]$form.Controls.Add($btnFolder)
+    [void]$btnRow.Controls.Add($btnFolder)
 
     $btnRefresh = New-Object System.Windows.Forms.Button
     $btnRefresh.Text = "Refresh"
-    $btnRefresh.Location = New-Object System.Drawing.Point(180, 305)
-    $btnRefresh.Size = New-Object System.Drawing.Size(90, 28)
+    $btnRefresh.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 6)
     $btnRefresh.Add_Click({
         $list.Items.Clear()
         foreach ($f in @(Get-WinUtilRegistryBackupFiles)) {
             [void]$list.Items.Add($f.FullName)
         }
     })
-    [void]$form.Controls.Add($btnRefresh)
+    [void]$btnRow.Controls.Add($btnRefresh)
 
     $btnRestore = New-Object System.Windows.Forms.Button
-    $btnRestore.Text = "Restore selected…"
-    $btnRestore.Location = New-Object System.Drawing.Point(520, 305)
-    $btnRestore.Size = New-Object System.Drawing.Size(172, 28)
+    $btnRestore.Text = "Restore selected..."
+    $btnRestore.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 6)
     $btnRestore.Add_Click({
         if ($list.SelectedItems.Count -eq 0) {
             [System.Windows.Forms.MessageBox]::Show("Select one or more .reg files.", "clark", "OK", "Information")
@@ -74,13 +78,16 @@ Continue?
             [System.Windows.Forms.MessageBox]::Show("Restore failed: $($_.Exception.Message)", "clark", "OK", "Error")
         }
     })
-    [void]$form.Controls.Add($btnRestore)
+    [void]$btnRow.Controls.Add($btnRestore)
 
     $btnClose = New-Object System.Windows.Forms.Button
     $btnClose.Text = "Close"
-    $btnClose.Location = New-Object System.Drawing.Point(600, 345)
+    $btnClose.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 6)
     $btnClose.Add_Click({ $form.Close() })
-    [void]$form.Controls.Add($btnClose)
+    [void]$btnRow.Controls.Add($btnClose)
+
+    Set-WinFormsButtonFullText -Button @($btnFolder, $btnRefresh, $btnRestore, $btnClose)
+    [void]$form.Controls.Add($btnRow)
 
     [void]$form.ShowDialog()
 }

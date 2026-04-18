@@ -5,7 +5,7 @@ function Invoke-WPFHardwareSummary {
     $text = Get-WinUtilHardwareSummaryData
 
     $form = New-Object System.Windows.Forms.Form
-    $form.Text = "Clark — Hardware summary"
+    $form.Text = "Clark - Hardware summary"
     $form.Size = New-Object System.Drawing.Size(760, 560)
     $form.StartPosition = "CenterScreen"
 
@@ -26,8 +26,11 @@ function Invoke-WPFHardwareSummary {
 
     $panel = New-Object System.Windows.Forms.FlowLayoutPanel
     $panel.Dock = "Bottom"
-    $panel.Height = 40
-    $panel.FlowDirection = "LeftToRight"
+    $panel.WrapContents = $true
+    $panel.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+    $panel.AutoSize = $true
+    $panel.AutoSizeMode = [System.Windows.Forms.AutoSizeMode]::GrowAndShrink
+    $panel.Padding = New-Object System.Windows.Forms.Padding(6, 4, 6, 6)
 
     function Save-HtmlReport {
         param([string]$Path)
@@ -56,7 +59,8 @@ function Invoke-WPFHardwareSummary {
     }
 
     $btnPdf = New-Object System.Windows.Forms.Button
-    $btnPdf.Text = "Export PDF…"
+    $btnPdf.Text = "Export PDF..."
+    $btnPdf.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
     $btnPdf.Add_Click({
         $sfd = New-Object System.Windows.Forms.SaveFileDialog
         $sfd.Filter = "PDF|*.pdf"
@@ -87,7 +91,8 @@ function Invoke-WPFHardwareSummary {
     [void]$panel.Controls.Add($btnPdf)
 
     $btnPng = New-Object System.Windows.Forms.Button
-    $btnPng.Text = "Export PNG…"
+    $btnPng.Text = "Export PNG..."
+    $btnPng.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
     $btnPng.Add_Click({
         $sfd = New-Object System.Windows.Forms.SaveFileDialog
         $sfd.Filter = "PNG|*.png"
@@ -117,7 +122,8 @@ function Invoke-WPFHardwareSummary {
     [void]$panel.Controls.Add($btnPng)
 
     $btnHtml = New-Object System.Windows.Forms.Button
-    $btnHtml.Text = "Export HTML…"
+    $btnHtml.Text = "Export HTML..."
+    $btnHtml.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
     $btnHtml.Add_Click({
         $sfd = New-Object System.Windows.Forms.SaveFileDialog
         $sfd.Filter = "HTML|*.html"
@@ -134,8 +140,11 @@ function Invoke-WPFHardwareSummary {
 
     $btnClose = New-Object System.Windows.Forms.Button
     $btnClose.Text = "Close"
+    $btnClose.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
     $btnClose.Add_Click({ $form.Close() })
     [void]$panel.Controls.Add($btnClose)
+
+    Set-WinFormsButtonFullText -Button @($btnPdf, $btnPng, $btnHtml, $btnClose)
 
     [void]$form.Controls.Add($panel)
     [void]$form.Controls.Add($tv)

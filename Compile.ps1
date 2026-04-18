@@ -41,6 +41,7 @@ $excludedFiles = @()
 
 # Add directories only if they exist
 if (Test-Path '.\.git\') { $excludedFiles += '.\.git\' }
+if (Test-Path '.\.idea\') { $excludedFiles += '.\.idea\' }
 if (Test-Path '.\binary\') { $excludedFiles += '.\binary\' }
 # JSON configs must not be run through PowerShell formatting regex (can break valid JSON)
 if (Test-Path '.\config\') { $excludedFiles += '.\config\' }

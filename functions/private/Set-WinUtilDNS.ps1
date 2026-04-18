@@ -60,7 +60,7 @@ function Set-WinUtilDNS {
             return
         }
 
-        Write-Host "DNS target: $DNSProvider — adapters:"
+        Write-Host "DNS target: $DNSProvider - adapters:"
         Write-Host ($Adapters | Select-Object Name, InterfaceIndex, Status | Format-Table | Out-String)
 
         foreach ($Adapter in $Adapters) {

@@ -61,6 +61,7 @@ function Invoke-Preprocessing {
 
     # Validate the ExcludedItems List before continuing on
     if ($ExcludedFiles.Count -gt 0) {
+        $failedFilesList = @()
         ForEach ($excludedFile in $ExcludedFiles) {
             $filePath = "$(($WorkingDir -replace ('\\$', '')) + '\' + ($excludedFile -replace ('\.\\', '')))"
             # Only attempt to create the directory if the excludedFile ends with '\'
@@ -110,8 +111,8 @@ function Invoke-Preprocessing {
     $changedFiles = @()
     $hashingAlgorithm = "MD5"
     foreach ($file in $files){
-        # Calculate the hash of the file
-        $hash = Get-FileHash -Path $file -Algorithm $hashingAlgorithm | Select-Object -ExpandProperty Hash
+        # Calculate the hash of the file (LiteralPath: paths may contain [] and other wildcard chars)
+        $hash = Get-FileHash -LiteralPath $file -Algorithm $hashingAlgorithm | Select-Object -ExpandProperty Hash
         $newHashes[$file] = $hash
 
         # Check if the hash already exists in the existing hashes
@@ -136,7 +137,10 @@ function Invoke-Preprocessing {
 
     for ($i = 0; $i -lt $numOfFiles; $i++) {
         $fullFileName = $files[$i]
-        $fileLines = @(Get-Content -Path $fullFileName -ErrorAction SilentlyContinue)
+        if (-not (Test-Path -LiteralPath $fullFileName -PathType Leaf)) {
+            continue
+        }
+        $fileLines = @(Get-Content -LiteralPath $fullFileName -ErrorAction SilentlyContinue)
         if ($null -eq $fileLines) {
             $fileLines = @()
         }
@@ -157,8 +161,8 @@ function Invoke-Preprocessing {
             -replace ('\}\s*Catch', '} catch') `
             -replace ('\}\s*Catch\s*(?<exceptions>(\[.*?\]\s*(\,)?\s*)+)\s*\{', '} catch ${exceptions} {') `
             -replace ('\}\s*Catch\s*(?<exceptions>\[.*?\])\s*\{', '} catch ${exceptions} {') `
-        | Set-Content "$fullFileName"
-        $newHashes[$fullFileName] = Get-FileHash -Path $fullFileName -Algorithm $hashingAlgorithm | Select-Object -ExpandProperty Hash
+        | Set-Content -LiteralPath $fullFileName
+        $newHashes[$fullFileName] = Get-FileHash -LiteralPath $fullFileName -Algorithm $hashingAlgorithm | Select-Object -ExpandProperty Hash
 
         Write-Progress -Activity $ProgressActivity -Status "$ProgressStatusMessage - Finished $i out of $numOfFiles" -PercentComplete (($i/$numOfFiles)*100)
     }

@@ -2,7 +2,7 @@
 .NOTES
     Product        : clark
     Organization   : Advance Systems 4042 (developed & managed)
-    Version        : 26.04.15
+    Version        : 26.04.18
 #>
 
 param (
@@ -98,7 +98,7 @@ if (Test-Path -LiteralPath (Join-Path $resolvedScriptRoot "config")) {
 
 # In deployed/irm mode, config is bundled in-script, so missing disk config should not block startup.
 $sync.PSScriptRoot = if ($repoRoot) { $repoRoot } else { $resolvedScriptRoot }
-$sync.version = "26.04.15"
+$sync.version = "26.04.18"
 $sync.configs = @{}
 $sync.Buttons = [System.Collections.Generic.List[PSObject]]::new()
 $sync.preferences = @{}
@@ -231,6 +231,54 @@ $($jsonAsObject | ConvertTo-Json -Depth 3)
         # Add new Element to Popup
         $sync.selectedAppsstackPanel.Children.Add($selectedAppGrid)
     }
+function Convert-WinUtilProfileInputToList {
+    <#
+    .SYNOPSIS
+        Normalizes profile import JSON to a flat list of checkbox IDs.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        $InputObject
+    )
+
+    if ($null -eq $InputObject) {
+        return @()
+    }
+
+    if ($InputObject -is [string]) {
+        return @($InputObject)
+    }
+
+    if ($InputObject -is [System.Collections.IDictionary]) {
+        $keys = @($InputObject.Keys)
+        if ($keys -contains 'apps' -or $keys -contains 'tweaks' -or $keys -contains 'toggles' -or $keys -contains 'features' -or $keys -contains 'schema') {
+            $out = [System.Collections.Generic.List[string]]::new()
+            foreach ($k in @('apps', 'tweaks', 'toggles', 'features')) {
+                if (-not ($InputObject.ContainsKey($k))) { continue }
+                foreach ($x in @($InputObject[$k])) {
+                    $sx = [string]$x
+                    if (-not [string]::IsNullOrWhiteSpace($sx)) { [void]$out.Add($sx) }
+                }
+            }
+            return $out
+        }
+    }
+
+    $propNames = @($InputObject.PSObject.Properties.Name)
+    if ($propNames -contains 'apps' -or $propNames -contains 'tweaks' -or $propNames -contains 'toggles' -or $propNames -contains 'features' -or $propNames -contains 'schema') {
+        $out = [System.Collections.Generic.List[string]]::new()
+        foreach ($k in @('apps', 'tweaks', 'toggles', 'features')) {
+            if (-not ($propNames -contains $k)) { continue }
+            foreach ($x in @($InputObject.$k)) {
+                $sx = [string]$x
+                if (-not [string]::IsNullOrWhiteSpace($sx)) { [void]$out.Add($sx) }
+            }
+        }
+        return $out
+    }
+
+    return @($InputObject)
+}
 function Find-AppsByNameOrDescription {
     <#
         .SYNOPSIS
@@ -444,6 +492,85 @@ function Get-LocalizedYesNo {
     return $charactersArray
 
   }
+function Get-WinUtilHardwareSummaryData {
+    <#
+    .SYNOPSIS
+        Collects hardware strings for UI / export via CIM.
+    #>
+    $sb = [System.Text.StringBuilder]::new()
+
+    $cpu = @(Get-CimInstance -ClassName Win32_Processor -ErrorAction SilentlyContinue)
+    [void]$sb.AppendLine("=== CPU ===")
+    foreach ($c in $cpu) {
+        [void]$sb.AppendLine("$($c.Name)")
+        [void]$sb.AppendLine("  Manufacturer: $($c.Manufacturer)  Cores: $($c.NumberOfCores)  Logical: $($c.NumberOfLogicalProcessors)")
+    }
+
+    $ram = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction SilentlyContinue
+    $modules = @(Get-CimInstance -ClassName Win32_PhysicalMemory -ErrorAction SilentlyContinue)
+    [void]$sb.AppendLine("")
+    [void]$sb.AppendLine("=== Memory ===")
+    if ($ram) {
+        $totalGb = [math]::Round($ram.TotalPhysicalMemory / 1GB, 2)
+        [void]$sb.AppendLine("Total visible: $totalGb GB")
+    }
+    foreach ($m in $modules) {
+        $cap = [math]::Round($m.Capacity / 1GB, 2)
+        [void]$sb.AppendLine("  $cap GB @ $($m.Speed) MHz  $($m.Manufacturer)  $($m.PartNumber)".Trim())
+    }
+
+    $gpu = @(Get-CimInstance -ClassName Win32_VideoController -ErrorAction SilentlyContinue)
+    [void]$sb.AppendLine("")
+    [void]$sb.AppendLine("=== Display adapters ===")
+    foreach ($g in $gpu) {
+        if ([string]::IsNullOrWhiteSpace($g.Name)) { continue }
+        [void]$sb.AppendLine("$($g.Name)")
+        [void]$sb.AppendLine("  Driver: $($g.DriverVersion)  RAM: $($g.AdapterRAM)  Status: $($g.Status)")
+    }
+
+    $board = Get-CimInstance -ClassName Win32_BaseBoard -ErrorAction SilentlyContinue
+    [void]$sb.AppendLine("")
+    [void]$sb.AppendLine("=== Motherboard ===")
+    if ($board) {
+        [void]$sb.AppendLine("$($board.Manufacturer) $($board.Product)  ($($board.Version))")
+        [void]$sb.AppendLine("  Serial: $($board.SerialNumber)")
+    }
+
+    $bios = Get-CimInstance -ClassName Win32_BIOS -ErrorAction SilentlyContinue
+    if ($bios) {
+        [void]$sb.AppendLine("BIOS: $($bios.SMBIOSBIOSVersion)  $($bios.ReleaseDate)")
+    }
+
+    $disks = @(Get-CimInstance -ClassName Win32_DiskDrive -ErrorAction SilentlyContinue)
+    [void]$sb.AppendLine("")
+    [void]$sb.AppendLine("=== Disk drives ===")
+    foreach ($d in $disks) {
+        $sizeGb = if ($d.Size) { [math]::Round([double]$d.Size / 1GB, 0) } else { "?" }
+        [void]$sb.AppendLine("$($d.Model)  $($sizeGb) GB  [$($d.InterfaceType)]  $($d.MediaType)")
+    }
+
+    $vols = @(Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction SilentlyContinue | Where-Object { $_.DriveType -in 2, 3 })
+    [void]$sb.AppendLine("")
+    [void]$sb.AppendLine("=== Logical volumes ===")
+    foreach ($v in $vols) {
+        $free = [math]::Round($v.FreeSpace / 1GB, 1)
+        $tot = [math]::Round($v.Size / 1GB, 1)
+        [void]$sb.AppendLine("$($v.DeviceID)  $free / $tot GB free  $($v.VolumeName)  [$($v.FileSystem)]")
+    }
+
+    try {
+        $pd = @(Get-PhysicalDisk -ErrorAction SilentlyContinue)
+        if ($pd.Count -gt 0) {
+            [void]$sb.AppendLine("")
+            [void]$sb.AppendLine("=== PhysicalDisk (health) ===")
+            foreach ($p in $pd) {
+                [void]$sb.AppendLine("$($p.FriendlyName)  Health: $($p.HealthStatus)  Op: $($p.OperationalStatus)  Media: $($p.MediaType)")
+            }
+        }
+    } catch { }
+
+    return $sb.ToString()
+}
 function Get-WinUtilInstallerProcess {
     <#
 
@@ -3147,7 +3274,7 @@ function Invoke-WinUtilISOMountAndVerify {
     }
 
     $tsClick = (Get-Date).ToString("HH:mm:ss")
-    Add-Win11ISOStatusLogLineUIThread -Line "[$tsClick] Mount & verify ??? starting (watch this log for progress)..."
+    Add-Win11ISOStatusLogLineUIThread -Line "[$tsClick] Mount & verify - starting (watch this log for progress)..."
 
     $mountBtn = $sync["WPFWin11ISOMountButton"]
     if ($mountBtn) { $mountBtn.IsEnabled = $false }
@@ -4602,6 +4729,148 @@ function Invoke-WinUtilISOWriteUSB {
 
     $script.BeginInvoke() | Out-Null
 }
+function Get-WinUtilProfileDocument {
+    <#
+    .SYNOPSIS
+        Builds a versioned profile object for JSON export (apps, tweaks, toggles, features).
+    #>
+    [ordered]@{
+        schema       = 1
+        clarkVersion = [string]$sync.version
+        apps         = @($sync.selectedApps | ForEach-Object { [string]$_ })
+        tweaks       = @($sync.selectedTweaks | ForEach-Object { [string]$_ })
+        toggles      = @($sync.selectedToggles | ForEach-Object { [string]$_ })
+        features     = @($sync.selectedFeatures | ForEach-Object { [string]$_ })
+    }
+}
+
+function Invoke-WinUtilProfileExportToPath {
+    param(
+        [Parameter(Mandatory)]
+        [string]$LiteralPath
+    )
+    $doc = Get-WinUtilProfileDocument
+    ($doc | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $LiteralPath -Encoding UTF8
+}
+
+function Invoke-WinUtilProfileImportFromObject {
+    <#
+    .SYNOPSIS
+        Applies profile data from ConvertFrom-Json (flat array or schema document).
+    #>
+    param(
+        [Parameter(Mandatory)]
+        $ProfileObject
+    )
+    Update-WinUtilSelections -flatJson $ProfileObject
+}
+function Get-WinUtilClarkBackupsDirectory {
+    $d = Join-Path $env:USERPROFILE "Clark\Backups"
+    if (-not (Test-Path -LiteralPath $d)) {
+        New-Item -ItemType Directory -Path $d -Force | Out-Null
+    }
+    return $d
+}
+
+function Invoke-WinUtilPreTweakRegistryExport {
+    <#
+    .SYNOPSIS
+        Exports HKCU and HKLM to timestamped .reg files before applying tweaks.
+    .NOTES
+        Coarse safety net only. Per-tweak undo remains Save-WinUtilRollbackSnapshot / rollback journal.
+    #>
+    [CmdletBinding()]
+    param()
+
+    $dir = Get-WinUtilClarkBackupsDirectory
+    $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    $base = Join-Path $dir "pre-tweak-$stamp"
+    $hkcuPath = "$base-HKCU.reg"
+    $hklmPath = "$base-HKLM.reg"
+    $regExe = Join-Path $env:SystemRoot "System32\reg.exe"
+
+    $results = [ordered]@{
+        HKCUPath = $hkcuPath
+        HKLMPath = $hklmPath
+        HKCUOk   = $false
+        HKLMOk   = $false
+        Messages = [System.Collections.Generic.List[string]]::new()
+    }
+
+    $pHKCU = Start-Process -FilePath $regExe -ArgumentList @('export', 'HKCU', $hkcuPath, '/y') -Wait -PassThru -WindowStyle Hidden
+    if ($pHKCU.ExitCode -eq 0 -and (Test-Path -LiteralPath $hkcuPath)) {
+        $results.HKCUOk = $true
+        [void]$results.Messages.Add("HKCU export: $hkcuPath")
+    } else {
+        [void]$results.Messages.Add("HKCU export failed (exit $($pHKCU.ExitCode)).")
+    }
+
+    $pHKLM = Start-Process -FilePath $regExe -ArgumentList @('export', 'HKLM', $hklmPath, '/y') -Wait -PassThru -WindowStyle Hidden
+    if ($pHKLM.ExitCode -eq 0 -and (Test-Path -LiteralPath $hklmPath)) {
+        $results.HKLMOk = $true
+        [void]$results.Messages.Add("HKLM export: $hklmPath")
+    } else {
+        [void]$results.Messages.Add("HKLM export may require elevation or failed (exit $($pHKLM.ExitCode)).")
+    }
+
+    return [pscustomobject]$results
+}
+
+function Test-WinUtilRegistryBackupThrottle {
+    param(
+        [int]$Seconds = 120
+    )
+    $key = 'LastPreTweakRegistryBackupUtc'
+    if (-not $sync.ContainsKey($key) -or $null -eq $sync.$key) {
+        return $false
+    }
+    $elapsed = ([datetime]::UtcNow - [datetime]$sync.$key).TotalSeconds
+    return ($elapsed -lt $Seconds)
+}
+
+function Invoke-WinUtilPreTweakRegistryExportIfNeeded {
+    <#
+    .SYNOPSIS
+        Exports registry backup unless a recent backup exists (toggle spam guard).
+    #>
+    param(
+        [switch]$Force
+    )
+    if (-not $Force -and (Test-WinUtilRegistryBackupThrottle -Seconds 120)) {
+        return $null
+    }
+    $out = Invoke-WinUtilPreTweakRegistryExport
+    $sync.LastPreTweakRegistryBackupUtc = [datetime]::UtcNow
+    return $out
+}
+
+function Get-WinUtilRegistryBackupFiles {
+    $dir = Get-WinUtilClarkBackupsDirectory
+    if (-not (Test-Path -LiteralPath $dir)) {
+        return @()
+    }
+    return Get-ChildItem -LiteralPath $dir -Filter "pre-tweak-*.reg" -File -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending
+}
+
+function Invoke-WinUtilRegistryBackupRestore {
+    <#
+    .SYNOPSIS
+        Imports selected .reg files (merges into live registry).
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string[]]$LiteralPaths
+    )
+    $regExe = Join-Path $env:SystemRoot "System32\reg.exe"
+    foreach ($p in $LiteralPaths) {
+        if (-not (Test-Path -LiteralPath $p)) { continue }
+        $proc = Start-Process -FilePath $regExe -ArgumentList @('import', $p) -Wait -PassThru -WindowStyle Hidden
+        if ($proc.ExitCode -ne 0) {
+            throw "reg import failed for '$p' (exit $($proc.ExitCode))."
+        }
+    }
+}
 function Invoke-WinUtilScript {
     <#
 
@@ -5260,37 +5529,148 @@ function Set-Preferences{
         Load-Preferences
     }
 }
+function Set-WinFormsButtonFullText {
+    <#
+    .SYNOPSIS
+        WinForms Button defaults to a narrow width (~75px), which truncates labels.
+        Sets AutoSize so the full caption is visible.
+    #>
+    param(
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [System.Windows.Forms.Button[]]$Button
+    )
+    process {
+        foreach ($b in $Button) {
+            if ($null -eq $b) { continue }
+            $b.AutoSize = $true
+        }
+    }
+}
 function Set-WinUtilDNS {
     <#
 
     .SYNOPSIS
-        Sets the DNS of all interfaces that are in the "Up" state. It will lookup the values from the DNS.Json file
+        Sets DNS servers on selected network adapters (defaults to adapters in Up state).
 
     .PARAMETER DNSProvider
-        The DNS provider to set the DNS server to
+        Key from dns.json (e.g. Google, Cloudflare), DHCP, or Custom.
+
+    .PARAMETER InterfaceIndex
+        Optional list of adapter interface indexes. When omitted, uses all Up adapters unless AllAdapters is set.
+
+    .PARAMETER AllAdapters
+        When set, includes every Get-NetAdapter result (not only Up).
+
+    .PARAMETER CustomPrimaryV4
+    .PARAMETER CustomSecondaryV4
+    .PARAMETER CustomPrimaryV6
+    .PARAMETER CustomSecondaryV6
+        Used when DNSProvider is Custom.
 
     .EXAMPLE
         Set-WinUtilDNS -DNSProvider "google"
 
     #>
-    param($DNSProvider)
-    if($DNSProvider -eq "Default") {return}
-    try {
-        $Adapters = Get-NetAdapter | Where-Object {$_.Status -eq "Up"}
-        Write-Host "Ensuring DNS is set to $DNSProvider on the following interfaces:"
-        Write-Host $($Adapters | Out-String)
+    param(
+        [string]$DNSProvider = "Default",
+        [int[]]$InterfaceIndex = $null,
+        [switch]$AllAdapters,
+        [string]$CustomPrimaryV4,
+        [string]$CustomSecondaryV4,
+        [string]$CustomPrimaryV6,
+        [string]$CustomSecondaryV6
+    )
 
-        Foreach ($Adapter in $Adapters) {
-            if($DNSProvider -eq "DHCP") {
-                Set-DnsClientServerAddress -InterfaceIndex $Adapter.ifIndex -ResetServerAddresses
+    if ($DNSProvider -eq "Default") {
+        return
+    }
+
+    $useAddressFamily = $false
+    try {
+        $cmd = Get-Command Set-DnsClientServerAddress -ErrorAction Stop
+        $useAddressFamily = $cmd.Parameters.ContainsKey("AddressFamily")
+    } catch {
+        $useAddressFamily = $false
+    }
+
+    try {
+        $allNet = @(Get-NetAdapter -ErrorAction Stop)
+        if ($InterfaceIndex -and $InterfaceIndex.Count -gt 0) {
+            $Adapters = @($allNet | Where-Object { $InterfaceIndex -contains $_.ifIndex })
+        } elseif ($AllAdapters) {
+            $Adapters = $allNet
+        } else {
+            $Adapters = @($allNet | Where-Object { $_.Status -eq "Up" })
+        }
+
+        if ($Adapters.Count -eq 0) {
+            Write-Warning "No network adapters matched the selection."
+            return
+        }
+
+        Write-Host "DNS target: $DNSProvider - adapters:"
+        Write-Host ($Adapters | Select-Object Name, InterfaceIndex, Status | Format-Table | Out-String)
+
+        foreach ($Adapter in $Adapters) {
+            $idx = $Adapter.ifIndex
+            if ($DNSProvider -eq "DHCP") {
+                if ($useAddressFamily) {
+                    Set-DnsClientServerAddress -InterfaceIndex $idx -AddressFamily IPv4 -ResetServerAddresses -ErrorAction SilentlyContinue
+                    Set-DnsClientServerAddress -InterfaceIndex $idx -AddressFamily IPv6 -ResetServerAddresses -ErrorAction SilentlyContinue
+                } else {
+                    Set-DnsClientServerAddress -InterfaceIndex $idx -ResetServerAddresses -ErrorAction SilentlyContinue
+                }
+                continue
+            }
+
+            if ($DNSProvider -eq "Custom") {
+                $v4 = @($CustomPrimaryV4, $CustomSecondaryV4 | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+                $v6 = @($CustomPrimaryV6, $CustomSecondaryV6 | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+                if ($v4.Count -eq 0 -and $v6.Count -eq 0) {
+                    Write-Warning "Custom DNS selected but no addresses were provided."
+                    continue
+                }
+                if ($useAddressFamily) {
+                    if ($v4.Count -gt 0) {
+                        Set-DnsClientServerAddress -InterfaceIndex $idx -AddressFamily IPv4 -ServerAddresses $v4 -ErrorAction Stop
+                    }
+                    if ($v6.Count -gt 0) {
+                        Set-DnsClientServerAddress -InterfaceIndex $idx -AddressFamily IPv6 -ServerAddresses $v6 -ErrorAction Stop
+                    }
+                } else {
+                    if ($v4.Count -gt 0) {
+                        Set-DnsClientServerAddress -InterfaceIndex $idx -ServerAddresses $v4 -ErrorAction Stop
+                    }
+                    if ($v6.Count -gt 0) {
+                        Write-Warning "IPv6 custom DNS may require a newer DnsClient module (AddressFamily)."
+                    }
+                }
+                continue
+            }
+
+            $cfg = $sync.configs.dns.$DNSProvider
+            if (-not $cfg) {
+                Write-Warning "Unknown DNS provider key: $DNSProvider"
+                continue
+            }
+
+            $v4p = [string]$cfg.Primary
+            $v4s = [string]$cfg.Secondary
+            $v6p = if ($cfg.PSObject.Properties.Name -contains "Primary6") { [string]$cfg.Primary6 } else { "" }
+            $v6s = if ($cfg.PSObject.Properties.Name -contains "Secondary6") { [string]$cfg.Secondary6 } else { "" }
+
+            if ($useAddressFamily) {
+                Set-DnsClientServerAddress -InterfaceIndex $idx -AddressFamily IPv4 -ServerAddresses @($v4p, $v4s) -ErrorAction Stop
+                if (-not [string]::IsNullOrWhiteSpace($v6p) -or -not [string]::IsNullOrWhiteSpace($v6s)) {
+                    Set-DnsClientServerAddress -InterfaceIndex $idx -AddressFamily IPv6 -ServerAddresses @($v6p, $v6s) -ErrorAction SilentlyContinue
+                }
             } else {
-                Set-DnsClientServerAddress -InterfaceIndex $Adapter.ifIndex -ServerAddresses ("$($sync.configs.dns.$DNSProvider.Primary)", "$($sync.configs.dns.$DNSProvider.Secondary)")
-                Set-DnsClientServerAddress -InterfaceIndex $Adapter.ifIndex -ServerAddresses ("$($sync.configs.dns.$DNSProvider.Primary6)", "$($sync.configs.dns.$DNSProvider.Secondary6)")
+                Set-DnsClientServerAddress -InterfaceIndex $idx -ServerAddresses @($v4p, $v4s) -ErrorAction Stop
             }
         }
     } catch {
-        Write-Warning "Unable to set DNS Provider due to an unhandled exception."
-        Write-Warning $psitem.Exception.StackTrace
+        Write-Warning "Unable to set DNS: $($_.Exception.Message)"
+        Write-Warning $_.ScriptStackTrace
     }
 }
 function Set-WinUtilProgressbar{
@@ -5995,7 +6375,8 @@ function Update-WinUtilSelections {
 
     Write-Debug "JSON to import: $($flatJson)"
 
-    foreach ($item in $flatJson) {
+    $items = Convert-WinUtilProfileInputToList -InputObject $flatJson
+    foreach ($item in $items) {
         # Ensure each item is treated as a string to handle PSCustomObject from JSON deserialization
         $cbkey = [string]$item
         $group = if ($cbkey.StartsWith("WPFInstall")) { "Install" }
@@ -6186,7 +6567,16 @@ function Invoke-WinUtilAutoRun {
 
         $sync.ProcessRunning = $true
 
-        for ($i = 0; $i -lt $Tweaks.Count; $i++) {
+        if ($Toggles.Count -gt 0) {
+            try {
+                $bak = Invoke-WinUtilPreTweakRegistryExport
+                foreach ($m in @($bak.Messages)) { Write-Host $m }
+            } catch {
+                Write-Warning "Pre-toggle registry backup failed: $($_.Exception.Message)"
+            }
+        }
+
+        for ($i = 0; $i -lt $Toggles.Count; $i++) {
             Invoke-WinUtilTweaks $Toggles[$i]
         }
 
@@ -6214,6 +6604,158 @@ function Invoke-WinUtilRemoveEdge {
   Start-Process -FilePath $Path -ArgumentList '--uninstall --system-level --force-uninstall --delete-profile' -Wait
 
   Write-Host "Microsoft Edge was removed" -ForegroundColor Green
+}
+function Invoke-WPFAppRemovalTool {
+    <#
+    .SYNOPSIS
+        List installed programs from registry uninstall keys; uninstall selected or open Programs and Features.
+    #>
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    function Get-InstalledProgramsFromRegistry {
+        $list = [System.Collections.Generic.List[object]]::new()
+        $roots = @(
+            'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
+            'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
+        )
+        foreach ($root in $roots) {
+            if (-not (Test-Path -LiteralPath $root)) { continue }
+            Get-ChildItem -LiteralPath $root -ErrorAction SilentlyContinue | ForEach-Object {
+                $p = Get-ItemProperty -LiteralPath $_.PSPath -ErrorAction SilentlyContinue
+                if (-not $p) { return }
+                $name = [string]$p.DisplayName
+                if ([string]::IsNullOrWhiteSpace($name)) { return }
+                if ($p.SystemComponent -eq 1) { return }
+                $quiet = [string]$p.QuietUninstallString
+                $loud = [string]$p.UninstallString
+                if ([string]::IsNullOrWhiteSpace($quiet) -and [string]::IsNullOrWhiteSpace($loud)) { return }
+                [void]$list.Add([pscustomobject]@{
+                        DisplayName     = $name
+                        Publisher       = [string]$p.Publisher
+                        Version         = [string]$p.DisplayVersion
+                        QuietUninstall  = $quiet
+                        UninstallString = $loud
+                    })
+            }
+        }
+        return @($list | Sort-Object DisplayName)
+    }
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = 'Clark - Installed programs & deep clean'
+    $form.Size = New-Object System.Drawing.Size(920, 560)
+    $form.StartPosition = 'CenterScreen'
+
+    $lbl = New-Object System.Windows.Forms.Label
+    $lbl.Dock = 'Top'
+    $lbl.Height = 40
+    $lbl.Padding = New-Object System.Windows.Forms.Padding(8, 8, 8, 0)
+    $lbl.Text = 'Programs from registry uninstall keys. Uninstall runs the quiet command when available; some installers still show UI. Create a restore point before bulk removals.'
+
+    $dg = New-Object System.Windows.Forms.DataGridView
+    $dg.Dock = 'Fill'
+    $dg.ReadOnly = $true
+    $dg.AutoGenerateColumns = $false
+    $dg.SelectionMode = 'FullRowSelect'
+    $dg.MultiSelect = $false
+    $dg.AllowUserToAddRows = $false
+    foreach ($colDef in @(
+            @{ Name = 'DisplayName'; HeaderText = 'Name'; Width = 280 }
+            @{ Name = 'Publisher'; HeaderText = 'Publisher'; Width = 160 }
+            @{ Name = 'Version'; HeaderText = 'Version'; Width = 90 }
+            @{ Name = 'QuietUninstall'; HeaderText = 'Quiet uninstall'; Width = 200 }
+            @{ Name = 'UninstallString'; HeaderText = 'Uninstall command'; Width = 260 }
+        )) {
+        $c = New-Object System.Windows.Forms.DataGridViewTextBoxColumn
+        $c.Name = $colDef.Name
+        $c.HeaderText = $colDef.HeaderText
+        $c.Width = $colDef.Width
+        $c.DataPropertyName = $colDef.Name
+        [void]$dg.Columns.Add($c)
+    }
+
+    $table = New-Object System.Data.DataTable
+    [void]$table.Columns.Add('DisplayName', [string])
+    [void]$table.Columns.Add('Publisher', [string])
+    [void]$table.Columns.Add('Version', [string])
+    [void]$table.Columns.Add('QuietUninstall', [string])
+    [void]$table.Columns.Add('UninstallString', [string])
+    foreach ($row in @(Get-InstalledProgramsFromRegistry)) {
+        [void]$table.Rows.Add(@($row.DisplayName, $row.Publisher, $row.Version, $row.QuietUninstall, $row.UninstallString))
+    }
+    $bs = New-Object System.Windows.Forms.BindingSource
+    $bs.DataSource = $table
+    $dg.DataSource = $bs
+
+    $flow = New-Object System.Windows.Forms.FlowLayoutPanel
+    $flow.Dock = 'Bottom'
+    $flow.WrapContents = $true
+    $flow.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+    $flow.AutoSize = $true
+    $flow.AutoSizeMode = [System.Windows.Forms.AutoSizeMode]::GrowAndShrink
+    $flow.Padding = New-Object System.Windows.Forms.Padding(8, 4, 8, 8)
+
+    $btnUn = New-Object System.Windows.Forms.Button
+    $btnUn.Text = 'Uninstall selected'
+    $btnUn.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnUn.Add_Click({
+        if ($dg.SelectedRows.Count -eq 0) { return }
+        $r = $dg.SelectedRows[0]
+        $cmd = [string]$r.Cells['QuietUninstall'].Value
+        if ([string]::IsNullOrWhiteSpace($cmd)) { $cmd = [string]$r.Cells['UninstallString'].Value }
+        $disp = [string]$r.Cells['DisplayName'].Value
+        if ([string]::IsNullOrWhiteSpace($cmd)) {
+            [System.Windows.Forms.MessageBox]::Show('No uninstall command for this entry.', 'clark', 'OK', 'Information')
+            return
+        }
+        $c = [System.Windows.Forms.MessageBox]::Show(
+            "Run uninstall for:`n`n$disp`n`nCommand:`n$cmd",
+            'Confirm uninstall',
+            'YesNo',
+            'Warning'
+        )
+        if ($c -ne 'Yes') { return }
+        try {
+            Start-Process cmd.exe -ArgumentList @('/c', $cmd) -Wait
+            [System.Windows.Forms.MessageBox]::Show('Uninstall process exited. Click Refresh if the program was removed.', 'clark', 'OK', 'Information')
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Uninstall', 'OK', 'Error')
+        }
+    })
+    [void]$flow.Controls.Add($btnUn)
+
+    $btnAppwiz = New-Object System.Windows.Forms.Button
+    $btnAppwiz.Text = 'Programs and Features'
+    $btnAppwiz.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnAppwiz.Add_Click({ Start-Process appwiz.cpl })
+    [void]$flow.Controls.Add($btnAppwiz)
+
+    $btnRef = New-Object System.Windows.Forms.Button
+    $btnRef.Text = 'Refresh'
+    $btnRef.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnRef.Add_Click({
+        $table.Rows.Clear()
+        foreach ($row in @(Get-InstalledProgramsFromRegistry)) {
+            [void]$table.Rows.Add(@($row.DisplayName, $row.Publisher, $row.Version, $row.QuietUninstall, $row.UninstallString))
+        }
+    })
+    [void]$flow.Controls.Add($btnRef)
+
+    $btnClose = New-Object System.Windows.Forms.Button
+    $btnClose.Text = 'Close'
+    $btnClose.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnClose.Add_Click({ $form.Close() })
+    [void]$flow.Controls.Add($btnClose)
+
+    Set-WinFormsButtonFullText -Button @($btnUn, $btnAppwiz, $btnRef, $btnClose)
+
+    # Dock: add Top and Bottom first, then Fill, so the grid uses remaining client area.
+    [void]$form.Controls.Add($lbl)
+    [void]$form.Controls.Add($flow)
+    [void]$form.Controls.Add($dg)
+
+    [void]$form.ShowDialog()
 }
 function Invoke-WPFButton {
 
@@ -6271,6 +6813,17 @@ function Invoke-WPFButton {
         }
     }
 
+    if ($sync.configs.tools -and ($null -ne $sync.configs.tools.$Button)) {
+        $toolBtn = $sync.configs.tools.$Button
+        if ($toolBtn.function) {
+            $tfn = [string]$toolBtn.function
+            if (Get-Command $tfn -ErrorAction SilentlyContinue) {
+                & $tfn
+                return
+            }
+        }
+    }
+
     # Fallback to hard-coded switch for buttons not in feature.json
     Switch -Wildcard ($Button) {
         "WPFTab?BT" {Invoke-WPFTab $Button}
@@ -6315,6 +6868,476 @@ function Invoke-WPFButton {
             }
         }
     }
+}
+function Invoke-WPFDiskToolsWizard {
+    <#
+    .SYNOPSIS
+        Disk health summary and shortcuts (Disk Management, chkdsk scan, diskpart helper).
+    #>
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    function Get-DiskHealthSummaryText {
+        $sb = [System.Text.StringBuilder]::new()
+        try {
+            $pd = @(Get-PhysicalDisk -ErrorAction SilentlyContinue | Sort-Object FriendlyName)
+            if ($pd.Count -gt 0) {
+                [void]$sb.AppendLine('=== Physical disks (SMART / health) ===')
+                foreach ($d in $pd) {
+                    $h = $d.HealthStatus
+                    $op = $d.OperationalStatus
+                    $media = $d.MediaType
+                    $size = if ($d.Size) { '{0:N0} GB' -f ($d.Size / 1GB) } else { '?' }
+                    [void]$sb.AppendLine(('- {0} | {1} | Health: {2} | Op: {3} | {4}' -f $d.FriendlyName, $media, $h, $op, $size))
+                }
+                [void]$sb.AppendLine('')
+            }
+        } catch { [void]$sb.AppendLine('PhysicalDisk: ' + $_.Exception.Message) }
+
+        try {
+            $disks = @(Get-Disk -ErrorAction SilentlyContinue | Sort-Object Number)
+            if ($disks.Count -gt 0) {
+                [void]$sb.AppendLine('=== Disks / partitions ===')
+                foreach ($dk in $disks) {
+                    [void]$sb.AppendLine(('- Disk {0}: {1} | {2:N0} GB | {3}' -f $dk.Number, $dk.FriendlyName, ($dk.Size / 1GB), $dk.OperationalStatus))
+                    $parts = @(Get-Partition -DiskId $dk.Path -ErrorAction SilentlyContinue | Sort-Object PartitionNumber)
+                    foreach ($p in $parts) {
+                        $letter = if ($p.DriveLetter) { "$($p.DriveLetter):" } else { '(no letter)' }
+                        [void]$sb.AppendLine(('    Part {0} {1} {2:N0} MB' -f $p.PartitionNumber, $letter, ($p.Size / 1MB)))
+                    }
+                }
+            }
+        } catch { [void]$sb.AppendLine('Get-Disk: ' + $_.Exception.Message) }
+
+        if ($sb.Length -eq 0) {
+            [void]$sb.AppendLine('No disk data returned. Run PowerShell as Administrator for fuller SMART details on some systems.')
+        }
+        return $sb.ToString()
+    }
+
+    function Get-ClarkDiskpartReadmeText {
+        @'
+================================================================================
+Clark - diskpart quick reference (read before typing anything destructive)
+================================================================================
+diskpart is powerful. Wrong disk/partition = data loss or unbootable PC.
+Prefer Disk Management for simple tasks. Run diskpart elevated (Admin) when
+Windows says access is denied.
+
+HOW TO RUN A SCRIPT FILE (optional)
+  diskpart /s C:\path\to\script.txt
+
+OPEN DISKPART FROM THIS BUTTON
+  A separate Command Prompt window opens running diskpart (DISKPART> prompt).
+  This README opens in Notepad beside it.
+
+-------------------------------------------------------------------------------
+INSPECTION (usually safe)
+-------------------------------------------------------------------------------
+  list disk
+  list volume
+  list partition          (after: select disk N)
+
+  select disk N           N = number from "list disk"
+  detail disk
+  detail volume           (after: select volume N)
+
+  select volume N         N = number from "list volume" (or use drive letter)
+  select partition N      (after: select disk N)
+
+-------------------------------------------------------------------------------
+ONLINE / OFFLINE / READONLY
+-------------------------------------------------------------------------------
+  online disk
+  offline disk
+  attributes disk clear readonly
+  attributes volume clear readonly
+
+-------------------------------------------------------------------------------
+CREATE / SHRINK / EXTEND (destructive if mis-targeted)
+-------------------------------------------------------------------------------
+  create partition primary size=50000    size in MB; omit size = use all space
+  create partition efi size=260           GPT EFI system partition
+  create partition msr size=128         GPT Microsoft Reserved
+
+  shrink desired=10240 minimum=10240    MB free to shrink from end of volume
+  extend size=10240                     extend into contiguous free space
+
+-------------------------------------------------------------------------------
+FORMAT / LETTERS / ACTIVE (destructive)
+-------------------------------------------------------------------------------
+  format fs=ntfs quick label=MyDisk
+  format fs=fat32 quick label=EFI       often used for small EFI partitions
+  assign letter=Z
+  remove letter=Z
+  active                                sets MBR partition as bootable (legacy)
+
+-------------------------------------------------------------------------------
+DELETE PARTITION (VERY destructive)
+-------------------------------------------------------------------------------
+  select disk N
+  select partition N
+  delete partition          may fail if Windows is using the partition
+
+  delete partition override          forces deletion (system/recovery/OEM)
+  delete partition override noerr    same, no error if already gone
+
+-------------------------------------------------------------------------------
+DISK WIPE (EXTREMELY destructive)
+-------------------------------------------------------------------------------
+  select disk N
+  clean                 remove partition table (fast)
+  clean all             overwrite entire disk (very slow)
+
+-------------------------------------------------------------------------------
+GPT / RECOVERY / SCAN / CONVERT (advanced, often destructive)
+-------------------------------------------------------------------------------
+  rescan                              refresh disk list after hot-plug
+  recover                             try to recover selected volume
+
+  convert mbr                         convert empty disk to MBR (data loss)
+  convert gpt                         convert empty disk to GPT (data loss)
+
+  gpt attributes=0x0000000000000000   clear GPT partition attributes (rare)
+  (Use only if you know why; recovery partitions use special attributes.)
+
+-------------------------------------------------------------------------------
+EXIT
+-------------------------------------------------------------------------------
+  exit                  leaves diskpart
+  exit                  again in cmd closes the window (if /k was used)
+
+================================================================================
+'@
+    }
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = 'Clark - Disk health & tools'
+    $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Sizable
+    $form.MinimumSize = New-Object System.Drawing.Size(520, 380)
+    $form.ClientSize = New-Object System.Drawing.Size(760, 480)
+    $form.StartPosition = 'CenterScreen'
+
+    $txt = New-Object System.Windows.Forms.TextBox
+    $txt.Multiline = $true
+    $txt.ReadOnly = $true
+    $txt.ScrollBars = 'Both'
+    $txt.Font = New-Object System.Drawing.Font('Consolas', 9)
+    $txt.Dock = 'Fill'
+    $txt.Text = Get-DiskHealthSummaryText
+
+    $flow = New-Object System.Windows.Forms.FlowLayoutPanel
+    $flow.Dock = 'Bottom'
+    $flow.WrapContents = $true
+    $flow.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+    $flow.AutoSize = $true
+    $flow.AutoSizeMode = [System.Windows.Forms.AutoSizeMode]::GrowAndShrink
+    $flow.Padding = New-Object System.Windows.Forms.Padding(8, 6, 8, 8)
+
+    $btnDiskMgmt = New-Object System.Windows.Forms.Button
+    $btnDiskMgmt.Text = 'Disk Management'
+    $btnDiskMgmt.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 6)
+    $btnDiskMgmt.Add_Click({ Start-Process 'diskmgmt.msc' })
+    [void]$flow.Controls.Add($btnDiskMgmt)
+
+    $btnChk = New-Object System.Windows.Forms.Button
+    $btnChk.Text = 'CHKDSK scan (OS volume)'
+    $btnChk.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 6)
+    $btnChk.Add_Click({
+        $sys = $env:SystemDrive
+        if ([string]::IsNullOrWhiteSpace($sys)) { $sys = 'C:' }
+        if (-not $sys.EndsWith('\')) { $sys = $sys + '\' }
+        $r = [System.Windows.Forms.MessageBox]::Show(
+            @"
+Run read-only CHKDSK scan on $sys ?
+
+A UAC prompt may appear; CHKDSK /scan needs Administrator on the system volume.
+
+This can take several minutes.
+"@,
+            'Confirm',
+            'YesNo',
+            'Question'
+        )
+        if ($r -ne 'Yes') { return }
+        try {
+            # Do NOT use chkdsk "C:\" ... ??? in cmd.exe a trailing backslash before the closing quote breaks quoting (\" escapes "), which causes bogus errors including "Access is denied".
+            $drive = $env:SystemDrive
+            if ([string]::IsNullOrWhiteSpace($drive)) { $drive = 'C:' }
+            $drive = $drive.TrimEnd('\')
+            # /scan is online read-only; omit /perf (can fail policy/permission on some PCs).
+            $chkArgs = "chkdsk $drive /scan"
+            $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
+            $cmdExe = if ($env:ComSpec -and (Test-Path -LiteralPath $env:ComSpec)) { $env:ComSpec } else { "$env:SystemRoot\System32\cmd.exe" }
+            $psi = [System.Diagnostics.ProcessStartInfo]::new()
+            $psi.FileName = $cmdExe
+            $psi.Arguments = "/k $chkArgs"
+            $psi.UseShellExecute = $true
+            if (-not $isAdmin) {
+                $psi.Verb = 'runas'
+            }
+            [void][System.Diagnostics.Process]::Start($psi)
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show(
+                "Could not start CHKDSK: $($_.Exception.Message)`n`nRun Clark as Administrator and try again, or from an elevated Command Prompt run:`nchkdsk $($env:SystemDrive.TrimEnd('\')) /scan",
+                'CHKDSK',
+                'OK',
+                'Warning'
+            )
+        }
+    })
+    [void]$flow.Controls.Add($btnChk)
+
+    $btnDp = New-Object System.Windows.Forms.Button
+    $btnDp.Text = 'Diskpart (cmd) + command guide'
+    $btnDp.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 6)
+    $btnDp.Add_Click({
+        # Command guide text lives only in this script (not downloaded). Shown in a WinForms window ??? no readme .txt on disk.
+        $readme = Get-ClarkDiskpartReadmeText
+
+        $guideForm = New-Object System.Windows.Forms.Form
+        $guideForm.Text = 'Clark - diskpart command guide'
+        $guideForm.Size = New-Object System.Drawing.Size(700, 560)
+        $guideForm.StartPosition = 'CenterScreen'
+        $guideForm.MinimizeBox = $false
+        $guideForm.ShowInTaskbar = $false
+        $guideForm.Owner = $form
+
+        $guideTb = New-Object System.Windows.Forms.TextBox
+        $guideTb.Multiline = $true
+        $guideTb.ReadOnly = $true
+        $guideTb.ScrollBars = 'Both'
+        $guideTb.Dock = 'Fill'
+        $guideTb.Font = New-Object System.Drawing.Font('Consolas', 9)
+        $guideTb.Text = $readme
+
+        $guideBtn = New-Object System.Windows.Forms.Button
+        $guideBtn.Text = 'Close'
+        $guideBtn.Dock = 'Bottom'
+        $guideBtn.Height = 34
+        $guideBtn.Add_Click({ $guideForm.Close() })
+        Set-WinFormsButtonFullText -Button $guideBtn
+
+        [void]$guideForm.Controls.Add($guideBtn)
+        [void]$guideForm.Controls.Add($guideTb)
+
+        # Optional tiny script on disk only if you run diskpart /s "path" (not required for the guide).
+        $samplePath = Join-Path $env:TEMP ("clark-diskpart-sample-{0}.txt" -f [Guid]::NewGuid().ToString('n'))
+        $sample = @(
+            'REM Safe inspection-only script. Run (elevated if needed):',
+            ('REM   diskpart /s "{0}"' -f $samplePath),
+            'REM Or paste lines into the DISKPART> window Clark opened.',
+            'list disk',
+            'list volume'
+        ) -join "`r`n"
+        Set-Content -LiteralPath $samplePath -Value $sample -Encoding UTF8
+
+        # Interactive diskpart in a new console (DISKPART> prompt).
+        Start-Process -FilePath cmd.exe -ArgumentList @('/k', 'diskpart') -WorkingDirectory $env:TEMP
+
+        # Readme: shown in this process only (no guide .txt file). Modeless so you can use DISKPART and the guide together.
+        [void]$guideForm.Show($form)
+    })
+    [void]$flow.Controls.Add($btnDp)
+
+    $btnRef = New-Object System.Windows.Forms.Button
+    $btnRef.Text = 'Refresh'
+    $btnRef.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 6)
+    $btnRef.Add_Click({ $txt.Text = Get-DiskHealthSummaryText })
+    [void]$flow.Controls.Add($btnRef)
+
+    $btnClose = New-Object System.Windows.Forms.Button
+    $btnClose.Text = 'Close'
+    $btnClose.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 6)
+    $btnClose.Add_Click({ $form.Close() })
+    [void]$flow.Controls.Add($btnClose)
+
+    Set-WinFormsButtonFullText -Button @($btnDiskMgmt, $btnChk, $btnDp, $btnRef, $btnClose)
+
+    [void]$form.Controls.Add($flow)
+    [void]$form.Controls.Add($txt)
+    [void]$form.ShowDialog()
+}
+function Invoke-WPFDnsManager {
+    <#
+    .SYNOPSIS
+        DNS presets per adapter or all adapters, plus DHCP reset.
+    #>
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    $providers = @("DHCP") + @($sync.configs.dns.PSObject.Properties.Name | Sort-Object) + @("Custom")
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = "Clark - DNS manager"
+    $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+    $form.MaximizeBox = $false
+    $form.StartPosition = "CenterScreen"
+
+    # Use a dedicated name + [int] ??? a plain $y can collide with outer scopes and become Object[], breaking $y - 2.
+    [int]$dnsFormY = 12
+    $lbl = New-Object System.Windows.Forms.Label
+    $lbl.Location = New-Object System.Drawing.Point(12, $dnsFormY)
+    $lbl.Size = New-Object System.Drawing.Size(600, 40)
+    $lbl.Text = "Pick a DNS preset first, then select adapters and click Apply. DHCP resets both IPv4 and IPv6 where supported."
+    [void]$form.Controls.Add($lbl)
+    $dnsFormY = [int]($dnsFormY + 46)
+
+    $lblP = New-Object System.Windows.Forms.Label
+    $lblP.Text = "DNS preset:"
+    $lblP.Location = New-Object System.Drawing.Point(12, $dnsFormY)
+    $lblP.AutoSize = $true
+    [void]$form.Controls.Add($lblP)
+    $combo = New-Object System.Windows.Forms.ComboBox
+    $combo.DropDownStyle = "DropDownList"
+    $combo.Location = New-Object System.Drawing.Point(100, [int]($dnsFormY - 2))
+    $combo.Width = 220
+    foreach ($p in $providers) { [void]$combo.Items.Add($p) }
+    $combo.SelectedIndex = [math]::Max(0, $combo.Items.IndexOf("Cloudflare"))
+    if ($combo.SelectedIndex -lt 0) { $combo.SelectedIndex = 0 }
+    [void]$form.Controls.Add($combo)
+    $combo.Add_DropDown({ $combo.BringToFront() })
+    $dnsFormY = [int]($dnsFormY + 32)
+
+    $cbAll = New-Object System.Windows.Forms.CheckBox
+    $cbAll.Text = "Select all adapters (including not Up)"
+    $cbAll.Location = New-Object System.Drawing.Point(12, $dnsFormY)
+    $cbAll.Width = 400
+    [void]$form.Controls.Add($cbAll)
+    $dnsFormY = [int]($dnsFormY + 28)
+
+    $list = New-Object System.Windows.Forms.CheckedListBox
+    $list.Location = New-Object System.Drawing.Point(12, $dnsFormY)
+    $list.Size = New-Object System.Drawing.Size(600, 160)
+    $ifIndexByRow = [System.Collections.Generic.List[int]]::new()
+    foreach ($a in @(Get-NetAdapter -ErrorAction SilentlyContinue | Sort-Object Name)) {
+        $label = "$($a.Name)  [ifIndex $($a.ifIndex)]  $($a.Status)"
+        [void]$list.Items.Add($label, ($a.Status -eq 'Up'))
+        [void]$ifIndexByRow.Add($a.ifIndex)
+    }
+    $list.Tag = $ifIndexByRow
+    [void]$form.Controls.Add($list)
+    $dnsFormY = [int]($dnsFormY + 168)
+
+    $lblC = New-Object System.Windows.Forms.Label
+    $lblC.Text = "Custom IPv4 (primary / secondary):"
+    $lblC.Location = New-Object System.Drawing.Point(12, $dnsFormY)
+    $lblC.Width = 260
+    [void]$form.Controls.Add($lblC)
+    $dnsFormY = [int]($dnsFormY + 22)
+    $tPri = New-Object System.Windows.Forms.TextBox
+    $tPri.Location = New-Object System.Drawing.Point(12, $dnsFormY)
+    $tPri.Width = 120
+    [void]$form.Controls.Add($tPri)
+    $tSec = New-Object System.Windows.Forms.TextBox
+    $tSec.Location = New-Object System.Drawing.Point(140, $dnsFormY)
+    $tSec.Width = 120
+    [void]$form.Controls.Add($tSec)
+    $dnsFormY = [int]($dnsFormY + 34)
+
+    $lbl6 = New-Object System.Windows.Forms.Label
+    $lbl6.Text = "Custom IPv6 (optional, primary / secondary):"
+    $lbl6.Location = New-Object System.Drawing.Point(12, $dnsFormY)
+    $lbl6.Width = 360
+    [void]$form.Controls.Add($lbl6)
+    $dnsFormY = [int]($dnsFormY + 22)
+    $t6p = New-Object System.Windows.Forms.TextBox
+    $t6p.Location = New-Object System.Drawing.Point(12, $dnsFormY)
+    $t6p.Width = 240
+    [void]$form.Controls.Add($t6p)
+    $t6s = New-Object System.Windows.Forms.TextBox
+    $t6s.Location = New-Object System.Drawing.Point(260, $dnsFormY)
+    $t6s.Width = 240
+    [void]$form.Controls.Add($t6s)
+    $dnsFormY = [int]($dnsFormY + 44)
+
+    $btnRow = New-Object System.Windows.Forms.FlowLayoutPanel
+    $btnRow.Location = New-Object System.Drawing.Point(12, $dnsFormY)
+    $btnRow.Width = 616
+    $btnRow.AutoSize = $true
+    $btnRow.WrapContents = $false
+    $btnRow.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+    $btnRow.Padding = New-Object System.Windows.Forms.Padding(0, 0, 0, 0)
+
+    $btnApply = New-Object System.Windows.Forms.Button
+    $btnApply.Text = "Apply to selected adapters"
+    $btnApply.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 0)
+    $btnApply.Add_Click({
+        $indexes = [System.Collections.Generic.List[int]]::new()
+        $rows = [System.Collections.Generic.List[int]]$list.Tag
+        for ($i = 0; $i -lt $list.Items.Count; $i++) {
+            if ($list.GetItemChecked($i)) {
+                [void]$indexes.Add([int]$rows[$i])
+            }
+        }
+        if ($indexes.Count -eq 0) {
+            [System.Windows.Forms.MessageBox]::Show("Check at least one adapter.", "clark", "OK", "Information")
+            return
+        }
+        $prov = [string]$combo.SelectedItem
+        if ($prov -eq "Custom" -and [string]::IsNullOrWhiteSpace($tPri.Text)) {
+            [System.Windows.Forms.MessageBox]::Show("Enter at least a primary custom IPv4 address.", "clark", "OK", "Warning")
+            return
+        }
+        try {
+            if ($prov -eq "Custom") {
+                Set-WinUtilDNS -DNSProvider Custom -InterfaceIndex $indexes.ToArray() `
+                    -CustomPrimaryV4 $tPri.Text.Trim() -CustomSecondaryV4 $tSec.Text.Trim() `
+                    -CustomPrimaryV6 $t6p.Text.Trim() -CustomSecondaryV6 $t6s.Text.Trim()
+            } else {
+                Set-WinUtilDNS -DNSProvider $prov -InterfaceIndex $indexes.ToArray()
+            }
+            [System.Windows.Forms.MessageBox]::Show("DNS update finished. See console output for details.", "clark", "OK", "Information")
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show("Failed: $($_.Exception.Message)", "clark", "OK", "Error")
+        }
+    })
+    [void]$btnRow.Controls.Add($btnApply)
+
+    $btnAll = New-Object System.Windows.Forms.Button
+    $btnAll.Text = "Apply preset to ALL adapters"
+    $btnAll.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 0)
+    $btnAll.Add_Click({
+        $prov = [string]$combo.SelectedItem
+        if ($prov -eq "Custom" -and [string]::IsNullOrWhiteSpace($tPri.Text)) {
+            [System.Windows.Forms.MessageBox]::Show("Enter at least a primary custom IPv4 address.", "clark", "OK", "Warning")
+            return
+        }
+        try {
+            if ($prov -eq "Custom") {
+                Set-WinUtilDNS -DNSProvider Custom -AllAdapters `
+                    -CustomPrimaryV4 $tPri.Text.Trim() -CustomSecondaryV4 $tSec.Text.Trim() `
+                    -CustomPrimaryV6 $t6p.Text.Trim() -CustomSecondaryV6 $t6s.Text.Trim()
+            } else {
+                Set-WinUtilDNS -DNSProvider $prov -AllAdapters
+            }
+            [System.Windows.Forms.MessageBox]::Show("DNS update applied to all adapters.", "clark", "OK", "Information")
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show("Failed: $($_.Exception.Message)", "clark", "OK", "Error")
+        }
+    })
+    [void]$btnRow.Controls.Add($btnAll)
+
+    $btnClose = New-Object System.Windows.Forms.Button
+    $btnClose.Text = "Close"
+    $btnClose.Add_Click({ $form.Close() })
+    [void]$btnRow.Controls.Add($btnClose)
+
+    Set-WinFormsButtonFullText -Button @($btnApply, $btnAll, $btnClose)
+    [void]$form.Controls.Add($btnRow)
+    $dnsFormY = [int]($dnsFormY + [math]::Max(44, $btnRow.PreferredSize.Height + 4))
+
+    $cbAll.Add_CheckedChanged({
+        if ($cbAll.Checked) {
+            for ($i = 0; $i -lt $list.Items.Count; $i++) {
+                $list.SetItemChecked($i, $true)
+            }
+        }
+    })
+
+    $form.ClientSize = New-Object System.Drawing.Size(640, [int]($dnsFormY + 48))
+
+    [void]$form.ShowDialog()
 }
 function Invoke-WPFFeatureInstall {
     <#
@@ -6714,6 +7737,158 @@ function Invoke-WPFGetInstalled {
         Invoke-WPFUIThread -ScriptBlock { Set-WinUtilTaskbaritem -state "None" }
     }
 }
+function Invoke-WPFHardwareSummary {
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    $text = Get-WinUtilHardwareSummaryData
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = "Clark - Hardware summary"
+    $form.Size = New-Object System.Drawing.Size(760, 560)
+    $form.StartPosition = "CenterScreen"
+
+    $tv = New-Object System.Windows.Forms.TreeView
+    $tv.Dock = "Fill"
+    $tv.HideSelection = $false
+    $current = $null
+    foreach ($line in ($text -split "`r?`n")) {
+        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+        if ($line -match '^=== (.+) ===$') {
+            $current = $tv.Nodes.Add($matches[1])
+            continue
+        }
+        if ($null -eq $current) { continue }
+        [void]$current.Nodes.Add($line)
+    }
+    $tv.ExpandAll()
+
+    $panel = New-Object System.Windows.Forms.FlowLayoutPanel
+    $panel.Dock = "Bottom"
+    $panel.WrapContents = $true
+    $panel.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+    $panel.AutoSize = $true
+    $panel.AutoSizeMode = [System.Windows.Forms.AutoSizeMode]::GrowAndShrink
+    $panel.Padding = New-Object System.Windows.Forms.Padding(6, 4, 6, 6)
+
+    function Save-HtmlReport {
+        param([string]$Path)
+        $esc = [System.Net.WebUtility]::HtmlEncode($text)
+        $html = @"
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Clark hardware</title>
+<style>body{font-family:Segoe UI,Arial;margin:16px;}pre{white-space:pre-wrap}</style></head>
+<body><h1>Clark hardware summary</h1><pre>$esc</pre></body></html>
+"@
+        Set-Content -LiteralPath $Path -Value $html -Encoding UTF8
+        return $Path
+    }
+
+    function Invoke-EdgeHeadless {
+        param([string[]]$Arguments)
+        $candidates = @(
+            (Join-Path ${env:ProgramFiles} "Microsoft\Edge\Application\msedge.exe"),
+            (Join-Path ${env:ProgramFiles(x86)} "Microsoft\Edge\Application\msedge.exe")
+        )
+        $edge = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+        if (-not $edge) {
+            throw "Microsoft Edge (msedge.exe) not found. Save as HTML instead."
+        }
+        $p = Start-Process -FilePath $edge -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
+        return $p.ExitCode
+    }
+
+    $btnPdf = New-Object System.Windows.Forms.Button
+    $btnPdf.Text = "Export PDF..."
+    $btnPdf.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnPdf.Add_Click({
+        $sfd = New-Object System.Windows.Forms.SaveFileDialog
+        $sfd.Filter = "PDF|*.pdf"
+        $sfd.FileName = "clark-hardware.pdf"
+        if ($sfd.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
+        $htmlPath = Join-Path $env:TEMP ("clark-hw-{0}.html" -f [Guid]::NewGuid().ToString("n"))
+        try {
+            $null = Save-HtmlReport -Path $htmlPath
+            $uri = ([Uri]$htmlPath).AbsoluteUri
+            Invoke-EdgeHeadless -Arguments @(
+                "--headless=new",
+                "--disable-gpu",
+                "--no-first-run",
+                "--disable-extensions",
+                "--print-to-pdf=$($sfd.FileName)",
+                $uri
+            ) | Out-Null
+            if (-not (Test-Path -LiteralPath $sfd.FileName)) {
+                throw "PDF was not created."
+            }
+            [System.Windows.Forms.MessageBox]::Show("Saved:`n$($sfd.FileName)", "clark", "OK", "Information")
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, "Export PDF", "OK", "Error")
+        } finally {
+            Remove-Item -LiteralPath $htmlPath -Force -ErrorAction SilentlyContinue
+        }
+    })
+    [void]$panel.Controls.Add($btnPdf)
+
+    $btnPng = New-Object System.Windows.Forms.Button
+    $btnPng.Text = "Export PNG..."
+    $btnPng.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnPng.Add_Click({
+        $sfd = New-Object System.Windows.Forms.SaveFileDialog
+        $sfd.Filter = "PNG|*.png"
+        $sfd.FileName = "clark-hardware.png"
+        if ($sfd.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
+        $htmlPath = Join-Path $env:TEMP ("clark-hw-{0}.html" -f [Guid]::NewGuid().ToString("n"))
+        try {
+            $null = Save-HtmlReport -Path $htmlPath
+            $uri = ([Uri]$htmlPath).AbsoluteUri
+            Invoke-EdgeHeadless -Arguments @(
+                "--headless=new",
+                "--disable-gpu",
+                "--window-size=1280,2000",
+                "--screenshot=$($sfd.FileName)",
+                $uri
+            ) | Out-Null
+            if (-not (Test-Path -LiteralPath $sfd.FileName)) {
+                throw "PNG was not created."
+            }
+            [System.Windows.Forms.MessageBox]::Show("Saved:`n$($sfd.FileName)", "clark", "OK", "Information")
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, "Export PNG", "OK", "Error")
+        } finally {
+            Remove-Item -LiteralPath $htmlPath -Force -ErrorAction SilentlyContinue
+        }
+    })
+    [void]$panel.Controls.Add($btnPng)
+
+    $btnHtml = New-Object System.Windows.Forms.Button
+    $btnHtml.Text = "Export HTML..."
+    $btnHtml.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnHtml.Add_Click({
+        $sfd = New-Object System.Windows.Forms.SaveFileDialog
+        $sfd.Filter = "HTML|*.html"
+        $sfd.FileName = "clark-hardware.html"
+        if ($sfd.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
+        try {
+            Save-HtmlReport -Path $sfd.FileName | Out-Null
+            [System.Windows.Forms.MessageBox]::Show("Saved:`n$($sfd.FileName)", "clark", "OK", "Information")
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, "Export HTML", "OK", "Error")
+        }
+    })
+    [void]$panel.Controls.Add($btnHtml)
+
+    $btnClose = New-Object System.Windows.Forms.Button
+    $btnClose.Text = "Close"
+    $btnClose.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnClose.Add_Click({ $form.Close() })
+    [void]$panel.Controls.Add($btnClose)
+
+    Set-WinFormsButtonFullText -Button @($btnPdf, $btnPng, $btnHtml, $btnClose)
+
+    [void]$form.Controls.Add($panel)
+    [void]$form.Controls.Add($tv)
+    [void]$form.ShowDialog()
+}
 function Invoke-WPFImpex {
     <#
 
@@ -7080,6 +8255,61 @@ function Invoke-WPFAutoReapplyDisable {
     }
 }
 
+function Invoke-WPFProfileExportFile {
+    Add-Type -AssemblyName System.Windows.Forms
+    $dlg = New-Object System.Windows.Forms.SaveFileDialog
+    $dlg.Filter = "Clark profile JSON (*.json)|*.json"
+    $dlg.FileName = "clark-profile.json"
+    $dlg.InitialDirectory = [Environment]::GetFolderPath('Desktop')
+    if ($dlg.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) {
+        return
+    }
+    $path = $dlg.FileName
+    if ([string]::IsNullOrWhiteSpace($path)) {
+        return
+    }
+    try {
+        Invoke-WinUtilProfileExportToPath -LiteralPath $path
+        [System.Windows.MessageBox]::Show("Profile exported to:`n$path", "clark", "OK", "Information")
+    } catch {
+        [System.Windows.MessageBox]::Show("Export failed: $($_.Exception.Message)", "clark", "OK", "Error")
+    }
+}
+
+function Invoke-WPFProfileImportFile {
+    Add-Type -AssemblyName System.Windows.Forms
+    $dlg = New-Object System.Windows.Forms.OpenFileDialog
+    $dlg.Filter = "Clark profile JSON (*.json)|*.json|All files (*.*)|*.*"
+    $dlg.InitialDirectory = [Environment]::GetFolderPath('Desktop')
+    if ($dlg.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) {
+        return
+    }
+    $path = $dlg.FileName
+    if ([string]::IsNullOrWhiteSpace($path)) {
+        return
+    }
+    try {
+        $raw = Get-Content -LiteralPath $path -Raw -ErrorAction Stop
+        $obj = $raw | ConvertFrom-Json
+        $sync.selectedApps = [System.Collections.Generic.List[string]]::new()
+        $sync.selectedTweaks = [System.Collections.Generic.List[string]]::new()
+        $sync.selectedToggles = [System.Collections.Generic.List[string]]::new()
+        $sync.selectedFeatures = [System.Collections.Generic.List[string]]::new()
+        Invoke-WinUtilProfileImportFromObject -ProfileObject $obj
+        if (-not $PARAM_NOUI) {
+            $sync.ImportInProgress = $true
+            try {
+                Reset-WPFCheckBoxes -doToggles $true
+            } finally {
+                $sync.ImportInProgress = $false
+            }
+        }
+        [System.Windows.MessageBox]::Show("Profile imported from:`n$path", "clark", "OK", "Information")
+    } catch {
+        [System.Windows.MessageBox]::Show("Import failed: $($_.Exception.Message)", "clark", "OK", "Error")
+    }
+}
+
 function Invoke-WPFProfileSave {
     Add-Type -AssemblyName Microsoft.VisualBasic
     $defaultName = if ($sync.preferences.activeprofile) { $sync.preferences.activeprofile } else { "MyProfile" }
@@ -7279,43 +8509,43 @@ function Invoke-WPFProfileCreateWithOptions {
     $txtName.Width = 410
     [void]$form.Controls.Add($txtName)
 
-    $y = 68
+    [int]$profileFormY = 68
     $cbApps = New-Object System.Windows.Forms.CheckBox
     $cbApps.Text = "Include selected Applications (Install tab)"
     $cbApps.Checked = $true
-    $cbApps.Location = New-Object System.Drawing.Point(12, $y)
+    $cbApps.Location = New-Object System.Drawing.Point(12, $profileFormY)
     $cbApps.Width = 410
     [void]$form.Controls.Add($cbApps)
-    $y += 28
+    $profileFormY = [int]($profileFormY + 28)
 
     $cbTweaks = New-Object System.Windows.Forms.CheckBox
     $cbTweaks.Text = "Include selected Tweaks"
     $cbTweaks.Checked = $true
-    $cbTweaks.Location = New-Object System.Drawing.Point(12, $y)
+    $cbTweaks.Location = New-Object System.Drawing.Point(12, $profileFormY)
     $cbTweaks.Width = 410
     [void]$form.Controls.Add($cbTweaks)
-    $y += 28
+    $profileFormY = [int]($profileFormY + 28)
 
     $cbToggles = New-Object System.Windows.Forms.CheckBox
     $cbToggles.Text = "Include selected Config toggles"
     $cbToggles.Checked = $true
-    $cbToggles.Location = New-Object System.Drawing.Point(12, $y)
+    $cbToggles.Location = New-Object System.Drawing.Point(12, $profileFormY)
     $cbToggles.Width = 410
     [void]$form.Controls.Add($cbToggles)
-    $y += 28
+    $profileFormY = [int]($profileFormY + 28)
 
     $cbFeatures = New-Object System.Windows.Forms.CheckBox
     $cbFeatures.Text = "Include selected Config features"
     $cbFeatures.Checked = $true
-    $cbFeatures.Location = New-Object System.Drawing.Point(12, $y)
+    $cbFeatures.Location = New-Object System.Drawing.Point(12, $profileFormY)
     $cbFeatures.Width = 410
     [void]$form.Controls.Add($cbFeatures)
-    $y += 32
+    $profileFormY = [int]($profileFormY + 32)
 
     $cbMerge = New-Object System.Windows.Forms.CheckBox
     $cbMerge.Text = "If this profile already exists, merge (add new entries; keep existing)"
     $cbMerge.Checked = $false
-    $cbMerge.Location = New-Object System.Drawing.Point(12, $y)
+    $cbMerge.Location = New-Object System.Drawing.Point(12, $profileFormY)
     $cbMerge.Width = 410
     [void]$form.Controls.Add($cbMerge)
 
@@ -7357,6 +8587,99 @@ function Invoke-WPFProfileCreateWithOptions {
     } catch {
         [System.Windows.MessageBox]::Show("Failed to save profile: $($_.Exception.Message)", "clark", "OK", "Error")
     }
+}
+function Invoke-WPFRegistryBackupManager {
+    <#
+    .SYNOPSIS
+        UI to list pre-tweak .reg backups, open folder, or restore via reg import.
+    #>
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = "Clark - Registry backups (pre-tweak)"
+    $form.Size = New-Object System.Drawing.Size(720, 420)
+    $form.StartPosition = "CenterScreen"
+
+    $lbl = New-Object System.Windows.Forms.Label
+    $lbl.Location = New-Object System.Drawing.Point(12, 10)
+    $lbl.Size = New-Object System.Drawing.Size(680, 40)
+    $lbl.Text = "Backups are created automatically before running tweaks (HKCU/HKLM). Restoring merges values from the file into the registry; it does not delete keys added after the backup. Distinct from 'Rollback Last Tweak Snapshot' (rollback journal)."
+    [void]$form.Controls.Add($lbl)
+
+    $list = New-Object System.Windows.Forms.ListBox
+    $list.Location = New-Object System.Drawing.Point(12, 55)
+    $list.Size = New-Object System.Drawing.Size(680, 240)
+    $list.SelectionMode = "MultiExtended"
+    [void]$form.Controls.Add($list)
+
+    foreach ($f in @(Get-WinUtilRegistryBackupFiles)) {
+        [void]$list.Items.Add($f.FullName)
+    }
+
+    $btnRow = New-Object System.Windows.Forms.FlowLayoutPanel
+    $btnRow.Location = New-Object System.Drawing.Point(12, 302)
+    $btnRow.Width = 696
+    $btnRow.AutoSize = $true
+    $btnRow.WrapContents = $true
+    $btnRow.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+
+    $btnFolder = New-Object System.Windows.Forms.Button
+    $btnFolder.Text = "Open backups folder"
+    $btnFolder.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 6)
+    $btnFolder.Add_Click({
+        Start-Process explorer.exe (Get-WinUtilClarkBackupsDirectory)
+    })
+    [void]$btnRow.Controls.Add($btnFolder)
+
+    $btnRefresh = New-Object System.Windows.Forms.Button
+    $btnRefresh.Text = "Refresh"
+    $btnRefresh.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 6)
+    $btnRefresh.Add_Click({
+        $list.Items.Clear()
+        foreach ($f in @(Get-WinUtilRegistryBackupFiles)) {
+            [void]$list.Items.Add($f.FullName)
+        }
+    })
+    [void]$btnRow.Controls.Add($btnRefresh)
+
+    $btnRestore = New-Object System.Windows.Forms.Button
+    $btnRestore.Text = "Restore selected..."
+    $btnRestore.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 6)
+    $btnRestore.Add_Click({
+        if ($list.SelectedItems.Count -eq 0) {
+            [System.Windows.Forms.MessageBox]::Show("Select one or more .reg files.", "clark", "OK", "Information")
+            return
+        }
+        $msg = @"
+reg import merges the selected file(s) into the current registry.
+
+Run Clark as Administrator. Incorrect restores can destabilize Windows.
+
+Continue?
+"@
+        $c = [System.Windows.Forms.MessageBox]::Show($msg, "Confirm restore", "YesNo", "Warning")
+        if ($c -ne 'Yes') { return }
+        $paths = @($list.SelectedItems | ForEach-Object { [string]$_ })
+        try {
+            Invoke-WinUtilRegistryBackupRestore -LiteralPaths $paths
+            [System.Windows.Forms.MessageBox]::Show("Restore completed.", "clark", "OK", "Information")
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show("Restore failed: $($_.Exception.Message)", "clark", "OK", "Error")
+        }
+    })
+    [void]$btnRow.Controls.Add($btnRestore)
+
+    $btnClose = New-Object System.Windows.Forms.Button
+    $btnClose.Text = "Close"
+    $btnClose.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 6)
+    $btnClose.Add_Click({ $form.Close() })
+    [void]$btnRow.Controls.Add($btnClose)
+
+    Set-WinFormsButtonFullText -Button @($btnFolder, $btnRefresh, $btnRestore, $btnClose)
+    [void]$form.Controls.Add($btnRow)
+
+    [void]$form.ShowDialog()
 }
 function Invoke-WPFRunspace {
 
@@ -7523,6 +8846,256 @@ function Invoke-WPFSSHServer {
         Write-Host "======================================="
     }
 }
+function Invoke-WPFStartupManager {
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    function Get-ExecutablePathFromStartupCommand {
+        param([string]$CommandLine)
+        if ([string]::IsNullOrWhiteSpace($CommandLine)) { return $null }
+        $t = $CommandLine.Trim()
+        if ($t -match '^"([^"]+\.(?:exe|EXE))"') { return $matches[1] }
+        $idx = $t.ToLowerInvariant().IndexOf('.exe')
+        if ($idx -ge 0) {
+            return $t.Substring(0, $idx + 4).Trim().Trim('"')
+        }
+        if ($t -match '^(\S+\.(?:exe|EXE))\b') { return $matches[1] }
+        return $null
+    }
+
+    function Test-StartupExePath {
+        param([string]$Path)
+        if ([string]::IsNullOrWhiteSpace($Path)) { return $false }
+        try {
+            return (Test-Path -LiteralPath $Path)
+        } catch {
+            return $false
+        }
+    }
+
+    function Get-StartupEntries {
+        $list = [System.Collections.Generic.List[object]]::new()
+
+        $runPaths = @(
+            @{ P = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'; L = 'HKCU Run' },
+            @{ P = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce'; L = 'HKCU RunOnce' },
+            @{ P = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'; L = 'HKLM Run' },
+            @{ P = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce'; L = 'HKLM RunOnce' },
+            @{ P = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run'; L = 'HKLM WOW Run' }
+        )
+        foreach ($rp in $runPaths) {
+            if (-not (Test-Path -LiteralPath $rp.P)) { continue }
+            $props = Get-ItemProperty -LiteralPath $rp.P -ErrorAction SilentlyContinue
+            if (-not $props) { continue }
+            foreach ($n in $props.PSObject.Properties) {
+                if ($n.Name -match '^PS') { continue }
+                if ($n.Name -eq '(default)') { continue }
+                $cmd = [string]$n.Value
+                if ([string]::IsNullOrWhiteSpace($cmd)) { continue }
+                $pub = ""
+                $exePath = Get-ExecutablePathFromStartupCommand -CommandLine $cmd
+                if ($exePath -and (Test-StartupExePath -Path $exePath)) {
+                    try {
+                        $ver = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exePath)
+                        $pub = $ver.CompanyName
+                    } catch { }
+                }
+                [void]$list.Add([pscustomobject]@{
+                        Kind     = 'RunKey'
+                        Location = $rp.L
+                        RegPath  = $rp.P
+                        Name     = $n.Name
+                        Command  = $cmd
+                        Publisher = $pub
+                    })
+            }
+        }
+
+        foreach ($folderKind in @('User', 'Common')) {
+            $fd = if ($folderKind -eq 'User') {
+                [Environment]::GetFolderPath('Startup')
+            } else {
+                [Environment]::GetFolderPath('CommonStartup')
+            }
+            if (-not (Test-Path -LiteralPath $fd)) { continue }
+            Get-ChildItem -LiteralPath $fd -ErrorAction SilentlyContinue | ForEach-Object {
+                $target = $_.FullName
+                if ($_.Extension -eq '.lnk') {
+                    try {
+                        $sh = New-Object -ComObject WScript.Shell
+                        $sc = $sh.CreateShortcut($_.FullName)
+                        $target = $sc.TargetPath
+                    } catch { }
+                }
+                $pub = ""
+                if ($target -and (Test-Path -LiteralPath $target)) {
+                    try {
+                        $ver = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($target)
+                        $pub = $ver.CompanyName
+                    } catch { }
+                }
+                [void]$list.Add([pscustomobject]@{
+                        Kind     = 'StartupFolder'
+                        Location = "$folderKind Startup"
+                        RegPath  = $fd
+                        Name     = $_.Name
+                        Command  = $target
+                        Publisher = $pub
+                    })
+            }
+        }
+        return $list
+    }
+
+    function Move-StartupFolderItemDisabled {
+        param($item)
+        $disabledRoot = Join-Path $env:LOCALAPPDATA "asys\StartupDisabled"
+        if (-not (Test-Path $disabledRoot)) {
+            New-Item -ItemType Directory -Path $disabledRoot -Force | Out-Null
+        }
+        $src = Join-Path $item.RegPath $item.Name
+        $dst = Join-Path $disabledRoot $item.Name
+        Move-Item -LiteralPath $src -Destination $dst -Force
+    }
+
+    function Move-StartupFolderItemEnabled {
+        param($item)
+        $disabledRoot = Join-Path $env:LOCALAPPDATA "asys\StartupDisabled"
+        $src = Join-Path $disabledRoot $item.Name
+        $dst = Join-Path $item.RegPath $item.Name
+        if (Test-Path -LiteralPath $src) {
+            Move-Item -LiteralPath $src -Destination $dst -Force
+        }
+    }
+
+    function Set-RunKeyDisabled {
+        param($item)
+        $backup = 'HKCU:\Software\Clark\DisabledStartup'
+        if (-not (Test-Path $backup)) {
+            New-Item -Path $backup -Force | Out-Null
+        }
+        Set-ItemProperty -LiteralPath $backup -Name $item.Name -Value $item.Command -Type String -Force
+        Remove-ItemProperty -LiteralPath $item.RegPath -Name $item.Name -ErrorAction Stop
+    }
+
+    function Set-RunKeyEnabled {
+        param($item)
+        $backup = 'HKCU:\Software\Clark\DisabledStartup'
+        $prop = Get-ItemProperty -LiteralPath $backup -ErrorAction Stop
+        $cmd = $prop.$($item.Name)
+        if ([string]::IsNullOrWhiteSpace([string]$cmd)) { throw "No backup value for $($item.Name)." }
+        Set-ItemProperty -LiteralPath $item.RegPath -Name $item.Name -Value $cmd -Type String -Force
+        Remove-ItemProperty -LiteralPath $backup -Name $item.Name -ErrorAction SilentlyContinue
+    }
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = "Clark - Startup manager"
+    $form.Size = New-Object System.Drawing.Size(900, 520)
+    $form.StartPosition = "CenterScreen"
+
+    $dg = New-Object System.Windows.Forms.DataGridView
+    $dg.Dock = "Fill"
+    $dg.ReadOnly = $true
+    $dg.AutoGenerateColumns = $false
+    $dg.SelectionMode = "FullRowSelect"
+    $dg.MultiSelect = $false
+    foreach ($colDef in @(
+            @{ Name = 'Kind'; HeaderText = 'Kind'; Width = 90 }
+            @{ Name = 'Location'; HeaderText = 'Location'; Width = 120 }
+            @{ Name = 'Name'; HeaderText = 'Name'; Width = 140 }
+            @{ Name = 'Command'; HeaderText = 'Executable / command'; Width = 360 }
+            @{ Name = 'Publisher'; HeaderText = 'Publisher'; Width = 120 }
+        )) {
+        $c = New-Object System.Windows.Forms.DataGridViewTextBoxColumn
+        $c.Name = $colDef.Name
+        $c.HeaderText = $colDef.HeaderText
+        $c.Width = $colDef.Width
+        [void]$dg.Columns.Add($c)
+    }
+    $dg.Tag = [System.Collections.Generic.List[object]]::new()
+
+    function Refresh-Grid {
+        $dg.Rows.Clear()
+        $dg.Tag.Clear()
+        foreach ($e in @(Get-StartupEntries)) {
+            [void]$dg.Tag.Add($e)
+            [void]$dg.Rows.Add(@($e.Kind, $e.Location, $e.Name, $e.Command, $e.Publisher))
+        }
+    }
+
+    Refresh-Grid
+
+    $flow = New-Object System.Windows.Forms.FlowLayoutPanel
+    $flow.Dock = "Bottom"
+    $flow.WrapContents = $true
+    $flow.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+    $flow.AutoSize = $true
+    $flow.AutoSizeMode = [System.Windows.Forms.AutoSizeMode]::GrowAndShrink
+    $flow.Padding = New-Object System.Windows.Forms.Padding(6, 4, 6, 6)
+
+    $btnDis = New-Object System.Windows.Forms.Button
+    $btnDis.Text = "Disable selected"
+    $btnDis.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnDis.Add_Click({
+        if ($dg.SelectedRows.Count -eq 0) { return }
+        $idx = $dg.SelectedRows[0].Index
+        $item = $dg.Tag[$idx]
+        try {
+            if ($item.Kind -eq 'RunKey') {
+                if ($item.RegPath -like 'HKLM:*') {
+                    [System.Windows.Forms.MessageBox]::Show("Disabling HKLM Run entries requires manual policy or running elevated scripts. Only HKCU Run keys are auto-disabled here.", "clark", "OK", "Information")
+                    return
+                }
+                Set-RunKeyDisabled -item $item
+            } else {
+                Move-StartupFolderItemDisabled -item $item
+            }
+            Refresh-Grid
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, "Disable", "OK", "Error")
+        }
+    })
+    [void]$flow.Controls.Add($btnDis)
+
+    $btnEn = New-Object System.Windows.Forms.Button
+    $btnEn.Text = "Enable (restore)"
+    $btnEn.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnEn.Add_Click({
+        if ($dg.SelectedRows.Count -eq 0) { return }
+        $idx = $dg.SelectedRows[0].Index
+        $item = $dg.Tag[$idx]
+        try {
+            if ($item.Kind -eq 'RunKey') {
+                if ($item.RegPath -like 'HKLM:*') { return }
+                Set-RunKeyEnabled -item $item
+            } else {
+                Move-StartupFolderItemEnabled -item $item
+            }
+            Refresh-Grid
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, "Enable", "OK", "Error")
+        }
+    })
+    [void]$flow.Controls.Add($btnEn)
+
+    $btnRef = New-Object System.Windows.Forms.Button
+    $btnRef.Text = "Refresh"
+    $btnRef.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnRef.Add_Click({ Refresh-Grid })
+    [void]$flow.Controls.Add($btnRef)
+
+    $btnClose = New-Object System.Windows.Forms.Button
+    $btnClose.Text = "Close"
+    $btnClose.Margin = New-Object System.Windows.Forms.Padding(0, 0, 8, 4)
+    $btnClose.Add_Click({ $form.Close() })
+    [void]$flow.Controls.Add($btnClose)
+
+    Set-WinFormsButtonFullText -Button @($btnDis, $btnEn, $btnRef, $btnClose)
+
+    [void]$form.Controls.Add($flow)
+    [void]$form.Controls.Add($dg)
+    [void]$form.ShowDialog()
+}
 function Invoke-WPFSystemRepair {
     <#
     .SYNOPSIS
@@ -7562,7 +9135,10 @@ function Invoke-WPFTab {
     $tabItemName = $ClickedTab -replace 'BT$'
     $tabButtons = Get-WinUtilVariables -Type ToggleButton | Where-Object { $_ -match '^WPFTab\d+BT$' }
     foreach ($buttonName in $tabButtons) {
-        $sync[$buttonName].IsChecked = ($buttonName -eq $ClickedTab)
+        $tb = $sync[$buttonName]
+        if ($tb) {
+            $tb.IsChecked = ($buttonName -eq $ClickedTab)
+        }
     }
 
     if ($sync[$tabItemName]) {
@@ -7581,21 +9157,32 @@ function Invoke-WPFTab {
         Find-TweaksByNameOrDescription -SearchString ""
     }
 
-    # Show search bar in Install and Tweaks tabs
+    # Show search bar in Install and Tweaks tabs (null-safe: other tabs used to NRE here and close the app)
+    $win = $sync["Form"]
+    $sbByName = if ($win) { $win.FindName("SearchBar") } else { $null }
     if ($sync.currentTab -eq "Install" -or $sync.currentTab -eq "Tweaks") {
-        $sync.SearchBar.Visibility = "Visible"
-        $searchIcon = ($sync.Form.FindName("SearchBar").Parent.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] -and $_.Text -eq [char]0xE721 })[0]
-        if ($searchIcon) {
-            $searchIcon.Visibility = "Visible"
+        if ($sync.SearchBar) {
+            $sync.SearchBar.Visibility = "Visible"
+        }
+        if ($sbByName -and $sbByName.Parent) {
+            $searchIcon = @($sbByName.Parent.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] -and $_.Text -eq [char]0xE721 })[0]
+            if ($searchIcon) {
+                $searchIcon.Visibility = "Visible"
+            }
         }
     } else {
-        $sync.SearchBar.Visibility = "Collapsed"
-        $searchIcon = ($sync.Form.FindName("SearchBar").Parent.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] -and $_.Text -eq [char]0xE721 })[0]
-        if ($searchIcon) {
-            $searchIcon.Visibility = "Collapsed"
+        if ($sync.SearchBar) {
+            $sync.SearchBar.Visibility = "Collapsed"
         }
-        # Hide the clear button if it's visible
-        $sync.SearchBarClearButton.Visibility = "Collapsed"
+        if ($sbByName -and $sbByName.Parent) {
+            $searchIcon = @($sbByName.Parent.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] -and $_.Text -eq [char]0xE721 })[0]
+            if ($searchIcon) {
+                $searchIcon.Visibility = "Collapsed"
+            }
+        }
+        if ($sync.SearchBarClearButton) {
+            $sync.SearchBarClearButton.Visibility = "Collapsed"
+        }
     }
 }
 function Invoke-WPFToggleAllCategories {
@@ -7678,6 +9265,19 @@ function Invoke-WPFtweaksbutton {
   }
 
   Write-Debug "Number of tweaks to process: $($Tweaks.Count)"
+
+  $needsRegistryTweakWork = ($restorePointSelected -or ($tweaksToRun.Count -gt 0))
+  if ($needsRegistryTweakWork) {
+    try {
+      $bak = Invoke-WinUtilPreTweakRegistryExport
+      foreach ($m in @($bak.Messages)) { Write-Host $m }
+      if (-not $bak.HKCUOk -or -not $bak.HKLMOk) {
+        Write-Warning "Pre-tweak registry export incomplete (HKCU:$($bak.HKCUOk) HKLM:$($bak.HKLMOk)). Restore may require Administrator."
+      }
+    } catch {
+      Write-Warning "Pre-tweak registry backup failed: $($_.Exception.Message)"
+    }
+  }
 
   if ($restorePointSelected) {
     $sync.ProcessRunning = $true
@@ -7938,6 +9538,7 @@ function Invoke-WPFUIElements {
                                 Invoke-WPFSelectedCheckboxesUpdate -type "Add" -checkboxName $Sender.name
                                 # Skip applying tweaks while an import is restoring toggle states
                                 if (-not $sync.ImportInProgress) {
+                                    $null = Invoke-WinUtilPreTweakRegistryExportIfNeeded
                                     Invoke-WinUtilTweaks $Sender.name
                                 }
                             })
@@ -7947,6 +9548,7 @@ function Invoke-WPFUIElements {
                                 Invoke-WPFSelectedCheckboxesUpdate -type "Remove" -checkboxName $Sender.name
                                 # Skip undoing tweaks while an import is restoring toggle states
                                 if (-not $sync.ImportInProgress) {
+                                    $null = Invoke-WinUtilPreTweakRegistryExportIfNeeded
                                     Invoke-WinUtiltweaks $Sender.name -undo $true
                                 }
                             })
@@ -8041,6 +9643,9 @@ function Invoke-WPFUIElements {
                         $button.HorizontalAlignment = "Left"
                         $button.SetResourceReference([Windows.Controls.Control]::MarginProperty, "ButtonMargin")
                         $button.SetResourceReference([Windows.Controls.Control]::FontSizeProperty, "ButtonFontSize")
+                        if ($entryInfo.Description) {
+                            $button.ToolTip = $entryInfo.Description
+                        }
                         if ($entryInfo.ButtonWidth) {
                             $baseWidth = [int]$entryInfo.ButtonWidth
                             $button.Width = [math]::Max($baseWidth, 350)
@@ -8108,7 +9713,7 @@ function Invoke-WPFUIElements {
                         if ($entryInfo.Link) {
                             $textBlock = New-Object Windows.Controls.TextBlock
                             $textBlock.Name = $checkBox.Name + "Link"
-                            $textBlock.Text = "(?)"
+                            $textBlock.Text = "Open"
                             $textBlock.ToolTip = if ($entryInfo.Description) { $entryInfo.Description } else { $entryInfo.Link }
                             $textBlock.Style = $HoverTextBlockStyle
                             $textBlock.UseLayoutRounding = $true
@@ -8545,6 +10150,179 @@ function Invoke-WPFUpdatessecurity {
     Write-Host "================================="
     Write-Host "-- Updates Set to Recommended ---"
     Write-Host "================================="
+}
+function Invoke-WPFWindowsUpdatePolicy {
+    <#
+    .SYNOPSIS
+        Configure Windows Update policy (defer / disable automatic updates) or remove policy keys.
+        HKLM paths require Administrator.
+    #>
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    $wu = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate'
+    $au = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
+    $clark = 'HKCU:\Software\Clark\WindowsUpdatePolicy'
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = 'Clark - Windows Update policy'
+    $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+    $form.MaximizeBox = $false
+    $form.StartPosition = 'CenterScreen'
+
+    $lbl = New-Object System.Windows.Forms.Label
+    $lbl.Location = New-Object System.Drawing.Point(12, 12)
+    $lbl.Size = New-Object System.Drawing.Size(480, 48)
+    $lbl.Text = 'Policy values are written under HKLM\SOFTWARE\Policies (requires Administrator). Use Remove policy keys to clear defer/disable settings Clark applied.'
+    [void]$form.Controls.Add($lbl)
+
+    [int]$wuFormY = 68
+    $chkDeferFeat = New-Object System.Windows.Forms.CheckBox
+    $chkDeferFeat.Text = 'Defer feature updates (enable policy)'
+    $chkDeferFeat.Location = New-Object System.Drawing.Point(12, $wuFormY)
+    $chkDeferFeat.Width = 280
+    [void]$form.Controls.Add($chkDeferFeat)
+    $wuFormY = [int]($wuFormY + 28)
+
+    $lblDf = New-Object System.Windows.Forms.Label
+    $lblDf.Text = 'Feature defer (days, 0-365):'
+    $lblDf.Location = New-Object System.Drawing.Point(28, $wuFormY)
+    $lblDf.AutoSize = $true
+    [void]$form.Controls.Add($lblDf)
+    $numFeat = New-Object System.Windows.Forms.NumericUpDown
+    $numFeat.Location = New-Object System.Drawing.Point(220, [int]($wuFormY - 2))
+    $numFeat.Width = 80
+    $numFeat.Minimum = 0
+    $numFeat.Maximum = 365
+    $numFeat.Value = 120
+    [void]$form.Controls.Add($numFeat)
+    $wuFormY = [int]($wuFormY + 32)
+
+    $chkDeferQual = New-Object System.Windows.Forms.CheckBox
+    $chkDeferQual.Text = 'Defer quality updates (enable policy)'
+    $chkDeferQual.Location = New-Object System.Drawing.Point(12, $wuFormY)
+    $chkDeferQual.Width = 280
+    [void]$form.Controls.Add($chkDeferQual)
+    $wuFormY = [int]($wuFormY + 28)
+
+    $lblDq = New-Object System.Windows.Forms.Label
+    $lblDq.Text = 'Quality defer (days, 0-30):'
+    $lblDq.Location = New-Object System.Drawing.Point(28, $wuFormY)
+    $lblDq.AutoSize = $true
+    [void]$form.Controls.Add($lblDq)
+    $numQual = New-Object System.Windows.Forms.NumericUpDown
+    $numQual.Location = New-Object System.Drawing.Point(220, [int]($wuFormY - 2))
+    $numQual.Width = 80
+    $numQual.Minimum = 0
+    $numQual.Maximum = 30
+    $numQual.Value = 7
+    [void]$form.Controls.Add($numQual)
+    $wuFormY = [int]($wuFormY + 36)
+
+    $chkNoAuto = New-Object System.Windows.Forms.CheckBox
+    $chkNoAuto.Text = 'Disable automatic updates (NoAutoUpdate = 1) - use with caution'
+    $chkNoAuto.Location = New-Object System.Drawing.Point(12, $wuFormY)
+    $chkNoAuto.Width = 440
+    [void]$form.Controls.Add($chkNoAuto)
+    $wuFormY = [int]($wuFormY + 40)
+
+    $btnRow = New-Object System.Windows.Forms.FlowLayoutPanel
+    $btnRow.Location = New-Object System.Drawing.Point(12, $wuFormY)
+    $btnRow.Width = 496
+    $btnRow.AutoSize = $true
+    $btnRow.WrapContents = $false
+    $btnRow.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+
+    $btnApply = New-Object System.Windows.Forms.Button
+    $btnApply.Text = 'Apply policy'
+    $btnApply.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 0)
+    $btnApply.Add_Click({
+        try {
+            if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+                [System.Windows.Forms.MessageBox]::Show('Applying HKLM policies requires running Clark as Administrator.', 'clark', 'OK', 'Warning')
+                return
+            }
+            New-Item -Path $wu -Force | Out-Null
+            New-Item -Path $au -Force | Out-Null
+
+            if ($chkDeferFeat.Checked) {
+                Set-ItemProperty -Path $wu -Name 'DeferFeatureUpdates' -Type DWord -Value 1 -Force
+                Set-ItemProperty -Path $wu -Name 'DeferFeatureUpdatesPeriodInDays' -Type DWord -Value ([int]$numFeat.Value) -Force
+            } else {
+                Remove-ItemProperty -Path $wu -Name 'DeferFeatureUpdates' -ErrorAction SilentlyContinue
+                Remove-ItemProperty -Path $wu -Name 'DeferFeatureUpdatesPeriodInDays' -ErrorAction SilentlyContinue
+            }
+
+            if ($chkDeferQual.Checked) {
+                Set-ItemProperty -Path $wu -Name 'DeferQualityUpdates' -Type DWord -Value 1 -Force
+                Set-ItemProperty -Path $wu -Name 'DeferQualityUpdatesPeriodInDays' -Type DWord -Value ([int]$numQual.Value) -Force
+            } else {
+                Remove-ItemProperty -Path $wu -Name 'DeferQualityUpdates' -ErrorAction SilentlyContinue
+                Remove-ItemProperty -Path $wu -Name 'DeferQualityUpdatesPeriodInDays' -ErrorAction SilentlyContinue
+            }
+
+            if ($chkNoAuto.Checked) {
+                Set-ItemProperty -Path $au -Name 'NoAutoUpdate' -Type DWord -Value 1 -Force
+                Set-ItemProperty -Path $au -Name 'AUOptions' -Type DWord -Value 1 -Force
+            } else {
+                Remove-ItemProperty -Path $au -Name 'NoAutoUpdate' -ErrorAction SilentlyContinue
+                Remove-ItemProperty -Path $au -Name 'AUOptions' -ErrorAction SilentlyContinue
+            }
+
+            if (-not (Test-Path -LiteralPath $clark)) {
+                New-Item -Path $clark -Force | Out-Null
+            }
+            Set-ItemProperty -Path $clark -Name 'LastApplied' -Type String -Value (Get-Date -Format 's') -Force
+
+            [System.Windows.Forms.MessageBox]::Show('Policy values written. Reboot or gpupdate may be required for all components to respect policy.', 'clark', 'OK', 'Information')
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Apply failed', 'OK', 'Error')
+        }
+    })
+    [void]$btnRow.Controls.Add($btnApply)
+
+    $btnClear = New-Object System.Windows.Forms.Button
+    $btnClear.Text = 'Remove policy keys'
+    $btnClear.Margin = New-Object System.Windows.Forms.Padding(0, 0, 10, 0)
+    $btnClear.Add_Click({
+        try {
+            if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+                [System.Windows.Forms.MessageBox]::Show('Removing HKLM policy values requires Administrator.', 'clark', 'OK', 'Warning')
+                return
+            }
+            if (Test-Path -LiteralPath $wu) {
+                foreach ($n in @('DeferFeatureUpdates', 'DeferFeatureUpdatesPeriodInDays', 'DeferQualityUpdates', 'DeferQualityUpdatesPeriodInDays')) {
+                    Remove-ItemProperty -LiteralPath $wu -Name $n -ErrorAction SilentlyContinue
+                }
+            }
+            if (Test-Path -LiteralPath $au) {
+                foreach ($n in @('NoAutoUpdate', 'AUOptions')) {
+                    Remove-ItemProperty -LiteralPath $au -Name $n -ErrorAction SilentlyContinue
+                }
+            }
+            Remove-Item -Path $clark -Recurse -Force -ErrorAction SilentlyContinue
+            [System.Windows.Forms.MessageBox]::Show('Removed defer / NoAutoUpdate policy values Clark uses, and the Clark marker under HKCU.', 'clark', 'OK', 'Information')
+            $chkDeferFeat.Checked = $false
+            $chkDeferQual.Checked = $false
+            $chkNoAuto.Checked = $false
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Remove failed', 'OK', 'Error')
+        }
+    })
+    [void]$btnRow.Controls.Add($btnClear)
+
+    $btnClose = New-Object System.Windows.Forms.Button
+    $btnClose.Text = 'Close'
+    $btnClose.Add_Click({ $form.Close() })
+    [void]$btnRow.Controls.Add($btnClose)
+
+    Set-WinFormsButtonFullText -Button @($btnApply, $btnClear, $btnClose)
+    [void]$form.Controls.Add($btnRow)
+    $wuFormY = [int]($wuFormY + [math]::Max(44, $btnRow.PreferredSize.Height + 4))
+
+    $form.ClientSize = New-Object System.Drawing.Size(520, [int]($wuFormY + 44))
+
+    [void]$form.ShowDialog()
 }
 function Show-ASYSLogo {
     <#
@@ -10521,6 +12299,24 @@ $sync.configs.profiles = @'
                              "ButtonWidth":  "360",
                              "function":  "Invoke-WPFProfileDelete"
                          },
+    "WPFProfileExportFile":  {
+                                 "Content":  "Export profile to JSON file...",
+                                 "Description":  "Save current app/tweak/toggle/feature selections to a versioned JSON file for backup or sharing.",
+                                 "Category":  "Profiles",
+                                 "panel":  "1",
+                                 "Type":  "Button",
+                                 "ButtonWidth":  "360",
+                                 "function":  "Invoke-WPFProfileExportFile"
+                             },
+    "WPFProfileImportFile":  {
+                                 "Content":  "Import profile from JSON file...",
+                                 "Description":  "Load selections from a Clark profile JSON file (schema v1 or legacy flat array).",
+                                 "Category":  "Profiles",
+                                 "panel":  "1",
+                                 "Type":  "Button",
+                                 "ButtonWidth":  "360",
+                                 "function":  "Invoke-WPFProfileImportFile"
+                             },
     "WPFAutoReapplyEnable":  {
                                  "Content":  "Enable Auto Reapply at Startup",
                                  "Description":  "Creates scheduled tasks that rerun the selected profile on logon and startup.",
@@ -10547,7 +12343,16 @@ $sync.configs.profiles = @'
                                  "Type":  "Button",
                                  "ButtonWidth":  "360",
                                  "function":  "Invoke-WPFRollbackLastTweak"
-                             }
+                             },
+    "WPFRegistryBackupManager":  {
+                                     "Content":  "Pre-tweak registry backups...",
+                                     "Description":  "Lists automatic HKLM/HKCU exports before tweaks; open folder or restore selected .reg files (reg import).",
+                                     "Category":  "Recovery",
+                                     "panel":  "1",
+                                     "Type":  "Button",
+                                     "ButtonWidth":  "360",
+                                     "function":  "Invoke-WPFRegistryBackupManager"
+                                 }
 }
 '@ | ConvertFrom-Json
 $sync.configs.themes = @'
@@ -10674,6 +12479,64 @@ $sync.configs.themes = @'
                  "BorderColor":  "#2F373D",
                  "BorderOpacity":  "0.2"
              }
+}
+'@ | ConvertFrom-Json
+$sync.configs.tools = @'
+{
+    "WPFHardwareSummary":  {
+                               "Content":  "Hardware summary",
+                               "Description":  "CPU, RAM, GPU, motherboard, and storage from WMI/CIM; export to PDF or PNG.",
+                               "Category":  "System",
+                               "panel":  "1",
+                               "Type":  "Button",
+                               "ButtonWidth":  "360",
+                               "function":  "Invoke-WPFHardwareSummary"
+                           },
+    "WPFDnsManager":  {
+                          "Content":  "DNS manager (per adapter)",
+                          "Description":  "Presets (Cloudflare, Google, Quad9, ...), custom IPv4/IPv6, DHCP reset; apply to selected or all adapters.",
+                          "Category":  "Network",
+                          "panel":  "1",
+                          "Type":  "Button",
+                          "ButtonWidth":  "360",
+                          "function":  "Invoke-WPFDnsManager"
+                      },
+    "WPFStartupManager":  {
+                              "Content":  "Startup manager",
+                              "Description":  "Registry Run / RunOnce and Startup folder entries; enable or disable; show path and publisher when available.",
+                              "Category":  "System",
+                              "panel":  "1",
+                              "Type":  "Button",
+                              "ButtonWidth":  "360",
+                              "function":  "Invoke-WPFStartupManager"
+                          },
+    "WPFWindowsUpdatePolicy":  {
+                                   "Content":  "Windows Update policy",
+                                   "Description":  "Defer feature/quality updates, disable automatic updates (policy), or clear Clark policy keys.",
+                                   "Category":  "Updates",
+                                   "panel":  "1",
+                                   "Type":  "Button",
+                                   "ButtonWidth":  "360",
+                                   "function":  "Invoke-WPFWindowsUpdatePolicy"
+                               },
+    "WPFDiskToolsWizard":  {
+                               "Content":  "Disk health \u0026 tools",
+                               "Description":  "SMART/health summary, chkdsk scan, diskpart list script; destructive actions require confirmation.",
+                               "Category":  "Storage",
+                               "panel":  "2",
+                               "Type":  "Button",
+                               "ButtonWidth":  "360",
+                               "function":  "Invoke-WPFDiskToolsWizard"
+                           },
+    "WPFAppRemovalTool":  {
+                              "Content":  "Installed programs \u0026 deep clean",
+                              "Description":  "List programs from registry uninstall keys, uninstall selection, optional restore point, leftover scan (preview).",
+                              "Category":  "Applications",
+                              "panel":  "2",
+                              "Type":  "Button",
+                              "ButtonWidth":  "360",
+                              "function":  "Invoke-WPFAppRemovalTool"
+                          }
 }
 '@ | ConvertFrom-Json
 $sync.configs.tweaks = @'
@@ -14071,6 +15934,12 @@ $inputXML = @'
                         </TextBlock>
                     </ToggleButton.Content>
                 </ToggleButton>
+                <ToggleButton Margin="0,0,5,0" Height="{DynamicResource TabButtonHeight}" Width="{DynamicResource TabButtonWidth}"
+                    Background="{DynamicResource ButtonConfigBackgroundColor}" Foreground="{DynamicResource ButtonConfigForegroundColor}" FontWeight="Bold" Name="WPFTab7BT">
+                    <ToggleButton.Content>
+                        <TextBlock FontSize="{DynamicResource TabButtonFontSize}" Background="Transparent" Foreground="{DynamicResource ButtonConfigForegroundColor}" Text="Tools"/>
+                    </ToggleButton.Content>
+                </ToggleButton>
                 <ToggleButton Margin="0,0,5,0" Height="{DynamicResource TabButtonHeight}" Width="Auto" MinWidth="{DynamicResource TabButtonWidth}"
                     Background="{DynamicResource ButtonWin11ISOBackgroundColor}" Foreground="{DynamicResource ButtonWin11ISOForegroundColor}" FontWeight="Bold" Name="WPFTab5BT">
                     <ToggleButton.Content>
@@ -14525,6 +16394,22 @@ $inputXML = @'
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="{DynamicResource TabContentMargin}">
                     <Grid Name="profilespanel" Grid.Row="1" Background="Transparent">
                     </Grid>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="Tools" Visibility="Collapsed" Name="WPFTab7">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="{DynamicResource TabContentMargin}">
+                    <StackPanel Orientation="Vertical" Background="Transparent">
+                        <TextBlock Margin="0,0,0,14"
+                                   TextWrapping="Wrap"
+                                   FontSize="{DynamicResource FontSize}"
+                                   Foreground="{DynamicResource MainForegroundColor}">
+                            <Run FontWeight="Bold">Built-in utilities</Run>
+                            <LineBreak/>
+                            <Run>Open a tool to run it in a separate window. Hover a button to see a short description.</Run>
+                        </TextBlock>
+                        <Grid Name="toolspanel" Background="Transparent" MinWidth="400">
+                        </Grid>
+                    </StackPanel>
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="Win11ISO" Visibility="Collapsed" Name="WPFTab5">
@@ -15576,6 +17461,10 @@ Invoke-WPFUIElements -configVariable $sync.configs.tweaks -targetGridName "tweak
 Invoke-WPFUIElements -configVariable $sync.configs.feature -targetGridName "featurespanel" -columncount 2
 
 Invoke-WPFUIElements -configVariable $sync.configs.profiles -targetGridName "profilespanel" -columncount 1
+
+if ($sync.configs.tools) {
+    Invoke-WPFUIElements -configVariable $sync.configs.tools -targetGridName "toolspanel" -columncount 2
+}
 
 # Future implementation: Add Windows Version to updates panel
 #Invoke-WPFUIElements -configVariable $sync.configs.updates -targetGridName "updatespanel" -columncount 1

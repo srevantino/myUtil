@@ -306,6 +306,9 @@ function Invoke-WPFUIElements {
                         $button.HorizontalAlignment = "Left"
                         $button.SetResourceReference([Windows.Controls.Control]::MarginProperty, "ButtonMargin")
                         $button.SetResourceReference([Windows.Controls.Control]::FontSizeProperty, "ButtonFontSize")
+                        if ($entryInfo.Description) {
+                            $button.ToolTip = $entryInfo.Description
+                        }
                         if ($entryInfo.ButtonWidth) {
                             $baseWidth = [int]$entryInfo.ButtonWidth
                             $button.Width = [math]::Max($baseWidth, 350)
@@ -373,7 +376,7 @@ function Invoke-WPFUIElements {
                         if ($entryInfo.Link) {
                             $textBlock = New-Object Windows.Controls.TextBlock
                             $textBlock.Name = $checkBox.Name + "Link"
-                            $textBlock.Text = "(?)"
+                            $textBlock.Text = "Open"
                             $textBlock.ToolTip = if ($entryInfo.Description) { $entryInfo.Description } else { $entryInfo.Link }
                             $textBlock.Style = $HoverTextBlockStyle
                             $textBlock.UseLayoutRounding = $true

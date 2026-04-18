@@ -18,7 +18,10 @@ function Invoke-WPFTab {
     $tabItemName = $ClickedTab -replace 'BT$'
     $tabButtons = Get-WinUtilVariables -Type ToggleButton | Where-Object { $_ -match '^WPFTab\d+BT$' }
     foreach ($buttonName in $tabButtons) {
-        $sync[$buttonName].IsChecked = ($buttonName -eq $ClickedTab)
+        $tb = $sync[$buttonName]
+        if ($tb) {
+            $tb.IsChecked = ($buttonName -eq $ClickedTab)
+        }
     }
 
     if ($sync[$tabItemName]) {
@@ -37,20 +40,31 @@ function Invoke-WPFTab {
         Find-TweaksByNameOrDescription -SearchString ""
     }
 
-    # Show search bar in Install and Tweaks tabs
+    # Show search bar in Install and Tweaks tabs (null-safe: other tabs used to NRE here and close the app)
+    $win = $sync["Form"]
+    $sbByName = if ($win) { $win.FindName("SearchBar") } else { $null }
     if ($sync.currentTab -eq "Install" -or $sync.currentTab -eq "Tweaks") {
-        $sync.SearchBar.Visibility = "Visible"
-        $searchIcon = ($sync.Form.FindName("SearchBar").Parent.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] -and $_.Text -eq [char]0xE721 })[0]
-        if ($searchIcon) {
-            $searchIcon.Visibility = "Visible"
+        if ($sync.SearchBar) {
+            $sync.SearchBar.Visibility = "Visible"
+        }
+        if ($sbByName -and $sbByName.Parent) {
+            $searchIcon = @($sbByName.Parent.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] -and $_.Text -eq [char]0xE721 })[0]
+            if ($searchIcon) {
+                $searchIcon.Visibility = "Visible"
+            }
         }
     } else {
-        $sync.SearchBar.Visibility = "Collapsed"
-        $searchIcon = ($sync.Form.FindName("SearchBar").Parent.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] -and $_.Text -eq [char]0xE721 })[0]
-        if ($searchIcon) {
-            $searchIcon.Visibility = "Collapsed"
+        if ($sync.SearchBar) {
+            $sync.SearchBar.Visibility = "Collapsed"
         }
-        # Hide the clear button if it's visible
-        $sync.SearchBarClearButton.Visibility = "Collapsed"
+        if ($sbByName -and $sbByName.Parent) {
+            $searchIcon = @($sbByName.Parent.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] -and $_.Text -eq [char]0xE721 })[0]
+            if ($searchIcon) {
+                $searchIcon.Visibility = "Collapsed"
+            }
+        }
+        if ($sync.SearchBarClearButton) {
+            $sync.SearchBarClearButton.Visibility = "Collapsed"
+        }
     }
 }

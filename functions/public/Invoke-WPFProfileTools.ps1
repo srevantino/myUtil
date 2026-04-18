@@ -277,43 +277,43 @@ function Invoke-WPFProfileCreateWithOptions {
     $txtName.Width = 410
     [void]$form.Controls.Add($txtName)
 
-    $y = 68
+    [int]$profileFormY = 68
     $cbApps = New-Object System.Windows.Forms.CheckBox
     $cbApps.Text = "Include selected Applications (Install tab)"
     $cbApps.Checked = $true
-    $cbApps.Location = New-Object System.Drawing.Point(12, $y)
+    $cbApps.Location = New-Object System.Drawing.Point(12, $profileFormY)
     $cbApps.Width = 410
     [void]$form.Controls.Add($cbApps)
-    $y += 28
+    $profileFormY = [int]($profileFormY + 28)
 
     $cbTweaks = New-Object System.Windows.Forms.CheckBox
     $cbTweaks.Text = "Include selected Tweaks"
     $cbTweaks.Checked = $true
-    $cbTweaks.Location = New-Object System.Drawing.Point(12, $y)
+    $cbTweaks.Location = New-Object System.Drawing.Point(12, $profileFormY)
     $cbTweaks.Width = 410
     [void]$form.Controls.Add($cbTweaks)
-    $y += 28
+    $profileFormY = [int]($profileFormY + 28)
 
     $cbToggles = New-Object System.Windows.Forms.CheckBox
     $cbToggles.Text = "Include selected Config toggles"
     $cbToggles.Checked = $true
-    $cbToggles.Location = New-Object System.Drawing.Point(12, $y)
+    $cbToggles.Location = New-Object System.Drawing.Point(12, $profileFormY)
     $cbToggles.Width = 410
     [void]$form.Controls.Add($cbToggles)
-    $y += 28
+    $profileFormY = [int]($profileFormY + 28)
 
     $cbFeatures = New-Object System.Windows.Forms.CheckBox
     $cbFeatures.Text = "Include selected Config features"
     $cbFeatures.Checked = $true
-    $cbFeatures.Location = New-Object System.Drawing.Point(12, $y)
+    $cbFeatures.Location = New-Object System.Drawing.Point(12, $profileFormY)
     $cbFeatures.Width = 410
     [void]$form.Controls.Add($cbFeatures)
-    $y += 32
+    $profileFormY = [int]($profileFormY + 32)
 
     $cbMerge = New-Object System.Windows.Forms.CheckBox
     $cbMerge.Text = "If this profile already exists, merge (add new entries; keep existing)"
     $cbMerge.Checked = $false
-    $cbMerge.Location = New-Object System.Drawing.Point(12, $y)
+    $cbMerge.Location = New-Object System.Drawing.Point(12, $profileFormY)
     $cbMerge.Width = 410
     [void]$form.Controls.Add($cbMerge)
 

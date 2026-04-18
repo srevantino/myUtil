@@ -1465,8 +1465,18 @@
             </TabItem>
             <TabItem Header="Tools" Visibility="Collapsed" Name="WPFTab7">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="{DynamicResource TabContentMargin}">
-                    <Grid Name="toolspanel" Background="Transparent">
-                    </Grid>
+                    <StackPanel Orientation="Vertical" Background="Transparent">
+                        <TextBlock Margin="0,0,0,14"
+                                   TextWrapping="Wrap"
+                                   FontSize="{DynamicResource FontSize}"
+                                   Foreground="{DynamicResource MainForegroundColor}">
+                            <Run FontWeight="Bold">Built-in utilities</Run>
+                            <LineBreak/>
+                            <Run>Open a tool to run it in a separate window. Hover a button to see a short description.</Run>
+                        </TextBlock>
+                        <Grid Name="toolspanel" Background="Transparent" MinWidth="400">
+                        </Grid>
+                    </StackPanel>
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="Win11ISO" Visibility="Collapsed" Name="WPFTab5">
